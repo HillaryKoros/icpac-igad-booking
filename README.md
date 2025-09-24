@@ -160,18 +160,3 @@ icpac-booking-system/
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## 📞 Support
-
-For questions, issues, or support:
-- Open an issue on GitHub
-- Contact the ICPAC development team
-- Email: [Your contact email]
-
-## 📝 License
-
-This project is developed for ICPAC/IGAD internal use.
-
----
-
-**Developed by ICPAC Development Team** 🌍
