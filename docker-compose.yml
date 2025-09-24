@@ -3,7 +3,7 @@ version: '3.8'
 services:
   icpac-booking-system:
     build: .
-    container_name: icpac-booking-frontend
+    container_name: icpac-booking-system
     ports:
       - "3000:80"
     restart: unless-stopped
