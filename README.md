@@ -1,70 +1,177 @@
-# Getting Started with Create React App
+# ICPAC Productivity Apps
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This repository contains productivity applications developed for the IGAD Climate Prediction and Applications Centre (ICPAC).
 
-## Available Scripts
+## Applications
 
-In the project directory, you can run:
+### 🏢 ICPAC Booking System
+📁 **Location**: [`icpac-booking-system/`](./icpac-booking-system/)
 
-### `npm start`
+A comprehensive room booking and management system for ICPAC facilities.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🚀 Quick Start - How to Clone and Run
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Option 1: Clone the entire repository and navigate to the system
+```bash
+# Clone the repository
+git clone https://github.com/icpac-igad/productivity-apps.git
 
-### `npm test`
+# Navigate to the booking system
+cd productivity-apps/icpac-booking-system
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# Run with Docker (recommended)
+docker-compose up
+```
 
-### `npm run build`
+### Option 2: Clone only the booking system folder (sparse checkout)
+```bash
+# Clone with sparse checkout
+git clone --filter=blob:none --sparse https://github.com/icpac-igad/productivity-apps.git
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Navigate to repository
+cd productivity-apps
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Set sparse checkout to only get the booking system
+git sparse-checkout set icpac-booking-system
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Navigate to the system
+cd icpac-booking-system
 
-### `npm run eject`
+# Run the system
+docker-compose up
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Option 3: Download as ZIP
+1. Go to [https://github.com/icpac-igad/productivity-apps](https://github.com/icpac-igad/productivity-apps)
+2. Click on `icpac-booking-system` folder
+3. Click "Code" → "Download ZIP"
+4. Extract and run with Docker
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 📋 System Requirements
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- **Docker & Docker Compose** (recommended)
+- **Node.js 16+** (if running without Docker)
+- **Python 3.8+** (if running without Docker)
+- **PostgreSQL** (if running without Docker)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 🔧 Installation & Setup
 
-## Learn More
+### Using Docker (Recommended)
+```bash
+# Navigate to the system directory
+cd icpac-booking-system
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+# Start all services
+docker-compose up
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000
+```
 
-### Code Splitting
+### Manual Installation
+```bash
+# Navigate to the system directory
+cd icpac-booking-system
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+# Install frontend dependencies
+npm install
 
-### Analyzing the Bundle Size
+# Install backend dependencies
+cd icpac-booking-backend
+pip install -r requirements.txt
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+# Set up database
+python manage.py migrate
+python manage.py createsuperuser
 
-### Making a Progressive Web App
+# Start backend (in one terminal)
+python manage.py runserver
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+# Start frontend (in another terminal)
+cd ..
+npm start
+```
 
-### Advanced Configuration
+## 🌟 Features
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- **Room Booking**: Schedule and manage meeting room reservations
+- **User Management**: Authentication and role-based access control
+- **Admin Dashboard**: Comprehensive room and booking management
+- **Email Notifications**: Automated booking confirmations and reminders
+- **Procurement Integration**: Request procurement items for meetings
+- **Responsive Design**: Works on desktop and mobile devices
+- **Docker Support**: Easy deployment and development setup
 
-### Deployment
+## 📖 Documentation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- **[Installation Guide](./icpac-booking-system/INSTALLATION.md)** - Detailed setup instructions
+- **[User Guide](./icpac-booking-system/USER_WORKFLOW.md)** - How to use the system
+- **[Admin Guide](./icpac-booking-system/ADMIN_WORKFLOW.md)** - Administrative functions
+- **[Docker Guide](./icpac-booking-system/README-Docker.md)** - Docker deployment
+- **[API Documentation](./icpac-booking-system/icpac-booking-backend/API_DOCUMENTATION.md)** - Backend API reference
 
-### `npm run build` fails to minify
+## 🚀 Production Deployment
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Using Docker
+```bash
+# Clone and navigate
+git clone https://github.com/icpac-igad/productivity-apps.git
+cd productivity-apps/icpac-booking-system
+
+# Production deployment
+docker-compose -f docker-compose.production.yml up -d
+```
+
+### Manual Server Deployment
+See the [Manual Server Deployment Guide](./icpac-booking-system/MANUAL-SERVER-DEPLOYMENT.md) for detailed production setup instructions.
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React.js, CSS3, JavaScript ES6+
+- **Backend**: Django, Django REST Framework, Python
+- **Database**: PostgreSQL
+- **Web Server**: Nginx
+- **Containerization**: Docker, Docker Compose
+- **Authentication**: Django built-in auth system
+
+## 📁 Project Structure
+
+```
+icpac-booking-system/
+├── src/                          # React frontend source
+│   ├── components/              # React components
+│   └── services/               # API services
+├── icpac-booking-backend/      # Django backend
+│   ├── apps/                   # Django applications
+│   ├── icpac_booking/         # Main Django project
+│   └── requirements.txt       # Python dependencies
+├── public/                     # Static assets
+├── docker-compose.yml         # Development Docker setup
+├── docker-compose.production.yml # Production Docker setup
+├── package.json               # Node.js dependencies
+└── README.md                  # System documentation
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📞 Support
+
+For questions, issues, or support:
+- Open an issue on GitHub
+- Contact the ICPAC development team
+- Email: [Your contact email]
+
+## 📝 License
+
+This project is developed for ICPAC/IGAD internal use.
+
+---
+
+**Developed by ICPAC Development Team** 🌍
