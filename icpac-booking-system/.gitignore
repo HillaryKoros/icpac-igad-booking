@@ -1,39 +1,69 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Dependencies
+node_modules/
+*.log
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
+# Environment variables and secrets
+.env
+.env.*
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
 .env.production
+.env.development
+.env.test
+*.env
+secrets/
+config/secrets/
+credentials.json
+auth.json
+private_key.*
+*.pem
+*.key
+*.p12
+*.pfx
 
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Build outputs
+build/
+dist/
 
-# Backend specific
-icpac-booking-backend/venv/
-icpac-booking-backend/db.sqlite3
-icpac-booking-backend/logs/
-icpac-booking-backend/__pycache__/
-**/__pycache__/
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
 *.pyc
 *.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.pytest_cache/
+htmlcov/
+.cache
+nosetests.xml
+coverage.xml
+.celery
+celerybeat-schedule
+celerybeat.pid
 
-# Large files
-*.tar.gz
-*.zip
-backups/
+# Django
+db.sqlite3
+*.sqlite3
+media/
+staticfiles/
 logs/
+local_settings.py
+django_secret_key.txt
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Docker volumes
+booking_data/
+postgres_data/
