@@ -59,6 +59,12 @@ const BookingBoard = () => {
   const [selectedRoomId, setSelectedRoomId] = useState('');
   const [selectedMeetingSpace, setSelectedMeetingSpace] = useState(null);
   const [showMeetingSpaceModal, setShowMeetingSpaceModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return window.innerWidth <= 768;
+  });
 
   // localStorage functions
   const saveBookingsToStorage = (bookingsData) => {
@@ -718,6 +724,20 @@ const BookingBoard = () => {
     document.body.classList.toggle('dark-mode', isDarkMode);
   }, [isDarkMode]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 
   const formatDate = (date) => {
     return date.toISOString().split('T')[0];
@@ -747,6 +767,161 @@ const BookingBoard = () => {
     slotDateTime.setHours(hours, minutes, 0, 0);
 
     return slotDateTime < now;
+  };
+
+  const renderRoomInfo = (room) => {
+    const categoryInfo = getCategoryInfo(room.category);
+
+    return (
+      <div className="room-info" style={{ borderLeftColor: categoryInfo.color }}>
+        <div className="room-header">
+          <h3 className="room-name">
+            <span className="room-category-icon">{categoryInfo.icon}</span>
+            {room.name}
+          </h3>
+          <div className="capacity-indicator">
+            <div className="capacity-visual">
+              <span className="capacity-icon">👥</span>
+              <span className="capacity-number">{room.capacity}</span>
+            </div>
+            <div className="capacity-bar">
+              <div
+                className={`capacity-fill ${getCapacityLevel(room.capacity)}`}
+                style={{
+                  width: `${Math.min((room.capacity / 200) * 100, 100)}%`,
+                  backgroundColor: getCapacityColor(room.capacity)
+                }}
+              ></div>
+            </div>
+          </div>
+        </div>
+        <div className="room-amenities">
+          {room.amenities.map(amenity => (
+            <span key={amenity} className="amenity-tag" title={amenity}>
+              <span className="amenity-icon">{getAmenityIcon(amenity)}</span>
+              <span className="amenity-text">{amenity}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderSlotContent = (room, time) => {
+    const isWeekendDay = isWeekend(selectedDate);
+    const isPast = isTimeSlotInPast(selectedDate, time);
+
+    if (isWeekendDay) {
+      return (
+        <div className="time-slot weekend-blocked">
+          <div className="slot-time">{time}</div>
+          <div className="slot-title">Sunday</div>
+          <div className="slot-subtitle">Not Available</div>
+        </div>
+      );
+    }
+
+    if (isPast) {
+      return null;
+    }
+
+    const isBooked = isSlotBooked(room.id, time);
+    const booking = isBooked ? getBookingDetails(room.id, time) : null;
+
+    if (isBooked && booking) {
+      const bookingTimeLabel = booking.time || booking.startTime || time;
+
+      return (
+        <div className={`modern-time-slot booked ${booking.bookingType || 'hourly'} ${booking.approvalStatus || 'pending'}`}>
+          <div className="slot-icon">
+            {booking.approvalStatus === 'approved' ? '✅' :
+              booking.approvalStatus === 'rejected' ? '❌' : '⏳'}
+          </div>
+          <div className="slot-content">
+            <div className="slot-time">{bookingTimeLabel}</div>
+            <div className="slot-title">{booking.title}</div>
+            <div className="slot-subtitle">{booking.organizer}</div>
+            {booking.bookingType !== 'hourly' && (
+              <div className="slot-duration">
+                {booking.bookingType === 'full-day' ? 'Full Day' :
+                  booking.bookingType === 'weekly' ? 'Weekly' :
+                    booking.bookingType === 'multi-day' ?
+                      `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}` :
+                      'Extended'}
+              </div>
+            )}
+          </div>
+          <div className={`slot-status booked-status ${booking.approvalStatus || 'pending'}`}>
+            <span className="status-text">
+              {booking.approvalStatus === 'approved' && 'Approved'}
+              {booking.approvalStatus === 'rejected' && 'Rejected'}
+              {(!booking.approvalStatus || booking.approvalStatus === 'pending') && 'Pending'}
+            </span>
+            <div className={`status-pulse ${booking.approvalStatus || 'pending'}`}></div>
+          </div>
+          {canManageBooking(booking) && (
+            <div className="admin-booking-controls">
+              <button
+                onClick={() => editBooking(booking)}
+                className="edit-booking-btn"
+                title="Edit this booking"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => cancelBooking(booking.id)}
+                className="cancel-booking-btn"
+                title="Cancel this booking"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+          {canApproveBooking(booking) && (!booking.approvalStatus || booking.approvalStatus === 'pending') && (
+            <div className="approval-controls">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  approveBooking(booking.id);
+                }}
+                className="approve-booking-btn"
+                title="Approve this booking"
+              >
+                ✅ Approve
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  rejectBooking(booking.id);
+                }}
+                className="reject-booking-btn"
+                title="Reject this booking"
+              >
+                ❌ Reject
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <button
+        onClick={() => handleBooking(room, time)}
+        className="modern-time-slot available"
+      >
+        <div className="slot-icon">⏰</div>
+        <div className="slot-content">
+          <div className="slot-time">{time}</div>
+          <div className="slot-title">Available</div>
+          <div className="slot-subtitle">Click to book</div>
+        </div>
+        <div className="slot-status available-status">
+          <span className="status-indicator">✅</span>
+          <div className="availability-pulse"></div>
+        </div>
+      </button>
+    );
   };
 
 
@@ -1232,13 +1407,49 @@ const BookingBoard = () => {
           </div>
 
           {shouldShowBookingInterface(selectedDate) ? (
-            <div className="grid-table-container">
-              <table className="grid-table">
-                <thead>
-                  <tr>
-                    <th>
-                      <span className="table-header-room">
-                        <span className="header-icon">🏢</span>
+            isMobile ? (
+              <div className="mobile-booking-list">
+                {getFilteredRooms().length === 0 ? (
+                  <div className="no-rooms-message">
+                    <div className="no-rooms-content">
+                      <h3>No Rooms Available</h3>
+                      <p>
+                        {currentUser ?
+                          `You don't have access to any rooms. Please contact your administrator.` :
+                          'Please log in to view available rooms.'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  getFilteredRooms().map(room => (
+                    <div key={room.id} className="mobile-room-card">
+                      {renderRoomInfo(room)}
+                      <div className="mobile-slots-wrapper">
+                        {timeSlots.map(time => {
+                          const content = renderSlotContent(room, time);
+                          if (!content) {
+                            return null;
+                          }
+                          return (
+                            <div key={time} className="mobile-slot-item">
+                              {content}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="grid-table-container">
+                <table className="grid-table">
+                  <thead>
+                    <tr>
+                      <th>
+                        <span className="table-header-room">
+                          <span className="header-icon">🏢</span>
                         <span className="header-text" style={{ color: 'black', fontWeight: 'bold', fontSize: '16px' }}>Meeting Rooms</span>
                       </span>
                     </th>
@@ -1263,156 +1474,21 @@ const BookingBoard = () => {
                       </td>
                     </tr>
                   ) : (
-                    getFilteredRooms().map(room => {
-                      const categoryInfo = getCategoryInfo(room.category);
-                      return (
-                        <tr key={room.id} className="room-row">
-                          <td>
-                            <div className="room-info" style={{ borderLeftColor: categoryInfo.color }}>
-                              <div className="room-header">
-                                <h3 className="room-name">
-                                  <span className="room-category-icon">{categoryInfo.icon}</span>
-                                  {room.name}
-                                </h3>
-                                <div className="capacity-indicator">
-                                  <div className="capacity-visual">
-                                    <span className="capacity-icon">👥</span>
-                                    <span className="capacity-number">{room.capacity}</span>
-                                  </div>
-                                  <div className="capacity-bar">
-                                    <div
-                                      className={`capacity-fill ${getCapacityLevel(room.capacity)}`}
-                                      style={{
-                                        width: `${Math.min((room.capacity / 200) * 100, 100)}%`,
-                                        backgroundColor: getCapacityColor(room.capacity)
-                                      }}
-                                    ></div>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="room-amenities">
-                                {room.amenities.map(amenity => (
-                                  <span key={amenity} className="amenity-tag" title={amenity}>
-                                    <span className="amenity-icon">{getAmenityIcon(amenity)}</span>
-                                    <span className="amenity-text">{amenity}</span>
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
+                    getFilteredRooms().map(room => (
+                      <tr key={room.id} className="room-row">
+                        <td>{renderRoomInfo(room)}</td>
+                        {timeSlots.map(time => (
+                          <td key={time}>
+                            {renderSlotContent(room, time)}
                           </td>
-                          {timeSlots.map(time => {
-                            const isBooked = isSlotBooked(room.id, time);
-                            const booking = getBookingDetails(room.id, time);
-                            const isPast = isTimeSlotInPast(selectedDate, time);
-                            const isWeekendDay = isWeekend(selectedDate);
-
-                            return (
-                              <td key={time}>
-                                {isWeekendDay ? (
-                                  <div className="time-slot weekend-blocked">
-                                    <div className="slot-title">Sunday</div>
-                                    <div className="slot-subtitle">Not Available</div>
-                                  </div>
-                                ) : isPast ? (
-                                  // Don't show anything for past time slots - hide completely
-                                  null
-                                ) : isBooked ? (
-                                  <div className={`modern-time-slot booked ${booking.bookingType || 'hourly'} ${booking.approvalStatus || 'pending'}`}>
-                                    <div className="slot-icon">
-                                      {booking.approvalStatus === 'approved' ? '✅' :
-                                        booking.approvalStatus === 'rejected' ? '❌' : '⏳'}
-                                    </div>
-                                    <div className="slot-content">
-                                      <div className="slot-title">{booking.title}</div>
-                                      <div className="slot-subtitle">{booking.organizer}</div>
-                                      {booking.bookingType !== 'hourly' && (
-                                        <div className="slot-duration">
-                                          {booking.bookingType === 'full-day' ? 'Full Day' :
-                                            booking.bookingType === 'weekly' ? 'Weekly' :
-                                              booking.bookingType === 'multi-day' ?
-                                                `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}` :
-                                                'Extended'}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className={`slot-status booked-status ${booking.approvalStatus || 'pending'}`}>
-                                      <span className="status-text">
-                                        {booking.approvalStatus === 'approved' && 'Approved'}
-                                        {booking.approvalStatus === 'rejected' && 'Rejected'}
-                                        {(!booking.approvalStatus || booking.approvalStatus === 'pending') && 'Pending'}
-                                      </span>
-                                      <div className={`status-pulse ${booking.approvalStatus || 'pending'}`}></div>
-                                    </div>
-                                    {canManageBooking(booking) && (
-                                      <div className="admin-booking-controls">
-                                        <button
-                                          onClick={() => editBooking(booking)}
-                                          className="edit-booking-btn"
-                                          title="Edit this booking"
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          onClick={() => cancelBooking(booking.id)}
-                                          className="cancel-booking-btn"
-                                          title="Cancel this booking"
-                                        >
-                                          Cancel
-                                        </button>
-                                      </div>
-                                    )}
-                                    {/* Approval Controls for Room Admins and Super Admins */}
-                                    {canApproveBooking(booking) && (!booking.approvalStatus || booking.approvalStatus === 'pending') && (
-                                      <div className="approval-controls">
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            approveBooking(booking.id);
-                                          }}
-                                          className="approve-booking-btn"
-                                          title="Approve this booking"
-                                        >
-                                          ✅ Approve
-                                        </button>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            rejectBooking(booking.id);
-                                          }}
-                                          className="reject-booking-btn"
-                                          title="Reject this booking"
-                                        >
-                                          ❌ Reject
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => handleBooking(room, time)}
-                                    className="modern-time-slot available"
-                                  >
-                                    <div className="slot-icon">⏰</div>
-                                    <div className="slot-content">
-                                      <div className="slot-title">Available</div>
-                                      <div className="slot-subtitle">Click to book</div>
-                                    </div>
-                                    <div className="slot-status available-status">
-                                      <span className="status-indicator">✅</span>
-                                      <div className="availability-pulse"></div>
-                                    </div>
-                                  </button>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })
+                        ))}
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
             </div>
+            )
           ) : (
             <div className="day-closed-message">
               <div className="day-closed-content">

@@ -28,12 +28,12 @@ RUN groupadd --gid 1000 app && \
 WORKDIR /app
 
 # Upgrade pip and install Python dependencies
-COPY icpac-booking-backend/requirements.txt .
+COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
-COPY icpac-booking-backend/ .
+COPY . .
 
 # Create necessary directories and set permissions
 RUN mkdir -p logs media staticfiles celerybeat-schedule && \
@@ -41,9 +41,6 @@ RUN mkdir -p logs media staticfiles celerybeat-schedule && \
 
 # Switch to app user
 USER app
-
-# Collect static files (will be overridden by volume in production)
-RUN python manage.py collectstatic --noinput --clear
 
 # Expose port
 EXPOSE 8000
@@ -53,4 +50,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8000/api/auth/ || exit 1
 
 # Default command - can be overridden in docker-compose
-CMD ["gunicorn", "icpac_booking.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120", "--keep-alive", "5", "--max-requests", "1000", "--preload"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

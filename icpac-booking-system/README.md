@@ -1,70 +1,73 @@
-# Getting Started with Create React App
+# ICPAC Booking System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive meeting room and resource booking system for ICPAC.
 
-## Available Scripts
+## Project Structure
 
-In the project directory, you can run:
+```
+icpac-booking-system/
+├── icpac-booking-frontend/    # React frontend application
+│   ├── src/                   # Source code
+│   ├── public/                 # Static files
+│   └── package.json           # Frontend dependencies
+├── icpac-booking-backend/     # Backend API service
+├── icpac-meeting-spaces/      # Meeting spaces management
+├── docker/                    # Docker configuration files
+│   ├── Dockerfile.frontend    # Frontend Docker image
+│   ├── Dockerfile.backend     # Backend Docker image
+│   └── nginx.*.conf          # Nginx configurations
+├── scripts/                   # Deployment and utility scripts
+├── docs/                      # Documentation
+└── docker-compose.yml         # Main orchestration file
+```
 
-### `npm start`
+## Quick Start
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Development
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+# Frontend
+cd icpac-booking-frontend
+npm install
+npm start
 
-### `npm test`
+# Backend
+cd icpac-booking-backend
+npm install
+npm run dev
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Production with Docker
 
-### `npm run build`
+```bash
+# Build and run all services
+docker-compose up -d
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# View logs
+docker-compose logs -f
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Stop services
+docker-compose down
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Services
 
-### `npm run eject`
+- **Frontend**: React application on port 3000
+- **Backend**: API service on port 8000
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Deployment
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+For staging/production deployment, clone this repository and run:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+docker-compose -f docker-compose.yml up -d
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Documentation
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+See the `docs/` folder for detailed documentation on:
+- Installation guide
+- Deployment procedures
+- System architecture
+- API documentation
+- User workflows

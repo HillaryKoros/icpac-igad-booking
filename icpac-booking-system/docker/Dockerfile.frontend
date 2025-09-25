@@ -15,8 +15,6 @@ RUN npm ci --only=production && npm cache clean --force
 
 # Copy source code
 COPY . .
-COPY public/ public/
-COPY src/ src/
 
 # Build the application
 RUN npm run build
@@ -35,7 +33,7 @@ RUN addgroup -g 1001 -S nodejs && \
 COPY --from=build /app/build /usr/share/nginx/html
 
 # Copy custom nginx production config
-COPY nginx.production.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Create directories and set permissions
 RUN mkdir -p /var/cache/nginx /var/run/nginx && \
