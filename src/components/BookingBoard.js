@@ -708,10 +708,42 @@ const BookingBoard = () => {
     }
   }, []);
 
-  const timeSlots = [
-    '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-    '14:00', '15:00', '16:00', '17:00', '18:00'
-  ];
+  // Generate time slots with 15-minute intervals for more granular booking
+  const generateTimeSlots = () => {
+    const slots = [];
+    const startHour = 8; // 8 AM
+    const endHour = 18; // 6 PM
+
+    for (let hour = startHour; hour <= endHour; hour++) {
+      // Add the hour slots (08:00, 09:00, etc.)
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+
+      // Add 15-minute intervals for each hour (except the last hour)
+      if (hour < endHour) {
+        slots.push(`${hour.toString().padStart(2, '0')}:15`);
+        slots.push(`${hour.toString().padStart(2, '0')}:30`);
+        slots.push(`${hour.toString().padStart(2, '0')}:45`);
+      }
+    }
+
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
+  // Filter out past time slots for current day to remove empty spaces
+  const getAvailableTimeSlots = (date) => {
+    const today = new Date();
+    const selectedDay = new Date(date);
+
+    // If it's not today, show all slots
+    if (selectedDay.toDateString() !== today.toDateString()) {
+      return timeSlots;
+    }
+
+    // For today, filter out past time slots
+    return timeSlots.filter(time => !isTimeSlotInPast(date, time));
+  };
 
   // Apply dark mode on initial load
   useEffect(() => {
@@ -779,7 +811,9 @@ const BookingBoard = () => {
       // For hourly bookings, check time slots
       if (booking.bookingType === 'hourly') {
         const bookingStartIndex = getTimeSlotIndex(booking.time);
-        const bookingEndIndex = bookingStartIndex + booking.duration;
+        // Convert duration from hours to number of 15-minute slots
+        const durationInSlots = Math.ceil(booking.duration * 4);
+        const bookingEndIndex = bookingStartIndex + durationInSlots;
         const currentTimeIndex = getTimeSlotIndex(time);
 
         return currentTimeIndex >= bookingStartIndex && currentTimeIndex < bookingEndIndex;
@@ -819,7 +853,9 @@ const BookingBoard = () => {
       // For hourly bookings, check time slots
       if (booking.bookingType === 'hourly') {
         const bookingStartIndex = getTimeSlotIndex(booking.time);
-        const bookingEndIndex = bookingStartIndex + booking.duration;
+        // Convert duration from hours to number of 15-minute slots
+        const durationInSlots = Math.ceil(booking.duration * 4);
+        const bookingEndIndex = bookingStartIndex + durationInSlots;
         const currentTimeIndex = getTimeSlotIndex(time);
 
         return currentTimeIndex >= bookingStartIndex && currentTimeIndex < bookingEndIndex;
@@ -832,7 +868,10 @@ const BookingBoard = () => {
 
   const canBookDuration = (roomId, startTime, duration) => {
     const startIndex = getTimeSlotIndex(startTime);
-    const endIndex = startIndex + duration;
+
+    // Convert duration (in hours) to number of 15-minute slots
+    const durationInSlots = Math.ceil(duration * 4); // 4 slots per hour (15-minute intervals)
+    const endIndex = startIndex + durationInSlots;
 
     // Check if booking would exceed available time slots
     if (endIndex > timeSlots.length) {
@@ -916,7 +955,7 @@ const BookingBoard = () => {
       // Keep legacy fields for backward compatibility
       date: bookingData.startDate,
       time: bookingData.startTime || selectedTime,
-      duration: bookingData.duration || 1,
+      duration: bookingData.duration || 0.5,
       // New fields for extended booking
       bookingType: bookingData.bookingType || 'hourly',
       startDate: bookingData.startDate,
@@ -1242,7 +1281,7 @@ const BookingBoard = () => {
                         <span className="header-text" style={{ color: 'black', fontWeight: 'bold', fontSize: '16px' }}>Meeting Rooms</span>
                       </span>
                     </th>
-                    {timeSlots.map(time => (
+                    {getAvailableTimeSlots(selectedDate).map(time => (
                       <th key={time}>{time}</th>
                     ))}
                   </tr>
@@ -1250,7 +1289,7 @@ const BookingBoard = () => {
                 <tbody>
                   {getFilteredRooms().length === 0 ? (
                     <tr>
-                      <td colSpan={timeSlots.length + 1} className="no-rooms-message">
+                      <td colSpan={getAvailableTimeSlots(selectedDate).length + 1} className="no-rooms-message">
                         <div className="no-rooms-content">
                           <h3>No Rooms Available</h3>
                           <p>
@@ -1300,7 +1339,7 @@ const BookingBoard = () => {
                               </div>
                             </div>
                           </td>
-                          {timeSlots.map(time => {
+                          {getAvailableTimeSlots(selectedDate).map(time => {
                             const isBooked = isSlotBooked(room.id, time);
                             const booking = getBookingDetails(room.id, time);
                             const isPast = isTimeSlotInPast(selectedDate, time);
@@ -1314,7 +1353,7 @@ const BookingBoard = () => {
                                     <div className="slot-subtitle">Not Available</div>
                                   </div>
                                 ) : isPast ? (
-                                  // Don't show anything for past time slots - hide completely
+                                  // This should never happen now since we filter past slots
                                   null
                                 ) : isBooked ? (
                                   <div className={`modern-time-slot booked ${booking.bookingType || 'hourly'} ${booking.approvalStatus || 'pending'}`}>
@@ -1683,10 +1722,24 @@ const ProcurementOrdersSection = ({ orders, attendeeCount, onOrdersChange }) => 
 };
 
 const BookingForm = ({ room, time, date, currentUser, onConfirm, onCancel }) => {
-  const timeSlots = [
-    '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-    '14:00', '15:00', '16:00', '17:00', '18:00'
-  ];
+  // Generate time slots with 15-minute intervals
+  const generateTimeSlots = () => {
+    const slots = [];
+    const startHour = 8; // 8 AM
+    const endHour = 18; // 6 PM
+
+    for (let hour = startHour; hour <= endHour; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      if (hour < endHour) {
+        slots.push(`${hour.toString().padStart(2, '0')}:15`);
+        slots.push(`${hour.toString().padStart(2, '0')}:30`);
+        slots.push(`${hour.toString().padStart(2, '0')}:45`);
+      }
+    }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
 
   // Get current time for today, or use selected time slot
   const getCurrentTimeSlot = () => {
@@ -1722,7 +1775,9 @@ const BookingForm = ({ room, time, date, currentUser, onConfirm, onCancel }) => 
     const startIndex = timeSlots.findIndex(slot => slot === startTime);
     if (startIndex === -1) return timeSlots[1];
 
-    const endIndex = Math.min(startIndex + duration, timeSlots.length - 1);
+    // Convert duration from hours to number of 15-minute slots
+    const durationInSlots = Math.ceil(duration * 4);
+    const endIndex = Math.min(startIndex + durationInSlots, timeSlots.length - 1);
     return timeSlots[endIndex];
   };
 
@@ -1732,11 +1787,11 @@ const BookingForm = ({ room, time, date, currentUser, onConfirm, onCancel }) => 
     title: '',
     organizer: currentUser ? currentUser.name : '',
     bookingType: 'hourly',
-    duration: 1,
+    duration: 0.5,
     startDate: date.toISOString().split('T')[0],
     endDate: date.toISOString().split('T')[0],
     startTime: initialStartTime,
-    endTime: calculateEndTime(initialStartTime, 1),
+    endTime: calculateEndTime(initialStartTime, 0.5),
     description: '',
     attendeeCount: 1,
     procurementOrders: []
@@ -1946,7 +2001,13 @@ const BookingForm = ({ room, time, date, currentUser, onConfirm, onCancel }) => 
                     className="modern-select"
                     id="duration"
                   >
+                    <option value={0.25}>⏱️ 15 minutes</option>
+                    <option value={0.33}>⏱️ 20 minutes</option>
+                    <option value={0.5}>⏱️ 30 minutes</option>
+                    <option value={0.75}>⏱️ 45 minutes</option>
                     <option value={1}>⏱️ 1 hour</option>
+                    <option value={1.25}>⏱️ 1 hour 15 minutes</option>
+                    <option value={1.5}>⏱️ 1 hour 30 minutes</option>
                     <option value={2}>⏱️ 2 hours</option>
                     <option value={3}>⏱️ 3 hours</option>
                     <option value={4}>⏱️ 4 hours</option>
@@ -3006,7 +3067,7 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
   const [formData, setFormData] = useState({
     title: booking.title || '',
     organizer: booking.organizer || (currentUser ? currentUser.name : ''),
-    duration: booking.duration || 1,
+    duration: booking.duration || 0.5,
     description: booking.description || '',
     date: booking.date || '',
     time: booking.time || '',
@@ -3015,10 +3076,24 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
     procurementOrders: booking.procurementOrders || []
   });
 
-  const timeSlots = [
-    '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-    '14:00', '15:00', '16:00', '17:00', '18:00'
-  ];
+  // Generate time slots with 15-minute intervals
+  const generateTimeSlots = () => {
+    const slots = [];
+    const startHour = 8; // 8 AM
+    const endHour = 18; // 6 PM
+
+    for (let hour = startHour; hour <= endHour; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      if (hour < endHour) {
+        slots.push(`${hour.toString().padStart(2, '0')}:15`);
+        slots.push(`${hour.toString().padStart(2, '0')}:30`);
+        slots.push(`${hour.toString().padStart(2, '0')}:45`);
+      }
+    }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -3119,7 +3194,13 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
               onChange={handleChange}
               className="form-select"
             >
+              <option value={0.25}>15 minutes</option>
+              <option value={0.33}>20 minutes</option>
+              <option value={0.5}>30 minutes</option>
+              <option value={0.75}>45 minutes</option>
               <option value={1}>1 hour</option>
+              <option value={1.25}>1 hour 15 minutes</option>
+              <option value={1.5}>1 hour 30 minutes</option>
               <option value={2}>2 hours</option>
               <option value={3}>3 hours</option>
               <option value={4}>4 hours</option>
