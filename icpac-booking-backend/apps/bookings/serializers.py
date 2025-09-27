@@ -17,19 +17,15 @@ class BookingSerializer(serializers.ModelSerializer):
     """
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
     room_name = serializers.CharField(source='room.name', read_only=True)
-    room = serializers.SerializerMethodField()  # Explicitly include room ID
+    room_id = serializers.IntegerField(source='room.id', read_only=True)  # Add explicit room_id field
     approval_status_display = serializers.CharField(source='get_approval_status_display', read_only=True)
     duration_hours = serializers.SerializerMethodField()
     can_modify = serializers.SerializerMethodField()
     
-    def get_room(self, obj):
-        """Get room ID"""
-        return obj.room.id if obj.room else None
-    
     class Meta:
         model = Booking
         fields = [
-            'id', 'room', 'room_name', 'user', 'user_name',
+            'id', 'room', 'room_id', 'room_name', 'user', 'user_name',
             'start_date', 'end_date', 'start_time', 'end_time',
             'purpose', 'expected_attendees', 'special_requirements',
             'approval_status', 'approval_status_display', 'approved_by',
@@ -136,12 +132,13 @@ class BookingListSerializer(serializers.ModelSerializer):
     """
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
     room_name = serializers.CharField(source='room.name', read_only=True)
+    room_id = serializers.IntegerField(source='room.id', read_only=True)  # Add room ID for frontend matching
     approval_status_display = serializers.CharField(source='get_approval_status_display', read_only=True)
     
     class Meta:
         model = Booking
         fields = [
-            'id', 'room_name', 'user_name', 'start_date', 'end_date',
+            'id', 'room_id', 'room_name', 'user_name', 'start_date', 'end_date',
             'start_time', 'end_time', 'purpose', 'expected_attendees',
             'approval_status', 'approval_status_display'
         ]

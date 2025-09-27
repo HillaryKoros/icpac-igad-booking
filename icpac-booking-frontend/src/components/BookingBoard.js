@@ -746,10 +746,18 @@ const BookingBoard = () => {
     console.log('First few bookings:', bookings.slice(0, 3));
 
     const matchingBooking = bookings.some(booking => {
-      // Handle both API format (booking.room) and old format (booking.roomId)
-      const bookingRoomId = booking.room || booking.roomId;
+      // Handle multiple room ID formats: booking.room, booking.room_id, booking.roomId
+      let bookingRoomId = booking.room || booking.room_id || booking.roomId;
+      
+      // Fallback: If no room ID found, try to map room_name to room ID
+      if (!bookingRoomId && booking.room_name && rooms.length > 0) {
+        const matchingRoom = rooms.find(room => room.name === booking.room_name);
+        if (matchingRoom) {
+          bookingRoomId = matchingRoom.id;
+          console.log(`🔧 MAPPED room_name "${booking.room_name}" to room_id ${bookingRoomId}`);
+        }
+      }
 
-      // Debug log each booking check
       console.log(`Checking booking ${booking.id}: room=${bookingRoomId}, targetRoom=${roomId}, date=${booking.start_date}, status=${booking.approval_status || booking.approvalStatus || 'pending'}`);
 
       if (bookingRoomId !== roomId) {
