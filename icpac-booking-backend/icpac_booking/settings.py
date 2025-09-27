@@ -56,6 +56,9 @@ CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
 
+# Frontend URL for admin "View site" link
+FRONTEND_URL = f"https://{os.environ.get('REPLIT_DOMAINS', 'localhost:5000')}"
+
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = True  # For development
 CORS_ALLOW_CREDENTIALS = True

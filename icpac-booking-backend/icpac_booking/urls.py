@@ -6,6 +6,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
+from django.shortcuts import redirect
 
 # Wagtail imports
 from wagtail.admin import urls as wagtailadmin_urls
@@ -24,6 +25,10 @@ def api_info(request):
         }
     })
 
+def redirect_to_frontend(request):
+    """Redirect to React frontend"""
+    return redirect(settings.FRONTEND_URL)
+
 urlpatterns = [
     # Django admin (renamed to avoid conflict with Wagtail)
     path('django-admin/', admin.site.urls),
@@ -32,6 +37,9 @@ urlpatterns = [
     path('cms/', include(wagtailadmin_urls)),
     path('documents/', include(wagtaildocs_urls)),
     
+    # Frontend redirect for admin "View site" link
+    path('', redirect_to_frontend, name='frontend_redirect'),
+    
     # API endpoints
     path('api/', api_info, name='api_info'),
     path('api/auth/', include('apps.authentication.urls')),
@@ -39,8 +47,8 @@ urlpatterns = [
     path('api/bookings/', include('apps.bookings.urls')),
     path('api/security/', include('apps.security.urls')),
     
-    # Wagtail pages (catch-all - must be last)
-    path('', include(wagtail_urls)),
+    # Wagtail pages (moved to specific path to avoid conflicts)
+    path('cms-pages/', include(wagtail_urls)),
 ]
 
 # Serve media files in development
