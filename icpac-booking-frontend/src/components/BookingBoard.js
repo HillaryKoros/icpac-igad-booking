@@ -60,7 +60,6 @@ const BookingBoard = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
   const [showUserLogin, setShowUserLogin] = useState(false);
   const [users, setUsers] = useState([]);
   const [showUserManagement, setShowUserManagement] = useState(false);
@@ -91,8 +90,8 @@ const BookingBoard = () => {
 
   const saveMeetingSpaceSelection = (spaceId) => {
     try {
-      if (currentUser) {
-        localStorage.setItem(`icpac_selected_space_${currentUser.username}`, spaceId);
+      if (user) {
+        localStorage.setItem(`icpac_selected_space_${user.username}`, spaceId);
       }
     } catch (error) {
       console.error('Error saving meeting space selection:', error);
@@ -101,8 +100,8 @@ const BookingBoard = () => {
 
   const loadMeetingSpaceSelection = () => {
     try {
-      if (currentUser) {
-        return localStorage.getItem(`icpac_selected_space_${currentUser.username}`);
+      if (user) {
+        return localStorage.getItem(`icpac_selected_space_${user.username}`);
       }
       return null;
     } catch (error) {
@@ -113,8 +112,8 @@ const BookingBoard = () => {
 
   const clearMeetingSpaceSelection = () => {
     try {
-      if (currentUser) {
-        localStorage.removeItem(`icpac_selected_space_${currentUser.username}`);
+      if (user) {
+        localStorage.removeItem(`icpac_selected_space_${user.username}`);
       }
     } catch (error) {
       console.error('Error clearing meeting space selection:', error);
@@ -207,30 +206,30 @@ const BookingBoard = () => {
 
 
   const canManageRoom = (roomId) => {
-    if (!currentUser) return false;
-    if (currentUser.role === 'super_admin') return true;
-    if (currentUser.role === 'room_admin') {
-      return currentUser.managedRooms && currentUser.managedRooms.includes(roomId);
+    if (!user) return false;
+    if (user.role === 'super_admin') return true;
+    if (user.role === 'room_admin') {
+      return user.managedRooms && user.managedRooms.includes(roomId);
     }
     return false;
   };
 
   const getVisibleRooms = () => {
     // If user has selected a specific meeting space, show only that space
-    if (selectedMeetingSpace && currentUser) {
+    if (selectedMeetingSpace && user) {
       return [selectedMeetingSpace];
     }
 
     // If not logged in, show all rooms for general viewing
-    if (!currentUser) return rooms;
+    if (!user) return rooms;
 
     // Super admin can see all rooms (but still filtered by meeting space selection)
-    if (currentUser.role === 'super_admin') return rooms;
+    if (user.role === 'super_admin') return rooms;
 
     // Room admin can only see their assigned rooms
-    if (currentUser.role === 'room_admin') {
+    if (user.role === 'room_admin') {
       return rooms.filter(room =>
-        currentUser.managedRooms && currentUser.managedRooms.includes(room.id)
+        user.managedRooms && user.managedRooms.includes(room.id)
       );
     }
 
@@ -316,13 +315,13 @@ const BookingBoard = () => {
   };
 
   const canManageBooking = (booking) => {
-    if (!currentUser) return false;
-    if (currentUser.role === 'super_admin') return true;
-    if (currentUser.role === 'room_admin') {
-      return currentUser.managedRooms && currentUser.managedRooms.includes(booking.roomId);
+    if (!user) return false;
+    if (user.role === 'super_admin') return true;
+    if (user.role === 'room_admin') {
+      return user.managedRooms && user.managedRooms.includes(booking.roomId);
     }
     // Users can manage their own bookings regardless of approval status
-    return booking.organizer === currentUser.email;
+    return booking.organizer === user.email;
   };
 
   const cancelBooking = async (bookingId) => {
@@ -336,12 +335,12 @@ const BookingBoard = () => {
         console.log('Booking cancelled successfully');
 
         // 📧 Send cancellation notification
-        if (currentUser && bookingToCancel && roomToCancel) {
+        if (user && bookingToCancel && roomToCancel) {
           const cancellationReason = prompt('Reason for cancellation (optional):') || 'No reason provided';
           await emailService.sendCancellationNotification(
             bookingToCancel,
             roomToCancel,
-            currentUser,
+            user,
             cancellationReason
           );
         }
@@ -391,21 +390,21 @@ const BookingBoard = () => {
 
   // Approval functions
   const canApproveBooking = (booking) => {
-    if (!currentUser) return false;
+    if (!user) return false;
 
     // Super admin can approve any booking
-    if (currentUser.role === 'super_admin') return true;
+    if (user.role === 'super_admin') return true;
 
     // Room admin can approve bookings for rooms they manage
-    if (currentUser.role === 'room_admin') {
-      return currentUser.managedRooms && currentUser.managedRooms.includes(booking.roomId);
+    if (user.role === 'room_admin') {
+      return user.managedRooms && user.managedRooms.includes(booking.roomId);
     }
 
     return false;
   };
 
   const approveBooking = async (bookingId) => {
-    console.log('approveBooking called with ID:', bookingId, 'Current user:', currentUser);
+    console.log('approveBooking called with ID:', bookingId, 'Current user:', user);
     if (window.confirm('Are you sure you want to approve this booking?')) {
       const bookingToApprove = bookings.find(booking => booking.id === bookingId);
       const selectedRoom = rooms.find(room => room.id === bookingToApprove.roomId);
@@ -417,7 +416,7 @@ const BookingBoard = () => {
       // 📧 Send approval notification to the user
       if (bookingUser && selectedRoom) {
         try {
-          await emailService.sendApprovalNotification(bookingToApprove, selectedRoom, bookingUser, currentUser.name);
+          await emailService.sendApprovalNotification(bookingToApprove, selectedRoom, bookingUser, user.name);
         } catch (error) {
           console.error('Error sending approval notification:', error);
         }
@@ -428,7 +427,7 @@ const BookingBoard = () => {
   };
 
   const rejectBooking = async (bookingId) => {
-    console.log('rejectBooking called with ID:', bookingId, 'Current user:', currentUser);
+    console.log('rejectBooking called with ID:', bookingId, 'Current user:', user);
     const reason = prompt('Please provide a reason for rejection (optional):');
     if (reason !== null) { // User didn't cancel the prompt
       const bookingToReject = bookings.find(booking => booking.id === bookingId);
@@ -441,7 +440,7 @@ const BookingBoard = () => {
       // 📧 Send rejection notification to the user
       if (bookingUser && selectedRoom) {
         try {
-          await emailService.sendRejectionNotification(bookingToReject, selectedRoom, bookingUser, currentUser.name, reason);
+          await emailService.sendRejectionNotification(bookingToReject, selectedRoom, bookingUser, user.name, reason);
         } catch (error) {
           console.error('Error sending rejection notification:', error);
         }
@@ -468,7 +467,6 @@ const BookingBoard = () => {
 
     // Authentication completely handled by AppContext/Django
     if (user) {
-      setCurrentUser(user);
       setIsAuthenticated(true);
       setShowLandingPage(false);
       
@@ -478,7 +476,6 @@ const BookingBoard = () => {
       }
     } else {
       // No user from Django - show landing page for login
-      setCurrentUser(null);
       setIsAuthenticated(false);
       setShowLandingPage(true);
     }
@@ -745,7 +742,7 @@ const BookingBoard = () => {
     // Debug logging
     console.log(`Checking if slot is booked: Room ${roomId}, Time ${time}, Date ${currentDate}`);
     console.log('Total bookings:', bookings.length);
-    console.log('Current user:', currentUser);
+    console.log('Current user:', user);
     console.log('First few bookings:', bookings.slice(0, 3));
 
     const matchingBooking = bookings.some(booking => {
@@ -763,8 +760,8 @@ const BookingBoard = () => {
       const bookingStatus = booking.approval_status || booking.approvalStatus || 'pending';
       console.log(`Booking ${booking.id}: approval_status="${booking.approval_status}", approvalStatus="${booking.approvalStatus}", final bookingStatus="${bookingStatus}"`);
 
-      // For simplicity: Regular users (including null currentUser) only see approved bookings as booked
-      if (!currentUser || (currentUser.role !== 'super_admin' && currentUser.role !== 'room_admin')) {
+      // For simplicity: Regular users (including null user) only see approved bookings as booked
+      if (!user || (user.role !== 'super_admin' && user.role !== 'room_admin')) {
         // Regular users only see approved bookings as booked slots
         if (bookingStatus !== 'approved') {
           console.log(`Regular user filter rejected: status="${bookingStatus}" (not approved)`);
@@ -854,7 +851,7 @@ const BookingBoard = () => {
       // Apply approval filter
       const bookingStatus = booking.approval_status || booking.approvalStatus || 'pending';
 
-      if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'room_admin')) {
+      if (user && (user.role === 'super_admin' || user.role === 'room_admin')) {
         // Admins can see bookings based on their selected filter
         if (approvalFilter !== 'all' && bookingStatus !== approvalFilter) {
           return false;
@@ -1084,7 +1081,7 @@ const BookingBoard = () => {
           <MeetingSpaceSelectionModal
             rooms={rooms}
             onSelect={handleMeetingSpaceSelection}
-            currentUser={currentUser}
+            user={user}
           />
         )}
 
@@ -1148,18 +1145,18 @@ const BookingBoard = () => {
             <h2 className="date-title">Select Date</h2>
 
             <div className="admin-controls">
-              {currentUser ? (
+              {user ? (
                 <div className="user-panel">
                   <span className="user-info">
-                    {currentUser.name}
-                    {currentUser.role !== 'super_admin' && (
-                      <span className={`role-badge role-${currentUser.role}`}>
-                        {currentUser.role === 'room_admin' ? 'Room Admin' :
-                          currentUser.role === 'procurement_officer' ? 'Procurement Officer' : 'User'}
+                    {user.name}
+                    {user.role !== 'super_admin' && (
+                      <span className={`role-badge role-${user.role}`}>
+                        {user.role === 'room_admin' ? 'Room Admin' :
+                          user.role === 'procurement_officer' ? 'Procurement Officer' : 'User'}
                       </span>
                     )}
                   </span>
-                  {currentUser.role === 'super_admin' && (
+                  {user.role === 'super_admin' && (
                     <>
                       <button
                         onClick={() => setShowUserManagement(true)}
@@ -1170,7 +1167,7 @@ const BookingBoard = () => {
                       </button>
                     </>
                   )}
-                  {currentUser.role === 'procurement_officer' && (
+                  {user.role === 'procurement_officer' && (
                     <button
                       onClick={() => setShowProcurementDashboard(true)}
                       className="procurement-dashboard-btn"
@@ -1276,7 +1273,7 @@ const BookingBoard = () => {
           </div>
 
           {/* Approval Filter for Admins */}
-          {currentUser && canApproveBooking({ roomId: 1 }) && (
+          {user && canApproveBooking({ roomId: 1 }) && (
             <div className="approval-filter-section">
               <label className="approval-filter-label">Filter by approval status:</label>
               <select
@@ -1334,7 +1331,7 @@ const BookingBoard = () => {
                     <div className="no-rooms-content">
                       <h3>No Rooms Available</h3>
                       <p>
-                        {currentUser ?
+                        {user ?
                           `You don't have access to any rooms. Please contact your administrator.` :
                           'Please log in to view available rooms.'
                         }
@@ -1385,7 +1382,7 @@ const BookingBoard = () => {
                         <div className="no-rooms-content">
                           <h3>No Rooms Available</h3>
                           <p>
-                            {currentUser ?
+                            {user ?
                               `You don't have access to any rooms. Please contact your administrator.` :
                               'Please log in to view available rooms.'
                             }
@@ -1451,7 +1448,7 @@ const BookingBoard = () => {
             room={selectedRoom}
             time={selectedTime}
             date={selectedDate}
-            currentUser={currentUser}
+            user={user}
             onConfirm={confirmBooking}
             onCancel={() => setShowBookingForm(false)}
           />
@@ -1464,7 +1461,7 @@ const BookingBoard = () => {
           <EditBookingForm
             booking={editingBooking}
             rooms={getFilteredRooms()}
-            currentUser={currentUser}
+            user={user}
             onUpdate={updateBooking}
             onCancel={() => {
               setShowEditForm(false);
@@ -1495,7 +1492,7 @@ const BookingBoard = () => {
 
         {showEmailSettings && (
           <EmailSettingsPanel
-            user={currentUser}
+            user={user}
             onSettingsUpdate={(settings) => {
               console.log('Email settings updated:', settings);
               // You can add additional logic here to handle settings changes
@@ -1672,7 +1669,7 @@ const ProcurementOrdersSection = ({ orders, attendeeCount, onOrdersChange }) => 
   );
 };
 
-const BookingForm = ({ room, time, date, currentUser, onConfirm, onCancel }) => {
+const BookingForm = ({ room, time, date, user, onConfirm, onCancel }) => {
   const timeSlots = [
     '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
     '14:00', '15:00', '16:00', '17:00', '18:00'
@@ -1720,7 +1717,7 @@ const BookingForm = ({ room, time, date, currentUser, onConfirm, onCancel }) => 
 
   const [formData, setFormData] = useState({
     title: '',
-    organizer: currentUser ? currentUser.name : '',
+    organizer: user ? user.name : '',
     bookingType: 'hourly',
     duration: 1,
     startDate: date.toISOString().split('T')[0],
@@ -3010,10 +3007,10 @@ const AdminLoginModal = ({ onLogin, onCancel }) => {
   );
 };
 
-const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) => {
+const EditBookingForm = ({ booking, rooms, user, onUpdate, onCancel }) => {
   const [formData, setFormData] = useState({
     title: booking.title || '',
-    organizer: booking.organizer || (currentUser ? currentUser.name : ''),
+    organizer: booking.organizer || (user ? user.name : ''),
     duration: booking.duration || 1,
     description: booking.description || '',
     date: booking.date || '',
@@ -4706,7 +4703,7 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
   );
 };
 
-const MeetingSpaceSelectionModal = ({ rooms, onSelect, currentUser }) => {
+const MeetingSpaceSelectionModal = ({ rooms, onSelect, user }) => {
   const [selectedRoomId, setSelectedRoomId] = useState('');
 
   const handleSubmit = (e) => {
@@ -4732,7 +4729,7 @@ const MeetingSpaceSelectionModal = ({ rooms, onSelect, currentUser }) => {
         <div className="modal-header">
           <h3 className="modal-title">Select Your Meeting Space</h3>
           <div className="modal-subtitle">
-            Welcome, {currentUser?.name}! Please choose a meeting space to continue.
+            Welcome, {user?.name}! Please choose a meeting space to continue.
           </div>
         </div>
         <form onSubmit={handleSubmit} className="meeting-space-form">
