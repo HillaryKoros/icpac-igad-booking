@@ -755,8 +755,13 @@ const BookingBoard = () => {
         if (matchingRoom) {
           bookingRoomId = matchingRoom.id;
           console.log(`🔧 MAPPED room_name "${booking.room_name}" to room_id ${bookingRoomId}`);
+        } else {
+          console.log(`❌ MAPPING FAILED: room_name "${booking.room_name}" not found in rooms:`, rooms.map(r => `${r.id}:${r.name}`));
         }
       }
+      
+      // Debug: Show what data we have
+      console.log(`🔍 DEBUG: bookingRoomId=${bookingRoomId}, targetRoom=${roomId}, room_name="${booking.room_name}", rooms.length=${rooms.length}`);
 
       console.log(`Checking booking ${booking.id}: room=${bookingRoomId}, targetRoom=${roomId}, date=${booking.start_date}, status=${booking.approval_status || booking.approvalStatus || 'pending'}`);
 
