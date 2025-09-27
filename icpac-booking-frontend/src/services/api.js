@@ -32,20 +32,37 @@ class APIService {
 
   // Authentication
   async login(email, password) {
+    console.log('🔍 DEBUG: Starting login process...');
     const response = await this.request('/auth/login/', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
 
+    console.log('🔍 DEBUG: Login response status:', response.status);
+    
     if (response.ok) {
       const data = await response.json();
+      console.log('🔍 DEBUG: Login response data:', data);
+      console.log('🔍 DEBUG: data.access:', data.access);
+      console.log('🔍 DEBUG: data.refresh:', data.refresh);
+      console.log('🔍 DEBUG: data.user:', data.user);
+      
       localStorage.setItem('access_token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
       localStorage.setItem('user', JSON.stringify(data.user));
+      console.log('🔍 DEBUG: Saved to localStorage successfully');
+      
+      // Verify it was saved
+      const savedToken = localStorage.getItem('access_token');
+      const savedUser = localStorage.getItem('user');
+      console.log('🔍 DEBUG: Verification - token saved:', !!savedToken);
+      console.log('🔍 DEBUG: Verification - user saved:', !!savedUser);
+      
       this.token = data.access;
       return data;
     }
 
+    console.log('🔍 DEBUG: Login failed, response not ok');
     throw new Error('Login failed');
   }
 

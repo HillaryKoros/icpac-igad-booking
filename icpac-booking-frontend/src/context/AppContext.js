@@ -143,11 +143,23 @@ export const AppProvider = ({ children }) => {
     fetchRooms();
     
     // Check if user is already logged in via JWT token
+    console.log('🔍 DEBUG: Checking for existing user in localStorage...');
+    const accessToken = localStorage.getItem('access_token');
+    const userString = localStorage.getItem('user');
+    console.log('🔍 DEBUG: Access token found:', !!accessToken);
+    console.log('🔍 DEBUG: User string found:', !!userString);
+    console.log('🔍 DEBUG: User string value:', userString);
+    
     const currentUser = apiService.getCurrentUser();
+    console.log('🔍 DEBUG: getCurrentUser() result:', currentUser);
+    
     if (currentUser) {
+      console.log('🔍 DEBUG: Setting user in context and fetching bookings...');
       setUser(currentUser);
       // Fetch user-specific data
       fetchBookings();
+    } else {
+      console.log('🔍 DEBUG: No user found, not fetching bookings');
     }
     // Note: No fallback data - all data must come from Django API
   }, []);
