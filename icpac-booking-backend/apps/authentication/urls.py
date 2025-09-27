@@ -14,6 +14,10 @@ urlpatterns = [
     path('logout/', views.LogoutView.as_view(), name='logout'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
+    # Email verification endpoints
+    path('verify-email/', views.VerifyEmailOTPView.as_view(), name='verify_email'),
+    path('resend-otp/', views.ResendOTPView.as_view(), name='resend_otp'),
+    
     # User profile endpoints
     path('profile/', views.CurrentUserView.as_view(), name='current_user'),
     path('password/change/', views.PasswordChangeView.as_view(), name='password_change'),

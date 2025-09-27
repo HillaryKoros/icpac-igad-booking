@@ -3,6 +3,9 @@ Custom User model for ICPAC Booking System
 """
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
+import random
+import string
 
 
 class User(AbstractUser):
@@ -25,6 +28,12 @@ class User(AbstractUser):
         choices=ROLE_CHOICES, 
         default='user',
         help_text='User role determines access permissions'
+    )
+    
+    # Email verification
+    is_email_verified = models.BooleanField(
+        default=False,
+        help_text='Whether user has verified their email address'
     )
     
     phone_number = models.CharField(
@@ -102,4 +111,72 @@ class User(AbstractUser):
             return True
         if self.is_room_admin:
             return self.managed_rooms.filter(id=booking.room.id).exists()
+        return False
+
+
+class EmailVerificationOTP(models.Model):
+    """
+    Model to store email verification OTP codes
+    """
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='email_verification_otps'
+    )
+    
+    otp_code = models.CharField(
+        max_length=6,
+        help_text='6-digit OTP code for email verification'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    
+    class Meta:
+        db_table = 'auth_email_verification_otp'
+        verbose_name = 'Email Verification OTP'
+        verbose_name_plural = 'Email Verification OTPs'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"OTP for {self.user.email} - {self.otp_code}"
+    
+    @classmethod
+    def generate_otp_for_user(cls, user):
+        """Generate a new OTP code for user email verification"""
+        # Generate 6-digit OTP
+        otp_code = ''.join(random.choices(string.digits, k=6))
+        
+        # Set expiration time (10 minutes from now)
+        expires_at = timezone.now() + timezone.timedelta(minutes=10)
+        
+        # Create OTP record
+        otp = cls.objects.create(
+            user=user,
+            otp_code=otp_code,
+            expires_at=expires_at
+        )
+        
+        return otp
+    
+    def is_valid(self):
+        """Check if OTP is still valid (not expired and not used)"""
+        return not self.is_used and self.expires_at > timezone.now()
+    
+    def verify(self, input_code):
+        """Verify the OTP code"""
+        if not self.is_valid():
+            return False
+        
+        if self.otp_code == input_code:
+            self.is_used = True
+            self.save()
+            
+            # Mark user email as verified
+            self.user.is_email_verified = True
+            self.user.save()
+            
+            return True
+        
         return False

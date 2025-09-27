@@ -19,6 +19,8 @@ from .serializers import (
     PasswordChangeSerializer,
     AdminUserSerializer
 )
+from .models import EmailVerificationOTP
+from .email_utils import send_otp_email
 
 User = get_user_model()
 
@@ -39,6 +41,15 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
         
+        # Check if user's email is verified
+        user = serializer.user
+        if not user.is_email_verified:
+            return Response({
+                'error': 'Please verify your email address before logging in.',
+                'requires_verification': True,
+                'email': user.email
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
@@ -55,17 +66,37 @@ class UserRegistrationView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
-        # Generate JWT tokens for the new user
-        refresh = RefreshToken.for_user(user)
-        
-        return Response({
-            'message': 'User registered successfully.',
-            'user': UserSerializer(user).data,
-            'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }
-        }, status=status.HTTP_201_CREATED)
+        # Generate and send OTP for email verification
+        try:
+            otp = EmailVerificationOTP.generate_otp_for_user(user)
+            email_sent = send_otp_email(
+                recipient_email=user.email,
+                otp_code=otp.otp_code,
+                user_name=user.get_full_name()
+            )
+            
+            if email_sent:
+                return Response({
+                    'message': 'Registration successful! Please check your email for the verification code.',
+                    'email': user.email,
+                    'requires_verification': True
+                }, status=status.HTTP_201_CREATED)
+            else:
+                # If email fails, still allow verification later
+                return Response({
+                    'message': 'Registration successful! Verification email will be sent shortly.',
+                    'email': user.email,
+                    'requires_verification': True
+                }, status=status.HTTP_201_CREATED)
+                
+        except Exception as e:
+            # Log error but don't fail registration
+            print(f"Error sending OTP email: {str(e)}")
+            return Response({
+                'message': 'Registration successful! Please contact support for email verification.',
+                'email': user.email,
+                'requires_verification': True
+            }, status=status.HTTP_201_CREATED)
 
 
 class CurrentUserView(generics.RetrieveUpdateAPIView):
@@ -120,6 +151,105 @@ class LogoutView(APIView):
             return Response({
                 'error': 'Invalid token.'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyEmailOTPView(APIView):
+    """
+    Verify email using OTP code
+    """
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        otp_code = request.data.get('otp_code')
+        
+        if not email or not otp_code:
+            return Response({
+                'error': 'Email and OTP code are required.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Get the latest valid OTP for this user
+            otp = EmailVerificationOTP.objects.filter(
+                user=user,
+                is_used=False
+            ).order_by('-created_at').first()
+            
+            if not otp:
+                return Response({
+                    'error': 'No valid OTP found. Please request a new verification code.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Verify the OTP
+            if otp.verify(otp_code):
+                # Generate JWT tokens for the verified user
+                refresh = RefreshToken.for_user(user)
+                
+                return Response({
+                    'message': 'Email verified successfully! You are now logged in.',
+                    'user': UserSerializer(user).data,
+                    'tokens': {
+                        'refresh': str(refresh),
+                        'access': str(refresh.access_token),
+                    }
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'error': 'Invalid or expired OTP code.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except User.DoesNotExist:
+            return Response({
+                'error': 'User with this email does not exist.'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class ResendOTPView(APIView):
+    """
+    Resend OTP for email verification
+    """
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        
+        if not email:
+            return Response({
+                'error': 'Email is required.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Check if user is already verified
+            if user.is_email_verified:
+                return Response({
+                    'error': 'Email is already verified.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Generate new OTP
+            otp = EmailVerificationOTP.generate_otp_for_user(user)
+            email_sent = send_otp_email(
+                recipient_email=user.email,
+                otp_code=otp.otp_code,
+                user_name=user.get_full_name()
+            )
+            
+            if email_sent:
+                return Response({
+                    'message': 'Verification code sent successfully to your email.'
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'error': 'Failed to send verification email. Please try again later.'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+        except User.DoesNotExist:
+            return Response({
+                'error': 'User with this email does not exist.'
+            }, status=status.HTTP_404_NOT_FOUND)
 
 
 class UserListView(generics.ListCreateAPIView):
