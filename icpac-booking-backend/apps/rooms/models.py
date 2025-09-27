@@ -97,7 +97,7 @@ class Room(models.Model):
         db_table = 'rooms'
         verbose_name = 'Room'
         verbose_name_plural = 'Rooms'
-        ordering = ['name']
+        ordering = ['id']  # Order by primary key to maintain consistent frontend mapping
         
     def __str__(self):
         return f"{self.name} (Capacity: {self.capacity})"

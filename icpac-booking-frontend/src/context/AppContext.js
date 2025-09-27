@@ -65,7 +65,14 @@ export const AppProvider = ({ children }) => {
       const finalRooms = roomsData.results || roomsData;
       console.log('🚀 FETCHING ROOMS: Final rooms to set:', finalRooms);
       console.log('🚀 FETCHING ROOMS: Room count:', finalRooms.length);
+      console.log('🚀 FETCHING ROOMS: Room IDs loaded:', finalRooms.map(r => `${r.id}:${r.name}`));
+      
+      // Extra debug: Check if Room 16 is present
+      const room16 = finalRooms.find(r => r.id === 16);
+      console.log('🚀 FETCHING ROOMS: Room 16 found?', room16 ? `Yes: ${room16.name}` : 'NO - MISSING!');
+      
       setRooms(finalRooms);
+      console.log('🚀 FETCHING ROOMS: Rooms set in state successfully');
     } catch (error) {
       setError(error.message);
       console.error('🚀 FETCHING ROOMS: Failed to fetch rooms from Django API:', error);
