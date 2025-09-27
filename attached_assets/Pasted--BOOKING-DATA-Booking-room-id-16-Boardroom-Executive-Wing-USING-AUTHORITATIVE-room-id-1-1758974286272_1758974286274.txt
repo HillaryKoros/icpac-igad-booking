@@ -1,0 +1,43 @@
+🔍 BOOKING DATA:
+  Booking room_id=16: "Boardroom - Executive Wing"
+🔧 USING AUTHORITATIVE room_id=12 from booking data
+🔍 DEBUG: bookingRoomId=12, targetRoom=10, room_name="Computer Lab 1 - Underground", rooms.length=11
+Checking booking 3: room=12, targetRoom=10, date=2025-09-27, status=approved
+🔧 USING AUTHORITATIVE room_id=16 from booking data
+🔍 DEBUG: bookingRoomId=16, targetRoom=10, room_name="Boardroom - Executive Wing", rooms.length=11
+Checking booking 2: room=16, targetRoom=10, date=2025-09-27, status=approved
+Slot booked result: false
+Checking if slot is booked: Room 17, Time 15:00, Date 2025-09-27
+Total bookings: 2
+Current user: 
+Object {id: 1, username: "admin@icpac.net", email: "admin@icpac.net", first_name: "", last_name: "", …}
+First few bookings: 
+(2) [{…}, {…}]
+🔍 FRONTEND ROOMS DEBUG:
+  Room 16: "Boardroom - Executive Wing"
+  Room 9: "Boardroom - First Floor"
+  Room 10: "SmallBoardroom - 1st Floor"
+🔍 BOOKING DATA:
+  Booking room_id=16: "Boardroom - Executive Wing"
+🔧 USING AUTHORITATIVE room_id=12 from booking data
+🔍 DEBUG: bookingRoomId=12, targetRoom=17, room_name="Computer Lab 1 - Underground", rooms.length=11
+Checking booking 3: room=12, targetRoom=17, date=2025-09-27, status=approved
+🔧 USING AUTHORITATIVE room_id=16 from booking data
+🔍 DEBUG: bookingRoomId=16, targetRoom=17, room_name="Boardroom - Executive Wing", rooms.length=11
+Checking booking 2: room=16, targetRoom=17, date=2025-09-27, status=approved
+Slot booked result: false
+Checking if slot is booked: Room 17, Time 16:00, Date 2025-09-27
+Total bookings: 2
+Current user: 
+Object {id: 1, username: "admin@icpac.net", email: "admin@icpac.net", first_name: "", last_name: "", …}
+First few bookings: 
+(2) [{…}, {…}]
+🔍 FRONTEND ROOMS DEBUG:
+  Room 16: "Boardroom - Executive Wing"
+  Room 9: "Boardroom - First Floor"
+  Room 10: "SmallBoardroom - 1st Floor"
+🔍 BOOKING DATA:
+  Booking room_id=16: "Boardroom - Executive Wing"
+🔧 USING AUTHORITATIVE room_id=12 from booking data
+🔍 DEBUG: bookingRoomId=12, targetRoom=17, room_name="Computer Lab 1 - Underground", rooms.length=11
+Checking booking 3: room=12, targetRoom=17, date=2025-09-27, status=approved

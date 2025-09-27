@@ -84,6 +84,8 @@ const BookingBoard = () => {
     }
     return window.innerWidth <= 768;
   });
+  
+  // SIMPLE SOLUTION: Fix room ID matching to work reliably for user testing
 
   // localStorage functions
   // Removed localStorage functions - all data comes from Django API
@@ -744,10 +746,31 @@ const BookingBoard = () => {
     console.log('Total bookings:', bookings.length);
     console.log('Current user:', user);
     console.log('First few bookings:', bookings.slice(0, 3));
+    
+    // CRITICAL DEBUG: Show frontend room array vs booking room_id
+    console.log('🔍 FRONTEND ROOMS DEBUG:');
+    rooms.forEach(room => {
+      if (room.name.includes('Boardroom')) {
+        console.log(`  Room ${room.id}: "${room.name}"`);
+      }
+    });
+    console.log('🔍 BOOKING DATA:');
+    bookings.forEach(booking => {
+      if (booking.room_name && booking.room_name.includes('Boardroom')) {
+        console.log(`  Booking room_id=${booking.room_id}: "${booking.room_name}"`);
+      }
+    });
 
     const matchingBooking = bookings.some(booking => {
       // Handle multiple room ID formats: booking.room, booking.room_id, booking.roomId
       let bookingRoomId = booking.room || booking.room_id || booking.roomId;
+      
+      // CRITICAL FIX: Always use booking.room_id as the authoritative source
+      // The frontend room display order may be wrong, but booking.room_id is correct from backend
+      if (booking.room_id) {
+        bookingRoomId = booking.room_id;
+        console.log(`🔧 USING AUTHORITATIVE room_id=${bookingRoomId} from booking data`);
+      }
       
       // Fallback: If no room ID found, try to map room_name to room ID
       if (!bookingRoomId && booking.room_name && rooms.length > 0) {
@@ -765,8 +788,16 @@ const BookingBoard = () => {
 
       console.log(`Checking booking ${booking.id}: room=${bookingRoomId}, targetRoom=${roomId}, date=${booking.start_date}, status=${booking.approval_status || booking.approvalStatus || 'pending'}`);
 
+      // CRITICAL FIX: Use room name as fallback matching when IDs don't align
       if (bookingRoomId !== roomId) {
-        return false;
+        // Check if room names match as fallback
+        const currentRoom = rooms.find(r => r.id === roomId);
+        if (currentRoom && currentRoom.name === booking.room_name) {
+          console.log(`✅ FALLBACK MATCH: Room name "${booking.room_name}" matches despite ID mismatch (${bookingRoomId} vs ${roomId})`);
+          // Continue with the booking check
+        } else {
+          return false;
+        }
       }
 
       // Apply approval filter
