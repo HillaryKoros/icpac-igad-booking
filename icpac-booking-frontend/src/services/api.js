@@ -142,11 +142,19 @@ class APIService {
           allRooms = allRooms.concat(data.results);
           // Get next page URL (relative path only)
           if (data.next) {
-            // Extract just the path and query from the full URL
-            const url = new URL(data.next);
-            nextUrl = url.pathname + url.search;
-            // Remove /api prefix if it exists since our request() method adds it
-            nextUrl = nextUrl.replace('/api', '');
+            try {
+              // Extract just the path and query from the full URL safely
+              const url = new URL(data.next, window.location.origin);
+              nextUrl = url.pathname + url.search;
+              // Remove /api prefix if it exists since our request() method adds it
+              if (nextUrl.startsWith('/api')) {
+                nextUrl = nextUrl.substring(4);
+              }
+              console.log(`🔄 PAGINATION: Next page URL: ${data.next} → ${nextUrl}`);
+            } catch (error) {
+              console.error('🔄 PAGINATION: Failed to parse next URL:', data.next, error);
+              nextUrl = null;
+            }
           } else {
             nextUrl = null;
           }
