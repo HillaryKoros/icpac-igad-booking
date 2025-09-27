@@ -130,12 +130,16 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS Settings
+# CORS Settings - Updated for Replit environment
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://localhost:9020",
-    "http://127.0.0.1:9020",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+    "https://3b70c48f-f47e-4551-a8d9-cda080c4be38-00-1w6cll60hfasg.janeway.replit.dev",
 ]
+
+# Allow all origins for development in Replit
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 
