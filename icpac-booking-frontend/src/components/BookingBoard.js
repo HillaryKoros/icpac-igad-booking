@@ -488,10 +488,46 @@ const BookingBoard = () => {
 
   // Data initialization is now handled by the API context
 
-  const timeSlots = [
+  // Dynamic time slots that automatically remove past times for today
+  const getAllTimeSlots = () => [
     '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
     '14:00', '15:00', '16:00', '17:00', '18:00'
   ];
+
+  const getAvailableTimeSlots = (date) => {
+    const allSlots = getAllTimeSlots();
+    const today = new Date();
+    const selectedDateObj = new Date(date);
+    
+    // If it's not today, return all slots
+    if (selectedDateObj.toDateString() !== today.toDateString()) {
+      return allSlots;
+    }
+    
+    // For today, filter out past time slots
+    return allSlots.filter(time => {
+      const [hours, minutes] = time.split(':').map(Number);
+      const slotDateTime = new Date(today);
+      slotDateTime.setHours(hours, minutes, 0, 0);
+      return slotDateTime > today;
+    });
+  };
+
+  const [timeSlots, setTimeSlots] = useState(getAvailableTimeSlots(selectedDate));
+
+  // Update time slots when date changes or every minute to remove past slots
+  useEffect(() => {
+    setTimeSlots(getAvailableTimeSlots(selectedDate));
+  }, [selectedDate]);
+
+  useEffect(() => {
+    // Update every minute to automatically remove past time slots
+    const interval = setInterval(() => {
+      setTimeSlots(getAvailableTimeSlots(selectedDate));
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [selectedDate]);
 
   // Apply dark mode on initial load
   useEffect(() => {
@@ -583,7 +619,6 @@ const BookingBoard = () => {
 
   const renderSlotContent = (room, time) => {
     const isWeekendDay = isWeekend(selectedDate);
-    const isPast = isTimeSlotInPast(selectedDate, time);
 
     if (isWeekendDay) {
       return (
@@ -595,9 +630,7 @@ const BookingBoard = () => {
       );
     }
 
-    if (isPast) {
-      return null;
-    }
+    // Past time slots are now filtered out at the source, so no need to check here
 
     const isBooked = isSlotBooked(room.id, time);
     const booking = isBooked ? getBookingDetails(room.id, time) : null;
