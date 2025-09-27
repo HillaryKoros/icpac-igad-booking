@@ -4,7 +4,7 @@ Booking serializers for ICPAC Booking System
 from rest_framework import serializers
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .models import Booking, ProcurementOrder
+from .models import Booking
 from apps.rooms.models import Room
 from django.contrib.auth import get_user_model
 
@@ -248,61 +248,6 @@ class BookingApprovalSerializer(serializers.Serializer):
         return attrs
 
 
-class ProcurementOrderSerializer(serializers.ModelSerializer):
-    """
-    Serializer for procurement orders
-    """
-    booking_details = BookingListSerializer(source='booking', read_only=True)
-    created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
-    class Meta:
-        model = ProcurementOrder
-        fields = [
-            'id', 'booking', 'booking_details', 'order_type', 'items_description',
-            'estimated_cost', 'priority', 'status', 'status_display',
-            'notes', 'created_by', 'created_by_name', 'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
-    
-    def validate_estimated_cost(self, value):
-        """Validate estimated cost"""
-        if value <= 0:
-            raise serializers.ValidationError('Estimated cost must be greater than zero.')
-        return value
-
-
-class ProcurementOrderCreateSerializer(serializers.ModelSerializer):
-    """
-    Serializer for creating procurement orders
-    """
-    class Meta:
-        model = ProcurementOrder
-        fields = [
-            'booking', 'order_type', 'items_description',
-            'estimated_cost', 'priority', 'notes'
-        ]
-    
-    def validate_booking(self, value):
-        """Validate booking"""
-        request = self.context.get('request')
-        
-        # Check if booking exists and is approved
-        if value.approval_status != 'approved':
-            raise serializers.ValidationError('Can only create orders for approved bookings.')
-        
-        # Check if user has permission to create orders for this booking
-        if (request.user != value.user and 
-            request.user.role not in ['super_admin', 'room_admin', 'procurement_officer']):
-            raise serializers.ValidationError('You can only create orders for your own bookings.')
-        
-        return value
-    
-    def create(self, validated_data):
-        """Create order with current user"""
-        request = self.context.get('request')
-        validated_data['created_by'] = request.user
-        return super().create(validated_data)
 
 
 class BookingStatsSerializer(serializers.Serializer):

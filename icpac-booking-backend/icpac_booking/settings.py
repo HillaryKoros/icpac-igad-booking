@@ -98,6 +98,7 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_totp',
     'django_otp.plugins.otp_static',
     'phonenumber_field',
+    'channels',
 
     # Local apps
     'apps.authentication',
@@ -140,6 +141,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'icpac_booking.wsgi.application'
+ASGI_APPLICATION = 'icpac_booking.asgi.application'
 
 # Database - PostgreSQL configuration for both local and production
 DATABASES = {
@@ -302,3 +304,13 @@ LOG_USER_ACTIONS = True
 LOG_API_REQUESTS = True
 SESSION_COOKIE_AGE = 28800  # 8 hours
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Channels configuration for WebSocket support
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        },
+    },
+}

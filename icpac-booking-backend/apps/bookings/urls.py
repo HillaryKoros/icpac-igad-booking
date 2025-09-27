@@ -22,7 +22,4 @@ urlpatterns = [
     path('dashboard/stats/', views.booking_dashboard_stats, name='booking_dashboard_stats'),
     path('calendar/events/', views.calendar_events, name='calendar_events'),
     
-    # Procurement order endpoints
-    path('procurement-orders/', views.ProcurementOrderListView.as_view(), name='procurement_order_list'),
-    path('procurement-orders/<int:pk>/', views.ProcurementOrderDetailView.as_view(), name='procurement_order_detail'),
 ]

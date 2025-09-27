@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "bash", "python-3.11", "python3"]
+modules = ["nodejs-20", "web", "bash", "python-3.11", "python3", "postgresql-16"]
 [agent]
 expertMode = true
 integrations = ["python_database:1.0.0", "replitmail:1.0.0"]
@@ -58,3 +58,7 @@ externalPort = 8000
 [[ports]]
 localPort = 38885
 externalPort = 3000
+
+[[ports]]
+localPort = 44013
+externalPort = 3001

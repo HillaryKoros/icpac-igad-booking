@@ -28,16 +28,7 @@ const LoginForm = ({ onSuccess }) => {
     }
   };
 
-  const handleDemoLogin = async () => {
-    try {
-      await login('admin@icpac.net', 'admin123');
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error) {
-      console.error('Demo login failed:', error);
-    }
-  };
+  // Removed demo login - all authentication must use real Django accounts
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -134,14 +125,7 @@ const LoginForm = ({ onSuccess }) => {
               Sign in
             </button>
             
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-100"
-            >
-              Demo Login (admin@icpac.net)
-            </button>
+            {/* Demo login removed - use real Django accounts only */}
           </div>
         </form>
         

@@ -1,7 +1,5 @@
-// Use relative URL for API in production, localhost for development
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '/api' 
-  : 'http://localhost:8000/api';
+// Use proxy or relative URL for API in Replit environment
+const API_BASE_URL = '/api';
 
 class APIService {
   constructor() {

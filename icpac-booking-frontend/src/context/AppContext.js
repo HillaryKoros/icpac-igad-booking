@@ -63,8 +63,7 @@ export const AppProvider = ({ children }) => {
       setRooms(roomsData.results || roomsData);
     } catch (error) {
       setError(error.message);
-      // Fallback to localStorage if API fails
-      loadFallbackData();
+      console.error('Failed to fetch rooms from Django API:', error);
     } finally {
       setLoading(false);
     }
@@ -129,57 +128,23 @@ export const AppProvider = ({ children }) => {
   };
 
   // Fallback data for when API is not available
-  const loadFallbackData = () => {
-    const fallbackRooms = [
-      { id: 1, name: 'Conference Room - Ground Floor', capacity: 200, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing', 'Audio System'] },
-      { id: 2, name: 'Boardroom - First Floor', capacity: 25, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing'] },
-      { id: 3, name: 'SmallBoardroom - 1st Floor', capacity: 12, category: 'conference', amenities: ['TV Screen', 'Whiteboard'] },
-      { id: 4, name: 'Situation Room', capacity: 8, category: 'special', amenities: ['Screen'] },
-      { id: 5, name: 'Computer Lab 1 - Underground', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard'] },
-      { id: 6, name: 'Computer Lab 2 - First Floor', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard'] },
-    ];
-    setRooms(fallbackRooms);
-  };
+  // Removed fallback data - all data must come from Django API
 
-  // localStorage functions (kept for fallback)
-  const saveBookingsToStorage = (bookingsData) => {
-    try {
-      localStorage.setItem('icpac_bookings', JSON.stringify(bookingsData));
-    } catch (error) {
-      console.error('Error saving bookings to localStorage:', error);
-    }
-  };
-
-  const loadBookingsFromStorage = () => {
-    try {
-      const saved = localStorage.getItem('icpac_bookings');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (error) {
-      console.error('Error loading bookings from localStorage:', error);
-    }
-    return null;
-  };
+  // Removed localStorage functions - all data comes from Django API
 
   // Initialize data
   useEffect(() => {
-    // Check if user is already logged in
+    // Always fetch rooms data - it's public information
+    fetchRooms();
+    
+    // Check if user is already logged in via JWT token
     const currentUser = apiService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
-      // Fetch real data
-      fetchRooms();
+      // Fetch user-specific data
       fetchBookings();
-    } else {
-      // Load fallback data if not authenticated
-      loadFallbackData();
-      // Load bookings from localStorage for demo
-      const savedBookings = loadBookingsFromStorage();
-      if (savedBookings && savedBookings.length > 0) {
-        setBookings(savedBookings);
-      }
     }
+    // Note: No fallback data - all data must come from Django API
   }, []);
 
   const value = {
@@ -206,9 +171,7 @@ export const AppProvider = ({ children }) => {
     updateBooking,
     cancelBooking,
     
-    // Fallback functions (for backward compatibility)
-    saveBookingsToStorage,
-    loadBookingsFromStorage
+    // All data comes from Django API
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

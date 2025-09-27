@@ -4,6 +4,7 @@ import emailService from '../services/emailService';
 import EmailSettingsPanel from './EmailSettingsPanel';
 import './BookingBoard.css';
 import '../services/emailNotifications.css';
+import { useBookingUpdates, useRoomAvailability } from '../hooks/useWebSocket';
 
 // Utility function for amenity icons
 const getAmenityIcon = (amenity) => {
@@ -27,11 +28,26 @@ const BookingBoard = () => {
     rooms: contextRooms,
     bookings: contextBookings,
     user,
+    logout,
     createBooking: apiCreateBooking,
     updateBooking: apiUpdateBooking,
     cancelBooking: apiCancelBooking,
     fetchBookings
   } = useApp();
+
+  // WebSocket real-time updates
+  const { bookingUpdates, isConnected: wsConnected } = useBookingUpdates(
+    user?.token // Pass user token for authentication
+  );
+
+  // Handle real-time booking updates
+  useEffect(() => {
+    if (bookingUpdates.length > 0) {
+      console.log('Received real-time booking updates:', bookingUpdates);
+      // Refresh bookings when we receive updates
+      fetchBookings();
+    }
+  }, [bookingUpdates, fetchBookings]);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState('');
@@ -71,13 +87,7 @@ const BookingBoard = () => {
   });
 
   // localStorage functions
-  const saveBookingsToStorage = (bookingsData) => {
-    try {
-      localStorage.setItem('icpac_bookings', JSON.stringify(bookingsData));
-    } catch (error) {
-      console.error('Error saving bookings to localStorage:', error);
-    }
-  };
+  // Removed localStorage functions - all data comes from Django API
 
   const saveMeetingSpaceSelection = (spaceId) => {
     try {
@@ -123,25 +133,7 @@ const BookingBoard = () => {
     return null;
   };
 
-  const saveUsersToStorage = (usersData) => {
-    try {
-      localStorage.setItem('icpac_users', JSON.stringify(usersData));
-    } catch (error) {
-      console.error('Error saving users to localStorage:', error);
-    }
-  };
-
-  const loadUsersFromStorage = () => {
-    try {
-      const saved = localStorage.getItem('icpac_users');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (error) {
-      console.error('Error loading users from localStorage:', error);
-    }
-    return null;
-  };
+  // Removed localStorage user functions - all user data comes from Django API
 
 
   const shouldShowBookingInterface = (date) => {
@@ -170,70 +162,7 @@ const BookingBoard = () => {
     return currentHour < 18;
   };
 
-  const handleAdminLogin = (password) => {
-    if (password === 'admin123') { // Simple password check
-      setIsAdmin(true);
-      setShowAdminLogin(false);
-      localStorage.setItem('icpac_admin', 'true');
-    } else {
-      alert('Invalid admin password');
-    }
-  };
-
-  const handleAdminLogout = () => {
-    setIsAdmin(false);
-    localStorage.removeItem('icpac_admin');
-  };
-
-  const handleUserLogin = (email, password) => {
-    const user = users.find(u => u.email === email && u.password === password);
-    if (user) {
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-      setShowLandingPage(false);
-      setShowUserLogin(false);
-      localStorage.setItem('icpac_current_user', JSON.stringify(user));
-
-      // Delay meeting space check to allow rooms to be initialized
-      setTimeout(() => {
-        const savedSpace = loadMeetingSpaceSelection();
-        if (savedSpace && rooms.length > 0) {
-          const space = rooms.find(room => room.id.toString() === savedSpace);
-          if (space) {
-            setSelectedMeetingSpace(space);
-            setSelectedRoomId(savedSpace);
-          } else {
-            // If saved space no longer exists, show modal
-            setShowMeetingSpaceModal(true);
-          }
-        } else {
-          // Show meeting space selection modal for new/returning users
-          setShowMeetingSpaceModal(true);
-        }
-      }, 100);
-
-      // Set admin status based on user role
-      if (user.role === 'super_admin' || user.role === 'room_admin') {
-        setIsAdmin(true);
-        localStorage.setItem('icpac_admin', 'true');
-      }
-    } else {
-      alert('Invalid email or password');
-    }
-  };
-
-  const handleUserLogout = () => {
-    clearMeetingSpaceSelection();
-    setCurrentUser(null);
-    setSelectedMeetingSpace(null);
-    setSelectedRoomId('');
-    setIsAdmin(false);
-    setIsAuthenticated(false);
-    setShowLandingPage(true);
-    setShowMeetingSpaceModal(false);
-    localStorage.removeItem('icpac_current_user');
-    localStorage.removeItem('icpac_admin');
-  };
+  // Removed hardcoded authentication - all authentication handled by AppContext/Django
 
   const handleMeetingSpaceSelection = (roomId) => {
     const selectedRoom = rooms.find(room => room.id.toString() === roomId.toString());
@@ -245,38 +174,7 @@ const BookingBoard = () => {
     }
   };
 
-  const handleUserSignup = (userData) => {
-    // Check if email already exists
-    const emailExists = users.some(user => user.email && userData.email && user.email.toLowerCase() === userData.email.toLowerCase());
-    if (emailExists) {
-      alert('Error: A user with this email address already exists. Please use a different email.');
-      return;
-    }
-
-    // Create new user
-    const newUser = {
-      id: Date.now(),
-      name: userData.name,
-      email: userData.email,
-      password: userData.password,
-      role: 'user',
-      managedRooms: [],
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    saveUsersToStorage(updatedUsers);
-
-    // Auto-login the new user
-    setCurrentUser(newUser);
-    setIsAuthenticated(true);
-    setShowLandingPage(false);
-    setShowSignup(false);
-    localStorage.setItem('icpac_current_user', JSON.stringify(newUser));
-
-    alert('Account created successfully! You are now logged in.');
-  };
+  // Removed client-side signup - all user registration handled by Django API through AppContext
 
   const sendProcurementNotification = (booking) => {
     if (!booking.procurementOrders || booking.procurementOrders.length === 0) {
@@ -297,9 +195,7 @@ const BookingBoard = () => {
     };
 
     // Save to localStorage (in a real app, this would be sent to a server)
-    const existingNotifications = JSON.parse(localStorage.getItem('icpac_procurement_notifications') || '[]');
-    existingNotifications.push(notificationData);
-    localStorage.setItem('icpac_procurement_notifications', JSON.stringify(existingNotifications));
+    // Procurement notifications now handled by Django API - no localStorage
 
     // Show a simple alert (in a real app, this would be proper notification)
     const orderSummary = booking.procurementOrders.map(order =>
@@ -570,49 +466,24 @@ const BookingBoard = () => {
       setIsAdmin(true);
     }
 
-    const currentUserData = localStorage.getItem('icpac_current_user');
-    if (currentUserData) {
-      const userData = JSON.parse(currentUserData);
-      setCurrentUser(userData);
+    // Authentication completely handled by AppContext/Django
+    if (user) {
+      setCurrentUser(user);
       setIsAuthenticated(true);
       setShowLandingPage(false);
-
-      // Ensure admin status is set correctly based on user role
-      if (userData.role === 'super_admin' || userData.role === 'room_admin') {
+      
+      // Set admin status based on user role from Django
+      if (user.role === 'super_admin' || user.role === 'room_admin') {
         setIsAdmin(true);
-        localStorage.setItem('icpac_admin', 'true');
       }
+    } else {
+      // No user from Django - show landing page for login
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      setShowLandingPage(true);
     }
 
-    // Load users or create default super admin
-    const savedUsers = loadUsersFromStorage();
-    if (savedUsers && savedUsers.length > 0) {
-      setUsers(savedUsers);
-    } else {
-      // Create default super admin and procurement officer
-      const defaultUsers = [
-        {
-          id: 1,
-          name: 'Super Admin',
-          email: 'admin@icpac.net',
-          password: 'admin123',
-          role: 'super_admin',
-          managedRooms: [],
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 2,
-          name: 'Procurement Officer',
-          email: 'procurement@icpac.net',
-          password: 'procurement123',
-          role: 'procurement_officer',
-          managedRooms: [],
-          createdAt: new Date().toISOString()
-        }
-      ];
-      setUsers(defaultUsers);
-      saveUsersToStorage(defaultUsers);
-    }
+    // All user data now comes from Django API - no hardcoded users
   }, []);
 
   // Data initialization is now handled by the API context
@@ -1164,8 +1035,8 @@ const BookingBoard = () => {
     setSelectedTime('');
   };
 
-  // Show landing page if not authenticated
-  if (showLandingPage || !isAuthenticated) {
+  // Show landing page only if explicitly requested, allow public viewing of rooms
+  if (showLandingPage && !isAuthenticated) {
     return (
       <div className="booking-container">
         <LandingPage
@@ -1174,33 +1045,9 @@ const BookingBoard = () => {
           onViewDashboard={() => window.location.href = '/dashboard'}
         />
 
-        {/* Login Modal */}
-        {showUserLogin && (
-          <UserLoginModal
-            onLogin={handleUserLogin}
-            onCancel={() => setShowUserLogin(false)}
-            onSwitchToSignup={() => {
-              setShowUserLogin(false);
-              setShowSignup(true);
-            }}
-            onForgotPassword={() => {
-              setShowUserLogin(false);
-              setShowForgotPassword(true);
-            }}
-          />
-        )}
+        {/* Removed hardcoded login modal - authentication handled by Django */}
 
-        {/* Signup Modal */}
-        {showSignup && (
-          <UserSignupModal
-            onSignup={handleUserSignup}
-            onCancel={() => setShowSignup(false)}
-            onSwitchToLogin={() => {
-              setShowSignup(false);
-              setShowUserLogin(true);
-            }}
-          />
-        )}
+        {/* Removed hardcoded signup modal - all registration through Django API */}
 
         {/* Meeting Space Selection Modal */}
         {showMeetingSpaceModal && (
@@ -1238,6 +1085,29 @@ const BookingBoard = () => {
             <div className="title-section">
               <h1 className="booking-title">ICPAC INTERNAL BOOKING SYSTEM</h1>
               <p className="booking-subtitle">Reserve your meeting space with ease - Book conference rooms, manage schedules, and collaborate seamlessly across ICPAC facilities</p>
+              {/* Real-time connection status */}
+              <div className="connection-status" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '12px',
+                color: wsConnected ? '#10b981' : '#ef4444',
+                marginTop: '4px'
+              }}>
+                <div style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: wsConnected ? '#10b981' : '#ef4444',
+                  animation: wsConnected ? 'pulse 2s infinite' : 'none'
+                }}></div>
+                <span>{wsConnected ? 'Real-time updates active' : 'Real-time updates disconnected'}</span>
+                {bookingUpdates.length > 0 && (
+                  <span style={{ color: '#6b7280', marginLeft: '8px' }}>
+                    ({bookingUpdates.length} recent updates)
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1294,7 +1164,7 @@ const BookingBoard = () => {
                     {isDarkMode ? '☀️' : '🌙'} {isDarkMode ? 'Light' : 'Dark'} Mode
                   </button>
                   <button
-                    onClick={handleUserLogout}
+                    onClick={logout}
                     className="admin-logout-btn"
                     title="Logout"
                   >
@@ -1557,13 +1427,7 @@ const BookingBoard = () => {
           />
         )}
 
-        {/* Admin Login Modal */}
-        {showAdminLogin && (
-          <AdminLoginModal
-            onLogin={handleAdminLogin}
-            onCancel={() => setShowAdminLogin(false)}
-          />
-        )}
+        {/* Removed hardcoded admin login - all authentication through Django */}
 
         {/* Edit Booking Modal */}
         {showEditForm && editingBooking && (
@@ -1610,50 +1474,50 @@ const BookingBoard = () => {
           />
         )}
 
-        {/* Footer */}
-        <footer className="booking-footer">
-          <div className="footer-content">
-            <div className="footer-section">
-              <div className="footer-logo">
-                <img src="/ICPAC_Website_Header_Logo.svg" alt="ICPAC Logo" className="footer-logo-img" />
-                <div className="footer-text">
-                  <h3>ICPAC Boardroom System</h3>
-                  <p>Streamlining meeting room reservations</p>
+        {/* Compact Footer */}
+        <footer className="booking-footer-compact">
+          <div className="footer-main">
+            <div className="footer-left">
+              <div className="footer-brand">
+                <img src="/ICPAC_Website_Header_Logo.svg" alt="ICPAC Logo" className="footer-logo-small" />
+                <div className="footer-info">
+                  <span className="brand-name">ICPAC Booking System</span>
+                  <span className="contact-brief">info@icpac.net • +254 20 7095000</span>
                 </div>
               </div>
             </div>
-
-            <div className="footer-section">
-              <h4>Quick Links</h4>
-              <ul className="footer-links">
-                <li><a href="#" onClick={(e) => { e.preventDefault(); window.location.reload(); }}>Refresh</a></li>
-                <li><a href="#" onClick={(e) => { e.preventDefault(); handleUserLogout(); }}>Logout</a></li>
-              </ul>
-            </div>
-
-            <div className="footer-section">
-              <h4>Contact Info</h4>
-              <div className="contact-info">
-                <p><strong>ICPAC</strong></p>
-                <p>Climate Prediction and Applications Centre</p>
-                <p>Email: info@icpac.net</p>
-                <p>Phone: +254 20 7095000</p>
+            
+            <div className="footer-center">
+              <div className="stats-compact">
+                <span className="stat-item">Rooms: {rooms.length}</span>
+                <span className="stat-item">Bookings: {bookings.length}</span>
+                <span className="stat-item">Users: {users.length}</span>
               </div>
             </div>
-
-            <div className="footer-section">
-              <h4>System Stats</h4>
-              <div className="system-stats">
-                <p>Total Rooms: {rooms.length}</p>
-                <p>Active Bookings: {bookings.length}</p>
-                <p>Registered Users: {users.length}</p>
-                <p>Last Updated: {new Date().toLocaleDateString()}</p>
+            
+            <div className="footer-right">
+              <div className="footer-actions">
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="footer-btn"
+                  title="Refresh page"
+                >
+                  🔄 Refresh
+                </button>
+                <button 
+                  onClick={logout}
+                  className="footer-btn logout-btn"
+                  title="Logout"
+                >
+                  🚪 Logout
+                </button>
               </div>
             </div>
           </div>
-
-          <div className="footer-bottom">
-            <p>&copy; 2025 ICPAC. All rights reserved. | Boardroom Booking System v1.0</p>
+          
+          <div className="footer-bottom-compact">
+            <span className="copyright">© 2025 ICPAC. All rights reserved.</span>
+            <span className="version">v1.0</span>
           </div>
         </footer>
       </div>

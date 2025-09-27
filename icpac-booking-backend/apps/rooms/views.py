@@ -24,7 +24,7 @@ class RoomListView(generics.ListCreateAPIView):
     List all rooms or create a new room
     """
     queryset = Room.objects.filter(is_active=True).order_by('name')
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]  # Allow public access to view rooms
     
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -65,7 +65,9 @@ class RoomListView(generics.ListCreateAPIView):
         return queryset
     
     def perform_create(self, serializer):
-        # Only super admin and room admin can create rooms
+        # Only authenticated super admin and room admin can create rooms
+        if not self.request.user.is_authenticated:
+            raise permissions.PermissionDenied('Authentication required to create rooms.')
         if self.request.user.role not in ['super_admin', 'room_admin']:
             raise permissions.PermissionDenied('Only admins can create rooms.')
         

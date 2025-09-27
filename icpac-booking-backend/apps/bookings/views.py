@@ -10,14 +10,12 @@ from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
-from .models import Booking, ProcurementOrder
+from .models import Booking
 from .serializers import (
     BookingSerializer,
     BookingListSerializer,
     BookingCreateUpdateSerializer,
     BookingApprovalSerializer,
-    ProcurementOrderSerializer,
-    ProcurementOrderCreateSerializer,
     BookingStatsSerializer,
     DashboardStatsSerializer
 )
@@ -308,75 +306,6 @@ def booking_dashboard_stats(request):
     })
 
 
-# Procurement Order Views
-
-class ProcurementOrderListView(generics.ListCreateAPIView):
-    """
-    List all procurement orders or create a new one
-    """
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return ProcurementOrderCreateSerializer
-        return ProcurementOrderSerializer
-    
-    def get_queryset(self):
-        user = self.request.user
-        
-        if user.role in ['super_admin', 'procurement_officer']:
-            return ProcurementOrder.objects.all().order_by('-created_at')
-        elif user.role == 'room_admin':
-            # Room admin can see orders for bookings in their managed rooms
-            managed_room_ids = user.managed_rooms.values_list('id', flat=True)
-            return ProcurementOrder.objects.filter(
-                Q(booking__room_id__in=managed_room_ids) | Q(created_by=user)
-            ).order_by('-created_at')
-        else:
-            # Regular users can see their own orders
-            return ProcurementOrder.objects.filter(
-                Q(created_by=user) | Q(booking__user=user)
-            ).order_by('-created_at')
-
-
-class ProcurementOrderDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve, update or delete a procurement order
-    """
-    queryset = ProcurementOrder.objects.all()
-    serializer_class = ProcurementOrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_queryset(self):
-        user = self.request.user
-        
-        if user.role in ['super_admin', 'procurement_officer']:
-            return ProcurementOrder.objects.all()
-        elif user.role == 'room_admin':
-            managed_room_ids = user.managed_rooms.values_list('id', flat=True)
-            return ProcurementOrder.objects.filter(
-                Q(booking__room_id__in=managed_room_ids) | Q(created_by=user)
-            )
-        else:
-            return ProcurementOrder.objects.filter(
-                Q(created_by=user) | Q(booking__user=user)
-            )
-    
-    def perform_update(self, serializer):
-        # Only procurement officers and super admin can update order status
-        if (self.request.user.role not in ['super_admin', 'procurement_officer'] and
-            'status' in self.request.data):
-            raise permissions.PermissionDenied('Only procurement officers can update order status.')
-        
-        serializer.save()
-    
-    def perform_destroy(self, instance):
-        # Only creator or super admin can delete
-        if (instance.created_by != self.request.user and 
-            self.request.user.role != 'super_admin'):
-            raise permissions.PermissionDenied('You can only delete your own orders.')
-        
-        instance.delete()
 
 
 @api_view(['GET'])
