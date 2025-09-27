@@ -82,7 +82,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'email', 'username', 'first_name', 'last_name',
+            'email', 'first_name', 'last_name',
             'password', 'password_confirm', 'phone_number', 'department'
         ]
         extra_kwargs = {
@@ -121,23 +121,27 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('A user with this email already exists.')
         return email
 
+    def create(self, validated_data):
+        """Create new user with email as username"""
+        validated_data.pop('password_confirm', None)
+        password = validated_data.pop('password')
+        email = validated_data.pop('email')
+        
+        # Use email as username for Django auth - pass username as first positional arg
+        user = User.objects.create_user(
+            email,      # username (first positional argument)
+            email,      # email (second positional argument) 
+            password,   # password (third positional argument)
+            **validated_data  # remaining fields
+        )
+        return user
+
     def validate_username(self, value):
         """Check if username is already in use"""
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError('A user with this username already exists.')
         return value
 
-    def create(self, validated_data):
-        # Remove password_confirm from validated_data
-        validated_data.pop('password_confirm')
-        
-        # Create user with hashed password
-        user = User.objects.create_user(
-            **validated_data,
-            role='user'  # Default role for new registrations
-        )
-        
-        return user
 
 
 class UserSerializer(serializers.ModelSerializer):

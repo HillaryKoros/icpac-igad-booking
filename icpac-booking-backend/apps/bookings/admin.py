@@ -14,8 +14,9 @@ admin.site.index_title = "Welcome to ICPAC Booking Management"
 # Removed RoomImageInline as RoomImage model doesn't exist yet
 
 
-@admin.register(Room)
-class RoomAdmin(admin.ModelAdmin):
+# Room admin is now registered in apps/rooms/admin.py
+# @admin.register(Room)
+class RoomAdminOld(admin.ModelAdmin):
     list_display = ('name', 'category_badge', 'capacity_display', 'floor', 'is_active', 'bookings_count')
     list_filter = ('category', 'is_active', 'floor', 'created_at')
     search_fields = ('name', 'description', 'amenities')
