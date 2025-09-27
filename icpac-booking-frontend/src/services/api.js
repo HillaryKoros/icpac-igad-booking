@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:9021/api';
+const API_BASE_URL = 'https://3b70c48f-f47e-4551-a8d9-cda080c4be38-00-1w6cll60hfasg.janeway.replit.dev/api';
 
 class APIService {
   constructor() {
