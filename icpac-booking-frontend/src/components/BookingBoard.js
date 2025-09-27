@@ -623,7 +623,6 @@ const BookingBoard = () => {
     if (isWeekendDay) {
       return (
         <div className="time-slot weekend-blocked">
-          <div className="slot-time">{time}</div>
           <div className="slot-title">Sunday</div>
           <div className="slot-subtitle">Not Available</div>
         </div>
@@ -655,7 +654,6 @@ const BookingBoard = () => {
               approvalStatus === 'rejected' ? '❌' : '⏳'}
           </div>
           <div className="slot-content">
-            <div className="slot-time">{bookingTimeLabel}</div>
             <div className="slot-title">{bookingTitle}</div>
             <div className="slot-subtitle">{bookingOrganizer}</div>
             {booking.bookingType !== 'hourly' && (
@@ -727,9 +725,8 @@ const BookingBoard = () => {
         onClick={() => handleBooking(room, time)}
         className="modern-time-slot available"
       >
-        <div className="slot-icon">⏰</div>
+        <div className="slot-icon">✅</div>
         <div className="slot-content">
-          <div className="slot-time">{time}</div>
           <div className="slot-title">Available</div>
           <div className="slot-subtitle">Click to book</div>
         </div>
