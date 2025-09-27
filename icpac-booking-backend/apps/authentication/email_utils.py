@@ -1,27 +1,21 @@
-# Using replitmail integration for ICPAC Booking System OTP emails
+# Using Gmail SMTP for ICPAC Booking System OTP emails
 import os
-import requests
-import json
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from django.conf import settings
 
 
-def get_auth_token():
-    """Get Replit authentication token"""
-    repl_identity = os.environ.get('REPL_IDENTITY')
-    web_repl_renewal = os.environ.get('WEB_REPL_RENEWAL')
-    
-    if repl_identity:
-        return f"repl {repl_identity}"
-    elif web_repl_renewal:
-        return f"depl {web_repl_renewal}"
-    else:
-        raise Exception("No authentication token found. Please set REPL_IDENTITY or ensure you're running in Replit environment.")
-
-
 def send_otp_email(recipient_email, otp_code, user_name=""):
-    """Send OTP verification email using Replit Mail service"""
+    """Send OTP verification email using Gmail SMTP"""
     try:
-        auth_token = get_auth_token()
+        # Get Gmail credentials from environment variables
+        gmail_email = os.environ.get('GMAIL_EMAIL')
+        gmail_password = os.environ.get('GMAIL_APP_PASSWORD')
+        
+        if not gmail_email or not gmail_password:
+            print("Gmail credentials not found. Please set GMAIL_EMAIL and GMAIL_APP_PASSWORD environment variables.")
+            return False
         
         # Create email content
         subject = "ICPAC Booking System - Email Verification"
@@ -108,29 +102,27 @@ def send_otp_email(recipient_email, otp_code, user_name=""):
         This is an automated message. Please do not reply to this email.
         """
         
-        # Send email using Replit Mail service
-        response = requests.post(
-            "https://connectors.replit.com/api/v2/mailer/send",
-            headers={
-                "Content-Type": "application/json",
-                "X_REPLIT_TOKEN": auth_token,
-            },
-            json={
-                "to": recipient_email,
-                "subject": subject,
-                "html": html_content,
-                "text": text_content,
-            }
-        )
+        # Create message
+        message = MIMEMultipart("alternative")
+        message["Subject"] = subject
+        message["From"] = gmail_email
+        message["To"] = recipient_email
         
-        if response.status_code == 200:
-            result = response.json()
-            print(f"OTP email sent successfully to {recipient_email}")
-            return True
-        else:
-            error_data = response.json() if response.content else {"message": "Unknown error"}
-            print(f"Failed to send OTP email: {error_data.get('message', 'Unknown error')}")
-            return False
+        # Add both plain text and HTML parts
+        text_part = MIMEText(text_content, "plain")
+        html_part = MIMEText(html_content, "html")
+        
+        message.attach(text_part)
+        message.attach(html_part)
+        
+        # Send email using Gmail SMTP
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()  # Enable encryption
+            server.login(gmail_email, gmail_password)
+            server.sendmail(gmail_email, recipient_email, message.as_string())
+        
+        print(f"OTP email sent successfully to {recipient_email}")
+        return True
             
     except Exception as e:
         print(f"Error sending OTP email: {str(e)}")
