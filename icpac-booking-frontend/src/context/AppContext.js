@@ -73,7 +73,12 @@ export const AppProvider = ({ children }) => {
     try {
       setLoading(true);
       const bookingsData = await apiService.getBookings();
-      setBookings(bookingsData.results || bookingsData);
+      console.log('🔍 DEBUG: Raw API response for bookings:', bookingsData);
+      console.log('🔍 DEBUG: Type of bookingsData:', typeof bookingsData);
+      console.log('🔍 DEBUG: bookingsData.results:', bookingsData.results);
+      const finalBookings = bookingsData.results || bookingsData;
+      console.log('🔍 DEBUG: Final bookings to store:', finalBookings);
+      setBookings(finalBookings);
     } catch (error) {
       setError(error.message);
       console.error('Failed to fetch bookings:', error);
