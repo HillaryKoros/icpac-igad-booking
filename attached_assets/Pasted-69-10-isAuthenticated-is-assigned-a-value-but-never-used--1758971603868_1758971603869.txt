@@ -1,0 +1,25 @@
+69:10:    'isAuthenticated' is assigned a value but never used                                                                      no-unused-vars
+  Line 70:10:    'showLandingPage' is assigned a value but never used                                                                      no-unused-vars
+  Line 73:10:    'isMobileMenuOpen' is assigned a value but never used                                                                     no-unused-vars
+  Line 73:28:    'setIsMobileMenuOpen' is assigned a value but never used                                                                  no-unused-vars
+  Line 101:9:    'loadMeetingSpaceSelection' is assigned a value but never used                                                            no-unused-vars
+  Line 123:9:    'loadBookingsFromStorage' is assigned a value but never used                                                              no-unused-vars
+  Line 183:11:   'notificationData' is assigned a value but never used                                                                     no-unused-vars
+  Line 208:9:    'canManageRoom' is assigned a value but never used                                                                        no-unused-vars
+  Line 264:9:    'getGroupedRooms' is assigned a value but never used                                                                      no-unused-vars
+  Line 484:6:    React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array                   react-hooks/exhaustive-deps
+  Line 518:6:    React Hook useEffect has a missing dependency: 'getAvailableTimeSlots'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 527:6:    React Hook useEffect has a missing dependency: 'getAvailableTimeSlots'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 642:13:   'bookingTimeLabel' is assigned a value but never used                                                                     no-unused-vars
+  Line 925:13:   'dateStr' is assigned a value but never used                                                                              no-unused-vars
+  Line 2139:7:   'UserLoginModal' is assigned a value but never used                                                                       no-unused-vars
+  Line 2142:10:  'emailFocused' is assigned a value but never used                                                                         no-unused-vars
+  Line 2143:10:  'passwordFocused' is assigned a value but never used                                                                      no-unused-vars
+  Line 2250:7:   'UserSignupModal' is assigned a value but never used                                                                      no-unused-vars
+  Line 2257:10:  'focusedFields' is assigned a value but never used                                                                        no-unused-vars
+  Line 2962:7:   'AdminLoginModal' is assigned a value but never used                                                                      no-unused-vars
+
+src/services/api.js
+  Line 303:1:  Assign instance to a variable before exporting as module default  import/no-anonymous-default-export
+
+webpack compiled with 1 warning

@@ -17,9 +17,14 @@ class BookingSerializer(serializers.ModelSerializer):
     """
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
     room_name = serializers.CharField(source='room.name', read_only=True)
+    room = serializers.SerializerMethodField()  # Explicitly include room ID
     approval_status_display = serializers.CharField(source='get_approval_status_display', read_only=True)
     duration_hours = serializers.SerializerMethodField()
     can_modify = serializers.SerializerMethodField()
+    
+    def get_room(self, obj):
+        """Get room ID"""
+        return obj.room.id if obj.room else None
     
     class Meta:
         model = Booking
