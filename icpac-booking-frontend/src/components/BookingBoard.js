@@ -2806,7 +2806,7 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
   return (
     <div style={{ 
       minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #034930 0%, #065f46 100%)',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -2893,7 +2893,7 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
             <button
               onClick={onSignup}
               style={{
-                background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: '#ffffff',
                 border: 'none',
                 padding: '10px 20px',
@@ -2943,7 +2943,7 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
             Meeting Room Booking
             <br />
             <span style={{ 
-              background: 'linear-gradient(135deg, #ff6b6b, #feca57)',
+              background: 'linear-gradient(135deg, #10b981, #34d399)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
@@ -2953,15 +2953,14 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
           </h1>
 
           <p style={{
-            fontSize: '1.5rem',
+            fontSize: '1.3rem',
             color: 'rgba(255,255,255,0.9)',
-            maxWidth: '700px',
+            maxWidth: '600px',
             margin: '0 auto 40px auto',
             lineHeight: '1.6',
             fontWeight: '400'
           }}>
-            The modern, intelligent platform for ICPAC's climate research community. 
-            Book rooms instantly, collaborate seamlessly, and optimize your workspace.
+            Secure meeting room booking for ICPAC staff and partners.
           </p>
 
           {/* Feature Highlights */}
@@ -3004,7 +3003,7 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
             <button
               onClick={onLogin}
               style={{
-                background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: '#ffffff',
                 border: 'none',
                 padding: '18px 40px',
@@ -3028,8 +3027,7 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
                 e.target.style.boxShadow = '0 12px 40px rgba(255,107,107,0.4)';
               }}
             >
-              <span style={{ fontSize: '1.3rem' }}>🚀</span>
-              Start Booking Now
+              Sign In
             </button>
 
             <button
@@ -3060,85 +3058,11 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
                 e.target.style.transform = 'translateY(0)';
               }}
             >
-              <span style={{ fontSize: '1.3rem' }}>✨</span>
-              Create Account
+              Register
             </button>
           </div>
         </div>
 
-        {/* Features Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '30px',
-          maxWidth: '1000px',
-          margin: '0 auto'
-        }}>
-          {[
-            {
-              icon: '🏢',
-              title: 'Enterprise Security',
-              description: 'Domain-restricted access ensures only ICPAC staff and authorized partners can book rooms.'
-            },
-            {
-              icon: '⚡',
-              title: 'Lightning Fast',
-              description: 'Book any available room in under 10 seconds with our optimized booking flow.'
-            },
-            {
-              icon: '📊',
-              title: 'Smart Insights',
-              description: 'AI-powered analytics help optimize room usage and predict booking patterns.'
-            },
-            {
-              icon: '🎯',
-              title: 'Seamless Experience',
-              description: 'Intuitive interface designed specifically for climate research professionals.'
-            }
-          ].map((feature, index) => (
-            <div key={index} style={{
-              background: 'rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(20px)',
-              borderRadius: '20px',
-              padding: '40px 30px',
-              border: '1px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer',
-              textAlign: 'left'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'translateY(-5px)';
-              e.target.style.background = 'rgba(255,255,255,0.15)';
-              e.target.style.boxShadow = '0 12px 40px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.background = 'rgba(255,255,255,0.1)';
-              e.target.style.boxShadow = '0 8px 32px rgba(0,0,0,0.1)';
-            }}>
-              <div style={{ fontSize: '3rem', marginBottom: '20px' }}>
-                {feature.icon}
-              </div>
-              <h3 style={{
-                fontSize: '1.4rem',
-                fontWeight: '700',
-                color: '#ffffff',
-                margin: '0 0 16px 0'
-              }}>
-                {feature.title}
-              </h3>
-              <p style={{
-                fontSize: '1rem',
-                color: 'rgba(255,255,255,0.8)',
-                margin: '0',
-                lineHeight: '1.6'
-              }}>
-                {feature.description}
-              </p>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
