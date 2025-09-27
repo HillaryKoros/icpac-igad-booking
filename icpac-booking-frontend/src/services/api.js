@@ -65,6 +65,39 @@ class APIService {
     throw new Error(errorData.message || 'Registration failed');
   }
 
+  async verifyEmail(email, code) {
+    const response = await this.request('/auth/verify-email/', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      this.token = data.access;
+      return data;
+    }
+
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Email verification failed');
+  }
+
+  async resendVerificationCode(email) {
+    const response = await this.request('/auth/resend-verification/', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+
+    if (response.ok) {
+      return await response.json();
+    }
+
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to resend verification code');
+  }
+
   logout() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
