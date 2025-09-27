@@ -59,11 +59,16 @@ export const AppProvider = ({ children }) => {
   const fetchRooms = async () => {
     try {
       setLoading(true);
+      console.log('🚀 FETCHING ROOMS: Starting room data fetch...');
       const roomsData = await apiService.getRooms();
-      setRooms(roomsData.results || roomsData);
+      console.log('🚀 FETCHING ROOMS: Raw API response:', roomsData);
+      const finalRooms = roomsData.results || roomsData;
+      console.log('🚀 FETCHING ROOMS: Final rooms to set:', finalRooms);
+      console.log('🚀 FETCHING ROOMS: Room count:', finalRooms.length);
+      setRooms(finalRooms);
     } catch (error) {
       setError(error.message);
-      console.error('Failed to fetch rooms from Django API:', error);
+      console.error('🚀 FETCHING ROOMS: Failed to fetch rooms from Django API:', error);
     } finally {
       setLoading(false);
     }

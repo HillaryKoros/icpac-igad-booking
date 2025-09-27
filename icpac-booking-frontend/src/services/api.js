@@ -126,13 +126,44 @@ class APIService {
     return user ? JSON.parse(user) : null;
   }
 
-  // Rooms
+  // Rooms  
   async getRooms() {
-    const response = await this.request('/rooms/');
-    if (response.ok) {
-      return await response.json();
+    let allRooms = [];
+    let nextUrl = '/rooms/';
+    
+    // Fetch all pages of rooms
+    while (nextUrl) {
+      const response = await this.request(nextUrl);
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Add rooms from this page
+        if (data.results) {
+          allRooms = allRooms.concat(data.results);
+          // Get next page URL (relative path only)
+          if (data.next) {
+            // Extract just the path and query from the full URL
+            const url = new URL(data.next);
+            nextUrl = url.pathname + url.search;
+            // Remove /api prefix if it exists since our request() method adds it
+            nextUrl = nextUrl.replace('/api', '');
+          } else {
+            nextUrl = null;
+          }
+        } else {
+          // Non-paginated response
+          allRooms = data;
+          nextUrl = null;
+        }
+      } else {
+        throw new Error('Failed to fetch rooms');
+      }
     }
-    throw new Error('Failed to fetch rooms');
+    
+    console.log(`🎯 ROOMS: Loaded ${allRooms.length} total rooms from ${allRooms.length > 10 ? 'multiple pages' : 'single page'}`);
+    console.log('🎯 ROOMS: Room IDs loaded:', allRooms.map(r => `${r.id}:${r.name}`));
+    
+    return { results: allRooms };
   }
 
   async getRoom(id) {
