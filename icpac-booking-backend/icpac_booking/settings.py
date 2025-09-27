@@ -41,10 +41,15 @@ ALLOWED_HOSTS = ['*']
 # CSRF and CORS Configuration for Replit
 CSRF_TRUSTED_ORIGINS = [
     'https://*.replit.dev',
-    'https://*.replit.app',
+    'https://*.replit.app', 
     'https://*.replit.co',
     'https://3b70c48f-f47e-4551-a8d9-cda080c4be38-00-1w6cll60hfasg.janeway.replit.dev',
+    'https://3b70c48f-f47e-4551-a8d9-cda080c4be38-00-1w6cll60hfasg.janeway.replit.dev:8000',
 ]
+
+# Disable CSRF for development (alternative approach)
+CSRF_COOKIE_HTTPONLY = False
+CSRF_USE_SESSIONS = False
 
 # Additional CSRF settings for development
 CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
@@ -133,13 +138,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'icpac_booking.wsgi.application'
 
-# Database
+# Database - PostgreSQL configuration for both local and production
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('PGDATABASE', 'icpac_booking'),
+        'USER': os.environ.get('PGUSER', 'postgres'),
+        'PASSWORD': os.environ.get('PGPASSWORD', ''),
+        'HOST': os.environ.get('PGHOST', 'localhost'),
+        'PORT': os.environ.get('PGPORT', '5432'),
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+        'CONN_MAX_AGE': 60,
     }
 }
+
+# Use DATABASE_URL if available (for production and Replit)
+import dj_database_url
+if 'DATABASE_URL' in os.environ:
+    DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'])
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
