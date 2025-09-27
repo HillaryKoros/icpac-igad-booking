@@ -37,8 +37,8 @@ urlpatterns = [
     path('cms/', include(wagtailadmin_urls)),
     path('documents/', include(wagtaildocs_urls)),
     
-    # Frontend redirect for admin "View site" link
-    path('', redirect_to_frontend, name='frontend_redirect'),
+    # Frontend redirect for admin "View site" link (specific path)
+    path('admin-site/', redirect_to_frontend, name='frontend_redirect'),
     
     # API endpoints
     path('api/', api_info, name='api_info'),
@@ -47,8 +47,8 @@ urlpatterns = [
     path('api/bookings/', include('apps.bookings.urls')),
     path('api/security/', include('apps.security.urls')),
     
-    # Wagtail pages (moved to specific path to avoid conflicts)
-    path('cms-pages/', include(wagtail_urls)),
+    # Wagtail pages (catch-all - must be last)
+    path('', include(wagtail_urls)),
 ]
 
 # Serve media files in development
