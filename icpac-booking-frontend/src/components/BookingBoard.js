@@ -1035,8 +1035,8 @@ const BookingBoard = () => {
     setSelectedTime('');
   };
 
-  // Show landing page only if explicitly requested, allow public viewing of rooms
-  if (showLandingPage && !isAuthenticated) {
+  // Allow public viewing of rooms - no authentication required
+  if (false) { // Temporarily disable landing page to show rooms publicly
     return (
       <div className="booking-container">
         <LandingPage
