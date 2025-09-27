@@ -742,34 +742,18 @@ const BookingBoard = () => {
     const currentDate = formatDate(selectedDate);
 
     // Debug logging
-    console.log(`Checking if slot is booked: Room ${roomId}, Time ${time}, Date ${currentDate}`);
-    console.log('Total bookings:', bookings.length);
-    console.log('Current user:', user);
-    console.log('First few bookings:', bookings.slice(0, 3));
-    
-    // CRITICAL DEBUG: Show frontend room array vs booking room_id
-    console.log('🔍 FRONTEND ROOMS DEBUG:');
-    rooms.forEach(room => {
-      if (room.name.includes('Boardroom')) {
-        console.log(`  Room ${room.id}: "${room.name}"`);
-      }
-    });
-    console.log('🔍 BOOKING DATA:');
-    bookings.forEach(booking => {
-      if (booking.room_name && booking.room_name.includes('Boardroom')) {
-        console.log(`  Booking room_id=${booking.room_id}: "${booking.room_name}"`);
-      }
-    });
+    // Production: minimal logging for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Checking slot: Room ${roomId}, Time ${time}, Date ${currentDate}`);
+    }
 
     const matchingBooking = bookings.some(booking => {
       // Handle multiple room ID formats: booking.room, booking.room_id, booking.roomId
       let bookingRoomId = booking.room || booking.room_id || booking.roomId;
       
-      // CRITICAL FIX: Always use booking.room_id as the authoritative source
-      // The frontend room display order may be wrong, but booking.room_id is correct from backend
+      // Always use booking.room_id as the authoritative source from backend
       if (booking.room_id) {
         bookingRoomId = booking.room_id;
-        console.log(`🔧 USING AUTHORITATIVE room_id=${bookingRoomId} from booking data`);
       }
       
       // Fallback: If no room ID found, try to map room_name to room ID
@@ -777,24 +761,31 @@ const BookingBoard = () => {
         const matchingRoom = rooms.find(room => room.name === booking.room_name);
         if (matchingRoom) {
           bookingRoomId = matchingRoom.id;
-          console.log(`🔧 MAPPED room_name "${booking.room_name}" to room_id ${bookingRoomId}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`Mapped room name "${booking.room_name}" to room_id ${bookingRoomId}`);
+          }
         } else {
-          console.log(`❌ MAPPING FAILED: room_name "${booking.room_name}" not found in rooms:`, rooms.map(r => `${r.id}:${r.name}`));
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`Warning: room_name "${booking.room_name}" not found in rooms`);
+          }
         }
       }
       
-      // Debug: Show what data we have
-      console.log(`🔍 DEBUG: bookingRoomId=${bookingRoomId}, targetRoom=${roomId}, room_name="${booking.room_name}", rooms.length=${rooms.length}`);
-
-      console.log(`Checking booking ${booking.id}: room=${bookingRoomId}, targetRoom=${roomId}, date=${booking.start_date}, status=${booking.approval_status || booking.approvalStatus || 'pending'}`);
+      // Development debugging only
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Booking ${booking.id}: room=${bookingRoomId} vs target=${roomId}, status=${booking.approval_status || booking.approvalStatus || 'pending'}`);
+      }
 
       // CRITICAL FIX: Use room name as fallback matching when IDs don't align
       if (bookingRoomId !== roomId) {
         // Check if room names match as fallback
         const currentRoom = rooms.find(r => r.id === roomId);
         if (currentRoom && currentRoom.name === booking.room_name) {
-          console.log(`✅ FALLBACK MATCH: Room name "${booking.room_name}" matches despite ID mismatch (${bookingRoomId} vs ${roomId})`);
-          // Continue with the booking check
+          // Room name matches - this is the same room despite ID mismatch
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`Room name match: "${booking.room_name}" despite ID difference`);
+          }
+          // Continue with booking check
         } else {
           return false;
         }
@@ -802,23 +793,17 @@ const BookingBoard = () => {
 
       // Apply approval filter
       const bookingStatus = booking.approval_status || booking.approvalStatus || 'pending';
-      console.log(`Booking ${booking.id}: approval_status="${booking.approval_status}", approvalStatus="${booking.approvalStatus}", final bookingStatus="${bookingStatus}"`);
 
-      // For simplicity: Regular users (including null user) only see approved bookings as booked
+      // Regular users only see approved bookings as booked slots
       if (!user || (user.role !== 'super_admin' && user.role !== 'room_admin')) {
-        // Regular users only see approved bookings as booked slots
         if (bookingStatus !== 'approved') {
-          console.log(`Regular user filter rejected: status="${bookingStatus}" (not approved)`);
           return false;
         }
-        console.log(`✅ Regular user: Approved booking accepted`);
       } else {
         // Admins can see bookings based on their selected filter
         if (approvalFilter !== 'all' && bookingStatus !== approvalFilter) {
-          console.log(`Admin filter rejected: status=${bookingStatus}, filter=${approvalFilter}`);
           return false;
         }
-        console.log(`✅ Admin: Booking passed filter`);
       }
 
       // Check if current date falls within booking date range
