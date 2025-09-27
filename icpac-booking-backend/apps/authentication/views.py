@@ -41,14 +41,17 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
         
-        # Check if user's email is verified
-        user = serializer.user
-        if not user.is_email_verified:
-            return Response({
-                'error': 'Please verify your email address before logging in.',
-                'requires_verification': True,
-                'email': user.email
-            }, status=status.HTTP_403_FORBIDDEN)
+        # Get the user from the validated data
+        user_data = serializer.validated_data.get('user')
+        if user_data:
+            # Get the actual user object to check email verification
+            user = User.objects.get(id=user_data['id'])
+            if not user.is_email_verified:
+                return Response({
+                    'error': 'Please verify your email address before logging in.',
+                    'requires_verification': True,
+                    'email': user.email
+                }, status=status.HTTP_403_FORBIDDEN)
         
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
