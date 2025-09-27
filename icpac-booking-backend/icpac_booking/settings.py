@@ -47,16 +47,39 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # Wagtail CMS apps (order matters)
+    'wagtail.contrib.forms',
+    'wagtail.contrib.redirects',
+    'wagtail.embeds',
+    'wagtail.sites',
+    'wagtail.users',
+    'wagtail.snippets',
+    'wagtail.documents',
+    'wagtail.images',
+    'wagtail.search',
+    'wagtail.admin',
+    'wagtail',
+    
+    # Wagtail dependencies
+    'modelcluster',
+    'taggit',
+
     # Third party apps
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'django_otp.plugins.otp_static',
+    'phonenumber_field',
 
     # Local apps
     'apps.authentication',
     'apps.rooms',
     'apps.bookings',
+    'apps.security',
+    'apps.cms_content',
 ]
 
 MIDDLEWARE = [
@@ -66,8 +89,11 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'wagtail.contrib.redirects.middleware.RedirectMiddleware',
+    'apps.security.middleware.SecurityMiddleware',
 ]
 
 ROOT_URLCONF = 'icpac_booking.urls'
@@ -194,3 +220,47 @@ SIMPLE_JWT = {
 
 # Custom user model
 AUTH_USER_MODEL = 'authentication.User'
+
+# Wagtail CMS Settings
+WAGTAIL_SITE_NAME = 'ICPAC Booking System CMS'
+WAGTAILADMIN_BASE_URL = 'https://3b70c48f-f47e-4551-a8d9-cda080c4be38-00-1w6cll60hfasg.janeway.replit.dev'
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+
+# Security Settings
+ALLOWED_EMAIL_DOMAINS = [
+    'icpac.net',
+    'igad.int',
+    'icpac.net.office',
+    # Add more approved domains
+]
+
+# Enable OTP for enhanced security
+OTP_TOTP_ISSUER = 'ICPAC Booking System'
+OTP_LOGIN_URL = '/admin/login/'
+
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = 3600
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+# Password Security
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour
+LOGIN_ATTEMPT_LIMIT = 5
+LOGIN_LOCKOUT_TIME = 1800  # 30 minutes
+
+# Email Configuration (for OTP and notifications)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+DEFAULT_FROM_EMAIL = 'noreply@icpac.net'
+EMAIL_SUBJECT_PREFIX = '[ICPAC Booking] '
+
+# SMS/Phone OTP Settings (would need integration with SMS service)
+SMS_BACKEND = 'dummy'  # Placeholder for SMS service
+OTP_SMS_SENDER = 'ICPAC'
+
+# Audit and Logging
+LOG_USER_ACTIONS = True
+LOG_API_REQUESTS = True
+SESSION_COOKIE_AGE = 28800  # 8 hours
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
