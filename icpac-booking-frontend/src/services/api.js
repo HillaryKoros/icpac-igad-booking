@@ -13,8 +13,11 @@ class APIService {
       ...options.headers,
     };
 
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    // Always get fresh token from localStorage
+    const currentToken = localStorage.getItem('access_token');
+    if (currentToken) {
+      headers['Authorization'] = `Bearer ${currentToken}`;
+      this.token = currentToken; // Keep instance in sync
     }
 
     const response = await fetch(url, {
