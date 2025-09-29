@@ -825,6 +825,40 @@ const BookingBoard = () => {
     return dayOfWeek === 0; // Only Sunday = 0 is blocked, Saturday (6) is now allowed
   };
 
+  // Week calculation helpers
+  const getWeekDays = (selectedDate) => {
+    const days = [];
+    const date = new Date(selectedDate);
+
+    // Get Monday of the week containing selectedDate
+    const dayOfWeek = date.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Handle Sunday (0) as last day
+    const monday = new Date(date);
+    monday.setDate(date.getDate() + mondayOffset);
+
+    // Generate 7 days starting from Monday
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(monday);
+      day.setDate(monday.getDate() + i);
+      days.push(day);
+    }
+
+    return days;
+  };
+
+  const getDayAbbrev = (date) => {
+    const abbrevs = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return abbrevs[date.getDay()];
+  };
+
+  const isSameDay = (date1, date2) => {
+    return date1.toDateString() === date2.toDateString();
+  };
+
+  const isToday = (date) => {
+    return isSameDay(date, new Date());
+  };
+
   const isTimeSlotInPast = (date, time) => {
     const now = new Date();
     const slotDate = new Date(date);
@@ -1305,7 +1339,7 @@ const BookingBoard = () => {
             display: 'grid',
             gridTemplateColumns: 'repeat(12, 1fr)',
             gap: '16px',
-            alignItems: 'start',
+            alignItems: 'stretch',
             marginTop: '16px'
           }}
           className="booking-grid-container">
@@ -1326,7 +1360,7 @@ const BookingBoard = () => {
                 margin: '0 0 12px 0',
                 color: '#475569',
                 fontSize: '14px',
-                fontWeight: '600',
+                fontWeight: '800',
                 textAlign: 'center'
               }}>
                 📅 Select Date
@@ -1346,13 +1380,15 @@ const BookingBoard = () => {
                   value={formatDate(selectedDate)}
                   onChange={(e) => setSelectedDate(new Date(e.target.value))}
                   style={{
-                    width: '100%',
-                    padding: '10px',
+                    width: 'calc(100% - 4px)',
+                    padding: '8px',
                     border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: '13px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
                     background: '#ffffff',
-                    color: '#374151'
+                    color: '#374151',
+                    boxSizing: 'border-box',
+                    margin: '0 2px'
                   }}
                 />
               </div>
@@ -1365,7 +1401,7 @@ const BookingBoard = () => {
                 <div style={{
                   fontSize: '12px',
                   color: '#64748b',
-                  fontWeight: '500',
+                  fontWeight: '700',
                   marginBottom: '6px'
                 }}>
                   Selected Date:
@@ -1373,13 +1409,118 @@ const BookingBoard = () => {
                 <div style={{
                   fontSize: '13px',
                   color: '#374151',
-                  fontWeight: '600'
+                  fontWeight: '800'
                 }}>
                   {selectedDate.toLocaleDateString('en-US', {
                     weekday: 'long',
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric'
+                  })}
+                </div>
+              </div>
+
+              {/* Current Week Strip */}
+              <div style={{
+                marginTop: '12px'
+              }}>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#64748b',
+                  fontWeight: '700',
+                  marginBottom: '8px',
+                  textAlign: 'center'
+                }}>
+                  Current Week
+                </div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, 1fr)',
+                  gap: '4px'
+                }}
+                className="week-strip">
+                  {getWeekDays(selectedDate).map((day, index) => {
+                    const isSelected = isSameDay(day, selectedDate);
+                    const isTodayDay = isToday(day);
+                    const isDisabled = isWeekend(day);
+                    const isPastDay = day < new Date().setHours(0, 0, 0, 0);
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => !isDisabled && setSelectedDate(day)}
+                        disabled={isDisabled}
+                        aria-label={`Select ${day.toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })}`}
+                        style={{
+                          padding: '6px 2px',
+                          border: isSelected
+                            ? '2px solid #f97316'
+                            : isTodayDay
+                              ? '2px solid #fb923c'
+                              : '1px solid #fdba74',
+                          borderRadius: '6px',
+                          background: isSelected
+                            ? 'linear-gradient(135deg, #fed7aa, #fdba74)'
+                            : isTodayDay
+                              ? 'linear-gradient(135deg, #ffedd5, #fed7aa)'
+                              : isDisabled
+                                ? '#f3f4f6'
+                                : 'linear-gradient(135deg, #fff7ed, #ffedd5)',
+                          color: isSelected
+                            ? '#000000'
+                            : isTodayDay
+                              ? '#c2410c'
+                              : isDisabled
+                                ? '#9ca3af'
+                                : '#c2410c',
+                          cursor: isDisabled ? 'not-allowed' : 'pointer',
+                          fontSize: '10px',
+                          fontWeight: isSelected ? '700' : '600',
+                          textAlign: 'center',
+                          transition: 'all 0.3s ease',
+                          opacity: isPastDay && !isTodayDay ? 0.6 : 1,
+                          boxShadow: isSelected
+                            ? '0 2px 8px rgba(249, 115, 22, 0.3)'
+                            : isTodayDay
+                              ? '0 1px 4px rgba(251, 146, 60, 0.2)'
+                              : '0 1px 3px rgba(249, 115, 22, 0.1)'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isDisabled && !isSelected) {
+                            e.target.style.background = 'linear-gradient(135deg, #fed7aa, #fdba74)';
+                            e.target.style.borderColor = '#f97316';
+                            e.target.style.transform = 'translateY(-1px)';
+                            e.target.style.boxShadow = '0 3px 8px rgba(249, 115, 22, 0.3)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isDisabled && !isSelected) {
+                            e.target.style.background = isTodayDay
+                              ? 'linear-gradient(135deg, #ffedd5, #fed7aa)'
+                              : 'linear-gradient(135deg, #fff7ed, #ffedd5)';
+                            e.target.style.borderColor = isTodayDay ? '#fb923c' : '#fdba74';
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = isTodayDay
+                              ? '0 1px 4px rgba(251, 146, 60, 0.2)'
+                              : '0 1px 3px rgba(249, 115, 22, 0.1)';
+                          }
+                        }}
+                      >
+                        <div style={{ lineHeight: '1.1' }}>
+                          <div style={{ fontSize: '9px', marginBottom: '1px' }}>
+                            {getDayAbbrev(day)}
+                          </div>
+                          <div style={{ fontSize: '11px', fontWeight: '600' }}>
+                            {day.getDate()}
+                          </div>
+                        </div>
+                      </button>
+                    );
                   })}
                 </div>
               </div>
@@ -1401,21 +1542,70 @@ const BookingBoard = () => {
                 margin: '0 0 12px 0',
                 color: '#034930',
                 fontSize: '14px',
-                fontWeight: '600',
+                fontWeight: '800',
                 textAlign: 'center'
               }}>
                 🏢 Select Meeting Spaces
               </h4>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '8px',
-                alignItems: 'start',
-                flex: '1',
-                overflowY: 'auto'
-              }}
-              className="meeting-spaces-grid">
-                {rooms.map(room => (
+              {selectedMeetingSpaces.length > 0 ? (
+                // Show selected meeting space name
+                <div style={{
+                  flex: '1',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '20px',
+                  background: 'linear-gradient(135deg, #059669, #047857)',
+                  borderRadius: '12px',
+                  border: '2px solid #065f46'
+                }}>
+                  <div style={{
+                    textAlign: 'center',
+                    color: '#ffffff'
+                  }}>
+                    <div style={{
+                      fontSize: '16px',
+                      fontWeight: '800',
+                      marginBottom: '4px'
+                    }}>
+                      ✓ Selected Space
+                    </div>
+                    <div style={{
+                      fontSize: '14px',
+                      fontWeight: '700'
+                    }}>
+                      {rooms.find(r => r.id === selectedMeetingSpaces[0])?.name}
+                    </div>
+                    <button
+                      onClick={() => setSelectedMeetingSpaces([])}
+                      style={{
+                        marginTop: '8px',
+                        padding: '4px 8px',
+                        background: 'rgba(255, 255, 255, 0.2)',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        borderRadius: '4px',
+                        color: '#ffffff',
+                        fontSize: '10px',
+                        cursor: 'pointer',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Change Selection
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Show all meeting spaces for selection
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '8px',
+                  alignItems: 'start',
+                  flex: '1',
+                  overflowY: 'auto'
+                }}
+                className="meeting-spaces-grid">
+                  {rooms.map(room => (
                   <label
                     key={room.id}
                     style={{
@@ -1489,20 +1679,7 @@ const BookingBoard = () => {
                       </div>
                     </div>
                   </label>
-                ))}
-              </div>
-              {selectedMeetingSpaces.length > 0 && (
-                <div style={{
-                  marginTop: '12px',
-                  padding: '8px 12px',
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid #10b981',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  color: '#034930',
-                  textAlign: 'center'
-                }}>
-                  {selectedMeetingSpaces.length} space{selectedMeetingSpaces.length > 1 ? 's' : ''} selected
+                  ))}
                 </div>
               )}
             </div>
@@ -1524,7 +1701,7 @@ const BookingBoard = () => {
                   margin: '0 0 12px 0',
                   color: '#4338ca',
                   fontSize: '14px',
-                  fontWeight: '600',
+                  fontWeight: '800',
                   textAlign: 'center'
                 }}>
                   📝 Select Booking Type

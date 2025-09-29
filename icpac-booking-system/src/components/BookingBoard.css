@@ -5500,3 +5500,47 @@ body.dark-mode .modal-footer-note {
     gap: 6px;
   }
 }
+
+/* Week Strip Styling */
+.week-strip button {
+  transition: all 0.3s ease !important;
+}
+
+/* Selected day - Orange theme */
+.week-strip button[style*="border: 2px solid #3b82f6"] {
+  border: 2px solid #f97316 !important;
+  background: linear-gradient(135deg, #fed7aa, #fdba74) !important;
+  color: #ea580c !important;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3) !important;
+}
+
+/* Today - Orange accent */
+.week-strip button[style*="border: 1px solid #10b981"]:not([style*="border: 2px solid"]) {
+  border: 2px solid #fb923c !important;
+  background: linear-gradient(135deg, #ffedd5, #fed7aa) !important;
+  color: #c2410c !important;
+  box-shadow: 0 1px 4px rgba(251, 146, 60, 0.2) !important;
+}
+
+/* Hover effects for available days */
+.week-strip button:hover:not(:disabled):not([style*="border: 2px solid"]) {
+  background: linear-gradient(135deg, #fff7ed, #ffedd5) !important;
+  border-color: #fdba74 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 3px 8px rgba(249, 115, 22, 0.2) !important;
+}
+
+/* Week Strip Responsive */
+@media (max-width: 768px) {
+  .week-strip {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .week-strip {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 4px !important;
+  }
+}
