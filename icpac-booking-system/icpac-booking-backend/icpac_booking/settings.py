@@ -15,6 +15,27 @@ SECRET_KEY = 'django-insecure-change-me-in-production'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
 ALLOWED_HOSTS = ['*']
 
 # Application definition
@@ -40,8 +61,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -167,5 +188,5 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,
 }
 
-# Custom user model if needed
-# AUTH_USER_MODEL = 'authentication.User'
+# Custom user model
+AUTH_USER_MODEL = 'authentication.User'

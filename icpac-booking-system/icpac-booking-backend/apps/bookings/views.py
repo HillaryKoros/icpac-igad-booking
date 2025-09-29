@@ -7,6 +7,9 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.db.models import Q, Count, Avg
 from datetime import datetime, timedelta
+import logging
+
+logger = logging.getLogger(__name__)
 from .models import Booking, ProcurementOrder
 from .serializers import (
     BookingSerializer,

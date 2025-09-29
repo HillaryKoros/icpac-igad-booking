@@ -11,8 +11,8 @@ on:
 
 env:
   REGISTRY: docker.io
-  FRONTEND_IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/icpac-booking-frontend
-  BACKEND_IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/icpac-booking-backend
+  FRONTEND_IMAGE_NAME: hkoros254/icpac-booking-frontend
+  BACKEND_IMAGE_NAME: hkoros254/icpac-booking-backend
 
 jobs:
   build-and-push:

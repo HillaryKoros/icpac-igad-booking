@@ -150,8 +150,10 @@ class BookingCreateUpdateSerializer(serializers.ModelSerializer):
         model = Booking
         fields = [
             'room', 'start_date', 'end_date', 'start_time', 'end_time',
-            'purpose', 'expected_attendees', 'special_requirements'
+            'purpose', 'expected_attendees', 'special_requirements',
+            'approval_status', 'approved_by', 'approved_at'
         ]
+        read_only_fields = ['approval_status', 'approved_by', 'approved_at']
     
     def validate(self, attrs):
         """Validate booking data"""
@@ -211,9 +213,15 @@ class BookingCreateUpdateSerializer(serializers.ModelSerializer):
         return attrs
     
     def create(self, validated_data):
-        """Create booking with current user"""
+        """Create booking with current user and auto-approve if no conflicts"""
         request = self.context.get('request')
         validated_data['user'] = request.user
+
+        # Auto-approve bookings since validation already checked for conflicts
+        validated_data['approval_status'] = 'approved'
+        validated_data['approved_by'] = request.user
+        validated_data['approved_at'] = timezone.now()
+
         return super().create(validated_data)
 
 
