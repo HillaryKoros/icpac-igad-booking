@@ -6,8 +6,55 @@ from pathlib import Path
 from datetime import timedelta
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def get_env_list(var_name, default):
+    """Return a list from a comma-separated environment variable."""
+    value = os.environ.get(var_name)
+    if value:
+        return [item.strip() for item in value.split(',') if item.strip()]
+    return default
+
+
+def get_env_bool(var_name, default=False):
+    """Parse a boolean environment variable."""
+    value = os.environ.get(var_name)
+    if value is None:
+        return default
+    return value.strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def get_env_int(var_name, default):
+    """Parse an integer environment variable safely."""
+    value = os.environ.get(var_name)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+DEFAULT_FRONTEND_URL = "http://localhost:3000"
+DEFAULT_BACKEND_URL = "http://localhost:8000"
+
+LOCAL_CLIENT_ORIGINS = [
+    DEFAULT_FRONTEND_URL,
+    "http://127.0.0.1:3000",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+LOCAL_BACKEND_ORIGINS = [
+    DEFAULT_BACKEND_URL,
+    "http://127.0.0.1:8000",
+]
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-change-me-in-production'
@@ -38,14 +85,11 @@ LOGGING = {
 
 ALLOWED_HOSTS = ['*']
 
-# CSRF and CORS Configuration for Replit
-CSRF_TRUSTED_ORIGINS = [
-    'https://*.replit.dev',
-    'https://*.replit.app', 
-    'https://*.replit.co',
-    'https://3b70c48f-f47e-4551-a8d9-cda080c4be38-00-1w6cll60hfasg.janeway.replit.dev',
-    'https://3b70c48f-f47e-4551-a8d9-cda080c4be38-00-1w6cll60hfasg.janeway.replit.dev:8000',
-]
+# CSRF and CORS configuration defaults for local development
+CSRF_TRUSTED_ORIGINS = get_env_list(
+    'CSRF_TRUSTED_ORIGINS',
+    LOCAL_CLIENT_ORIGINS + LOCAL_BACKEND_ORIGINS,
+)
 
 # Disable CSRF for development (alternative approach)
 CSRF_COOKIE_HTTPONLY = False
@@ -57,11 +101,7 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Frontend URL for admin "View site" link
-FRONTEND_URL = f"https://{os.environ.get('REPLIT_DOMAINS', 'localhost:5000')}"
-
-# CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = True  # For development
-CORS_ALLOW_CREDENTIALS = True
+FRONTEND_URL = os.environ.get('FRONTEND_URL', DEFAULT_FRONTEND_URL)
 
 # Application definition
 INSTALLED_APPS = [
@@ -159,10 +199,16 @@ DATABASES = {
     }
 }
 
-# Use DATABASE_URL if available (for production and Replit)
-import dj_database_url
+# Use DATABASE_URL if available (for hosted deployments)
 if 'DATABASE_URL' in os.environ:
-    DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'])
+    try:
+        import dj_database_url  # type: ignore
+    except ImportError as exc:  # pragma: no cover - configuration guard
+        raise ImproperlyConfigured(
+            "dj_database_url must be installed to use the DATABASE_URL setting"
+        ) from exc
+    else:
+        DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'])
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -196,16 +242,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS Settings - Updated for Replit environment
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:5000",
-    "http://127.0.0.1:5000",
-    "https://3b70c48f-f47e-4551-a8d9-cda080c4be38-00-1w6cll60hfasg.janeway.replit.dev",
-]
+# CORS settings default to local development-safe origins
+CORS_ALLOWED_ORIGINS = get_env_list(
+    'CORS_ALLOWED_ORIGINS',
+    LOCAL_CLIENT_ORIGINS + LOCAL_BACKEND_ORIGINS,
+)
 
-# Allow all origins for development in Replit
-CORS_ALLOW_ALL_ORIGINS = True
+# Allow overriding via environment when broader access is required
+CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'False').lower() == 'true'
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -263,7 +307,7 @@ AUTH_USER_MODEL = 'authentication.User'
 
 # Wagtail CMS Settings
 WAGTAIL_SITE_NAME = 'ICPAC Booking System CMS'
-WAGTAILADMIN_BASE_URL = 'https://3b70c48f-f47e-4551-a8d9-cda080c4be38-00-1w6cll60hfasg.janeway.replit.dev'
+WAGTAILADMIN_BASE_URL = os.environ.get('BACKEND_BASE_URL', DEFAULT_BACKEND_URL)
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
 # Security Settings
@@ -281,7 +325,7 @@ OTP_LOGIN_URL = '/admin/login/'
 # Security Headers
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'SAMEORIGIN'  # Changed from DENY to allow Replit iframes
+X_FRAME_OPTIONS = 'SAMEORIGIN'  # keep CMS previews working locally
 SECURE_HSTS_SECONDS = 3600
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
@@ -290,10 +334,30 @@ PASSWORD_RESET_TIMEOUT = 3600  # 1 hour
 LOGIN_ATTEMPT_LIMIT = 5
 LOGIN_LOCKOUT_TIME = 1800  # 30 minutes
 
-# Email Configuration (for OTP and notifications)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-DEFAULT_FROM_EMAIL = 'noreply@icpac.net'
-EMAIL_SUBJECT_PREFIX = '[ICPAC Booking] '
+# Email Configuration (OTP and notifications)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_PORT = get_env_int('EMAIL_PORT', 587)
+EMAIL_USE_TLS = get_env_bool('EMAIL_USE_TLS', True)
+EMAIL_USE_SSL = get_env_bool('EMAIL_USE_SSL', False)
+
+# Avoid conflicting TLS/SSL configuration
+if EMAIL_USE_TLS and EMAIL_USE_SSL:
+    EMAIL_USE_SSL = False
+
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@icpac.net')
+SERVER_EMAIL = os.environ.get('SERVER_EMAIL', DEFAULT_FROM_EMAIL)
+EMAIL_TIMEOUT = get_env_int('EMAIL_TIMEOUT', 10)
+
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND')
+if not EMAIL_BACKEND:
+    EMAIL_BACKEND = (
+        'django.core.mail.backends.smtp.EmailBackend'
+        if EMAIL_HOST else 'django.core.mail.backends.console.EmailBackend'
+    )
+
+EMAIL_SUBJECT_PREFIX = os.environ.get('EMAIL_SUBJECT_PREFIX', '[ICPAC Booking] ')
 
 # SMS/Phone OTP Settings (would need integration with SMS service)
 SMS_BACKEND = 'dummy'  # Placeholder for SMS service

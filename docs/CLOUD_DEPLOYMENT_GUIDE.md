@@ -125,9 +125,13 @@ POSTGRES_PASSWORD=your-secure-database-password-32-chars-min
 # Set Redis password
 REDIS_PASSWORD=your-secure-redis-password
 
-# Configure email (Gmail example)
+# Configure email (SMTP example)
+EMAIL_HOST=smtp.office365.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
 EMAIL_HOST_USER=noreply@icpac.net
 EMAIL_HOST_PASSWORD=your-app-specific-password
+DEFAULT_FROM_EMAIL=noreply@icpac.net
 ```
 
 ### Step 3: Configure SSL Certificate

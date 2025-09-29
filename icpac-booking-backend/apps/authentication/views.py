@@ -11,6 +11,8 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.crypto import get_random_string
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .serializers import (
     CustomTokenObtainPairSerializer,
     UserRegistrationSerializer,
@@ -25,6 +27,7 @@ from .email_utils import send_otp_email
 User = get_user_model()
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
     Custom login view that returns JWT tokens with user info
@@ -56,6 +59,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class UserRegistrationView(generics.CreateAPIView):
     """
     User registration endpoint
@@ -156,6 +160,7 @@ class LogoutView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class VerifyEmailOTPView(APIView):
     """
     Verify email using OTP code
@@ -209,6 +214,7 @@ class VerifyEmailOTPView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ResendOTPView(APIView):
     """
     Resend OTP for email verification

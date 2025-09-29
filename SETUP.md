@@ -51,8 +51,15 @@ ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
 # Redis Configuration
 REDIS_URL=redis://localhost:6379/0
 
-# Email Configuration (Optional)
-EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+# Email Configuration (OTP delivery)
+EMAIL_HOST=smtp.your-provider.net
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=noreply@icpac.net
+EMAIL_HOST_PASSWORD=your-app-password
+DEFAULT_FROM_EMAIL=noreply@icpac.net
+EMAIL_SUBJECT_PREFIX=[ICPAC Booking]
+EMAIL_TIMEOUT=10
 ```
 
 #### Database Setup
@@ -90,7 +97,7 @@ npm install
 Create `.env` file in `icpac-booking-frontend/` directory:
 ```env
 # API Configuration
-REACT_APP_API_URL=http://localhost:8000/api
+REACT_APP_API_BASE_URL=/api  # Leave unset to use default CRA proxy
 REACT_APP_WS_URL=ws://localhost:8000/ws
 
 # EmailJS Configuration (Optional)
@@ -201,7 +208,7 @@ ALLOWED_HOSTS=yourdomain.com
 DATABASE_URL=<production-database-url>
 
 # React
-REACT_APP_API_URL=https://yourdomain.com/api
+REACT_APP_API_BASE_URL=https://yourdomain.com/api
 ```
 
 ### Docker Deployment (Optional)

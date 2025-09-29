@@ -503,13 +503,12 @@ const BookingBoard = () => {
       return allSlots;
     }
     
-    // For today, filter out past time slots
-    return allSlots.filter(time => {
-      const [hours, minutes] = time.split(':').map(Number);
-      const slotDateTime = new Date(today);
-      slotDateTime.setHours(hours, minutes, 0, 0);
-      return slotDateTime > today;
-    });
+    // For today, show all slots but indicate which are past
+    // This ensures booking detection works for all slots
+    return allSlots;
+    
+    // Note: We show all slots so booking detection works correctly.
+    // Past slots can be styled differently in the UI if needed.
   };
 
   const [timeSlots, setTimeSlots] = useState(getAvailableTimeSlots(selectedDate));

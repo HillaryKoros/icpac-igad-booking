@@ -25,7 +25,13 @@ class BookingListView(generics.ListCreateAPIView):
     """
     List all bookings or create a new booking
     """
-    permission_classes = [permissions.IsAuthenticated]
+    def get_permissions(self):
+        """
+        Allow anonymous read access, require authentication for create
+        """
+        if self.request.method == 'GET':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
     
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -35,12 +41,17 @@ class BookingListView(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         queryset = Booking.objects.all().order_by('-created_at')
-        
-        # Filter based on user role
-        if user.role == 'super_admin':
+
+        # Handle anonymous users (for public booking view)
+        if not user.is_authenticated:
+            # Anonymous users can see all bookings for demo purposes
+            return queryset
+
+        # Filter based on user role for authenticated users
+        if hasattr(user, 'role') and user.role == 'super_admin':
             # Super admin can see all bookings
             pass
-        elif user.role == 'room_admin':
+        elif hasattr(user, 'role') and user.role == 'room_admin':
             # Room admin can see bookings for their managed rooms
             managed_room_ids = user.managed_rooms.values_list('id', flat=True)
             queryset = queryset.filter(

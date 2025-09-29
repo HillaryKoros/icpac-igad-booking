@@ -25,7 +25,7 @@ The ICPAC Internal Booking System is a full-featured, enterprise-grade meeting r
 
 **Infrastructure:**
 - **Nginx** - Reverse proxy and static file serving
-- **Replit** - Development and hosting platform
+- **Docker Compose** - Local development orchestration
 
 ## Core Features
 
@@ -40,6 +40,7 @@ The ICPAC Internal Booking System is a full-featured, enterprise-grade meeting r
 - **OTP Authentication**: Email and SMS-based one-time passwords
 - **Two-Factor Authentication**: Optional 2FA for enhanced security
 - **TOTP Support**: Time-based one-time password support
+- **SMTP Delivery**: Configurable SMTP settings deliver OTP emails via the core backend
 
 #### Account Security Features
 - **Login Attempt Monitoring**: Track and limit failed login attempts

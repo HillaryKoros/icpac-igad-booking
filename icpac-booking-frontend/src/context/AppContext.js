@@ -166,13 +166,14 @@ export const AppProvider = ({ children }) => {
     console.log('🔍 DEBUG: getCurrentUser() result:', currentUser);
     
     if (currentUser) {
-      console.log('🔍 DEBUG: Setting user in context and fetching bookings...');
+      console.log('🔍 DEBUG: Setting user in context...');
       setUser(currentUser);
-      // Fetch user-specific data
-      fetchBookings();
     } else {
-      console.log('🔍 DEBUG: No user found, not fetching bookings');
+      console.log('🔍 DEBUG: No user found, but still fetching public data');
     }
+
+    // Always fetch public data (rooms and bookings) regardless of authentication
+    fetchBookings();
     // Note: No fallback data - all data must come from Django API
   }, []);
 

@@ -105,11 +105,14 @@ DOMAIN_NAME=77.237.247.119
 ALLOWED_HOSTS=localhost,127.0.0.1,77.237.247.119
 FRONTEND_URL=http://77.237.247.119
 
-# Email (Configure with your settings)
-EMAIL_HOST_USER=your-email@gmail.com
+# Email (Configure with your SMTP settings)
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=notifications@icpac.net
 EMAIL_HOST_PASSWORD=your-app-password
-DEFAULT_FROM_EMAIL=noreply@icpac.net
-SSL_EMAIL=admin@icpac.net
+DEFAULT_FROM_EMAIL=notifications@icpac.net
+EMAIL_SUBJECT_PREFIX=[ICPAC Booking]
 
 # Backup
 BACKUP_KEEP_DAYS=7

@@ -51,8 +51,12 @@ DOMAIN_NAME=booking.icpac.net
 ALLOWED_HOSTS=localhost,127.0.0.1,booking.icpac.net
 
 # Email
-EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=notifications@example.com
 EMAIL_HOST_PASSWORD=your-app-password
+DEFAULT_FROM_EMAIL=notifications@example.com
 ```
 
 ## 🏗️ System Architecture

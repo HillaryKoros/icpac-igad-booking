@@ -1,5 +1,5 @@
-// Use proxy or relative URL for API in Replit environment
-const API_BASE_URL = '/api';
+// Default to CRA proxy for local development; allow override via env
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
 
 class APIService {
   constructor() {
@@ -100,6 +100,20 @@ class APIService {
 
     const errorData = await response.json();
     throw new Error(errorData.message || 'Email verification failed');
+  }
+
+  async resendOTP(email) {
+    const response = await this.request('/auth/resend-otp/', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+
+    if (response.ok) {
+      return await response.json();
+    }
+
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to resend OTP');
   }
 
   async resendVerificationCode(email) {

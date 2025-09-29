@@ -1,6 +1,8 @@
 """
 Security API views for ICPAC Booking System
 """
+import logging
+
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -9,12 +11,13 @@ from rest_framework.generics import ListAPIView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.conf import settings
+from django.core.mail import send_mail
+
 from .models import AllowedEmailDomain, LoginAttempt, AuditLog, OTPToken
 from .serializers import OTPTokenSerializer, AuditLogSerializer
-import random
-import string
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class GenerateOTPView(APIView):
@@ -27,6 +30,14 @@ class GenerateOTPView(APIView):
         user = request.user
         token_type = request.data.get('token_type', 'two_factor')
         
+        # Guard against missing delivery channel
+        if not user.email:
+            logger.warning("OTP requested for user %s without an email address", user.pk)
+            return Response(
+                {'error': 'No email address on file. Please contact an administrator.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         # Create OTP token
         otp_token = OTPToken.create_otp(
             user=user,
@@ -43,13 +54,41 @@ class GenerateOTPView(APIView):
             user_agent=request.META.get('HTTP_USER_AGENT', '')
         )
         
-        # In real implementation, send OTP via email/SMS
-        # For development, return the token (remove in production)
-        return Response({
+        # Deliver OTP via email
+        subject = f"{settings.EMAIL_SUBJECT_PREFIX}One-Time Password"
+        expires_local = timezone.localtime(otp_token.expires_at)
+        message = (
+            f"Hello {user.get_full_name() or user.email},\n\n"
+            f"Your verification code is: {otp_token.token}\n"
+            f"It expires at {expires_local.strftime('%Y-%m-%d %H:%M %Z')}.\n\n"
+            "If you did not request this code, please contact the ICPAC IT team immediately.\n\n"
+            "ICPAC Booking System"
+        )
+
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+        except Exception as exc:  # pragma: no cover - depends on SMTP
+            logger.exception("Failed to send OTP email to %s: %s", user.email, exc)
+            return Response(
+                {'error': 'Failed to deliver the OTP email. Please try again later.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
+        response_data = {
             'message': 'OTP generated successfully',
-            'token': otp_token.token if settings.DEBUG else None,  # Only in debug mode
-            'expires_at': otp_token.expires_at
-        })
+            'expires_at': otp_token.expires_at,
+            'email_sent': True,
+        }
+        if settings.DEBUG:
+            response_data['token'] = otp_token.token
+
+        return Response(response_data)
 
 
 class VerifyOTPView(APIView):
