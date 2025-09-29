@@ -11,8 +11,8 @@ on:
 
 env:
   REGISTRY: docker.io
-  FRONTEND_IMAGE_NAME: hkoros254/icpac-booking-frontend
-  BACKEND_IMAGE_NAME: hkoros254/icpac-booking-backend
+  FRONTEND_IMAGE_NAME: icpac/booking-frontend
+  BACKEND_IMAGE_NAME: icpac/booking-backend
 
 jobs:
   build-and-push:
@@ -55,8 +55,8 @@ jobs:
     - name: Build and push frontend Docker image
       uses: docker/build-push-action@v5
       with:
-        context: ./icpac-booking-system/icpac-booking-frontend
-        file: ./icpac-booking-system/docker/Dockerfile.frontend
+        context: ./icpac-booking-frontend
+        file: ./docker/Dockerfile.frontend
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.frontend-meta.outputs.tags }}
         labels: ${{ steps.frontend-meta.outputs.labels }}
@@ -64,8 +64,8 @@ jobs:
     - name: Build and push backend Docker image
       uses: docker/build-push-action@v5
       with:
-        context: ./icpac-booking-system/icpac-booking-backend
-        file: ./icpac-booking-system/docker/Dockerfile.backend
+        context: ./icpac-booking-backend
+        file: ./docker/Dockerfile.backend
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.backend-meta.outputs.tags }}
         labels: ${{ steps.backend-meta.outputs.labels }}
