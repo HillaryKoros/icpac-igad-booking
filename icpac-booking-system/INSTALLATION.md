@@ -120,7 +120,7 @@ icpac-boardroom-frontend/
   - Small Boardroom (First Floor)
   - Big Conference Room (Ground Floor)
   - Big Conference Room (First Floor)
-  - Computer Lab 1 (Underground)
+  - Computer Lab 1 (Ground Floor)
   - Computer Lab 2 (First Floor)
 
 ### Booking System

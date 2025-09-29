@@ -133,9 +133,9 @@ export const AppProvider = ({ children }) => {
     const fallbackRooms = [
       { id: 1, name: 'Conference Room - Ground Floor', capacity: 200, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing', 'Audio System'] },
       { id: 2, name: 'Boardroom - First Floor', capacity: 25, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing'] },
-      { id: 3, name: 'SmallBoardroom - 1st Floor', capacity: 12, category: 'conference', amenities: ['TV Screen', 'Whiteboard'] },
+      { id: 3, name: 'Small Boardroom - 1st Floor', capacity: 12, category: 'conference', amenities: ['TV Screen', 'Whiteboard'] },
       { id: 4, name: 'Situation Room', capacity: 8, category: 'special', amenities: ['Screen'] },
-      { id: 5, name: 'Computer Lab 1 - Underground', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard'] },
+      { id: 5, name: 'Computer Lab 1 - Ground Floor', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard'] },
       { id: 6, name: 'Computer Lab 2 - First Floor', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard'] },
     ];
     setRooms(fallbackRooms);

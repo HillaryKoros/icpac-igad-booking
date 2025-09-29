@@ -15,11 +15,11 @@ const ProtectedRoute = ({ children }) => {
 const PublicRoute = ({ children }) => {
   const { user } = useApp();
   const token = localStorage.getItem('access_token');
-  
+
   if (user || token) {
     return <Navigate to="/" replace />;
   }
-  
+
   return children;
 };
 
@@ -29,32 +29,32 @@ const AppContent = () => {
     <div className="App min-h-screen bg-gray-50 flex flex-col">
       <main className="flex-1">
         <Routes>
-          <Route 
-            path="/login" 
+          <Route
+            path="/login"
             element={
               <PublicRoute>
                 <LoginForm onSuccess={() => window.location.href = '/'} />
               </PublicRoute>
-            } 
+            }
           />
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
               <ProtectedRoute>
                 <BookingBoard />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/procurement" 
+          <Route
+            path="/procurement"
             element={
               <ProtectedRoute>
                 <div className="flex-1 flex items-center justify-center p-4">
@@ -63,7 +63,7 @@ const AppContent = () => {
                   </div>
                 </div>
               </ProtectedRoute>
-            } 
+            }
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

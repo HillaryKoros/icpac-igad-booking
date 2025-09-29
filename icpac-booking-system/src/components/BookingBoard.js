@@ -58,6 +58,7 @@ const BookingBoard = () => {
   });
   const [selectedRoomId, setSelectedRoomId] = useState('');
   const [selectedMeetingSpace, setSelectedMeetingSpace] = useState(null);
+  const [selectedMeetingSpaces, setSelectedMeetingSpaces] = useState([]);
   const [showMeetingSpaceModal, setShowMeetingSpaceModal] = useState(false);
 
   // localStorage functions
@@ -309,8 +310,22 @@ const BookingBoard = () => {
     return false;
   };
 
+  // Handle meeting space checkbox changes
+  const handleMeetingSpaceChange = (roomId, isChecked) => {
+    if (isChecked) {
+      setSelectedMeetingSpaces(prev => [...prev, roomId]);
+    } else {
+      setSelectedMeetingSpaces(prev => prev.filter(id => id !== roomId));
+    }
+  };
+
   const getVisibleRooms = () => {
-    // If user has selected a specific meeting space, show only that space
+    // If user has selected specific meeting spaces, show only those spaces
+    if (selectedMeetingSpaces.length > 0 && currentUser) {
+      return rooms.filter(room => selectedMeetingSpaces.includes(room.id));
+    }
+
+    // If user has selected a specific meeting space (legacy single selection), show only that space
     if (selectedMeetingSpace && currentUser) {
       return [selectedMeetingSpace];
     }
@@ -411,12 +426,21 @@ const BookingBoard = () => {
 
   const canManageBooking = (booking) => {
     if (!currentUser) return false;
+
+    // Super admin can manage all bookings
     if (currentUser.role === 'super_admin') return true;
+
+    // Room admin can manage bookings in their rooms
     if (currentUser.role === 'room_admin') {
       return currentUser.managedRooms && currentUser.managedRooms.includes(booking.roomId);
     }
-    // Users can manage their own bookings regardless of approval status
-    return booking.organizer === currentUser.email;
+
+    // Users can manage their own bookings (cancel and edit)
+    // Check if the current user is the organizer or creator of the booking
+    return booking.organizer === currentUser.name ||
+      booking.organizer === currentUser.email ||
+      booking.createdBy === currentUser.email ||
+      booking.createdBy === currentUser.id;
   };
 
   const cancelBooking = async (bookingId) => {
@@ -451,7 +475,19 @@ const BookingBoard = () => {
   };
 
   const updateBooking = (bookingData) => {
-    const updatedBooking = { ...editingBooking, ...bookingData };
+    // Preserve original creator information and approval status
+    const updatedBooking = {
+      ...editingBooking,
+      ...bookingData,
+      // Preserve original creator info
+      createdBy: editingBooking.createdBy,
+      createdByName: editingBooking.createdByName,
+      // Keep auto-approved status
+      approvalStatus: 'approved',
+      approvedBy: 'System',
+      approvedAt: new Date().toISOString()
+    };
+
     const updatedBookings = bookings.map(booking =>
       booking.id === editingBooking.id
         ? updatedBooking
@@ -459,9 +495,6 @@ const BookingBoard = () => {
     );
     setBookings(updatedBookings);
     saveBookingsToStorage(updatedBookings);
-
-    // Send procurement notification if there are orders
-    sendProcurementNotification(updatedBooking);
 
     setShowEditForm(false);
     setEditingBooking(null);
@@ -577,6 +610,10 @@ const BookingBoard = () => {
         setIsAdmin(true);
         localStorage.setItem('icpac_admin', 'true');
       }
+    } else {
+      // If no user is logged in, automatically show login modal instead of landing page
+      setShowUserLogin(true);
+      setShowLandingPage(false);
     }
 
     // Load users or create default super admin
@@ -616,9 +653,9 @@ const BookingBoard = () => {
     setRooms([
       { id: 1, name: 'Conference Room - Ground Floor', capacity: 200, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing', 'Audio System'] },
       { id: 2, name: 'Boardroom - First Floor', capacity: 25, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing'] },
-      { id: 3, name: 'SmallBoardroom - 1st Floor', capacity: 12, category: 'conference', amenities: ['TV Screen', 'Whiteboard'] },
+      { id: 3, name: 'Small Boardroom - 1st Floor', capacity: 12, category: 'conference', amenities: ['TV Screen', 'Whiteboard'] },
       { id: 4, name: 'Situation Room', capacity: 8, category: 'special', amenities: ['Screen'] },
-      { id: 5, name: 'Computer Lab 1 - Underground', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard',] },
+      { id: 5, name: 'Computer Lab 1 - Ground Floor', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard',] },
       { id: 6, name: 'Computer Lab 2 - First Floor', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard',] },
     ]);
 
@@ -640,11 +677,11 @@ const BookingBoard = () => {
           title: 'ICPAC Annual Conference',
           organizer: 'Dr. Abdi fitar',
           attendeeCount: 150,
-          procurementOrders: [
-            { itemName: 'Coffee & Tea', quantity: 50, notes: 'For morning breaks' },
-            { itemName: 'Water Bottles', quantity: 200, notes: 'Throughout the event' },
-            { itemName: 'Lunch Catering', quantity: 150, notes: 'All three days' }
-          ]
+          approvalStatus: 'approved',
+          approvedBy: 'System',
+          approvedAt: new Date().toISOString(),
+          createdBy: 'admin@icpac.net',
+          createdByName: 'Dr. Abdi fitar'
         },
         {
           id: 2,
@@ -655,10 +692,11 @@ const BookingBoard = () => {
           title: 'Climate Advisory Meeting',
           organizer: 'ICPAC Team',
           attendeeCount: 12,
-          procurementOrders: [
-            { itemName: 'Coffee & Tea', quantity: 12, notes: 'Afternoon session' },
-            { itemName: 'Meeting Stationery', quantity: 12, notes: 'Notebooks and pens' }
-          ]
+          approvalStatus: 'approved',
+          approvedBy: 'System',
+          approvedAt: new Date().toISOString(),
+          createdBy: 'admin@icpac.net',
+          createdByName: 'ICPAC Team'
         },
         {
           id: 3,
@@ -669,10 +707,11 @@ const BookingBoard = () => {
           title: 'Emergency Response Planning',
           organizer: 'Disaster Risk Management',
           attendeeCount: 8,
-          procurementOrders: [
-            { itemName: 'Lunch Catering', quantity: 8, notes: 'Working lunch' },
-            { itemName: 'Coffee & Tea', quantity: 8, notes: 'All day refreshments' }
-          ]
+          approvalStatus: 'approved',
+          approvedBy: 'System',
+          approvedAt: new Date().toISOString(),
+          createdBy: 'admin@icpac.net',
+          createdByName: 'Disaster Risk Management'
         },
         {
           id: 4,
@@ -683,10 +722,11 @@ const BookingBoard = () => {
           title: 'GIS Training Workshop',
           organizer: 'IT Department',
           attendeeCount: 15,
-          procurementOrders: [
-            { itemName: 'Coffee & Tea', quantity: 15, notes: 'Morning session' },
-            { itemName: 'Training Materials', quantity: 15, notes: 'Printed handouts' }
-          ]
+          approvalStatus: 'approved',
+          approvedBy: 'System',
+          approvedAt: new Date().toISOString(),
+          createdBy: 'admin@icpac.net',
+          createdByName: 'IT Department'
         },
         {
           id: 5,
@@ -697,10 +737,11 @@ const BookingBoard = () => {
           title: 'Climate Data Analysis Training',
           organizer: 'Research Team',
           attendeeCount: 18,
-          procurementOrders: [
-            { itemName: 'Lunch Catering', quantity: 18, notes: 'Working lunch included' },
-            { itemName: 'Coffee & Tea', quantity: 18, notes: 'All day refreshments' }
-          ]
+          approvalStatus: 'approved',
+          approvedBy: 'System',
+          approvedAt: new Date().toISOString(),
+          createdBy: 'admin@icpac.net',
+          createdByName: 'Research Team'
         },
       ];
       setBookings(defaultBookings);
@@ -966,19 +1007,21 @@ const BookingBoard = () => {
       organizer: bookingData.organizer,
       description: bookingData.description || '',
       attendeeCount: bookingData.attendeeCount || 1,
-      procurementOrders: bookingData.procurementOrders || [],
-      // Add approval status fields
-      approvalStatus: 'pending', // pending, approved, rejected
-      approvedBy: null,
-      approvedAt: null
+      // Add approval status fields - Auto-approved
+      approvalStatus: 'approved', // automatically approved
+      approvedBy: 'System',
+      approvedAt: new Date().toISOString(),
+      // Add creator information for user permissions
+      userId: currentUser ? currentUser.id : null,
+      userName: currentUser ? currentUser.name : bookingData.organizer,
+      createdBy: currentUser ? currentUser.email : bookingData.organizer,
+      createdByName: currentUser ? currentUser.name : bookingData.organizer
     };
 
     const updatedBookings = [...bookings, newBooking];
     setBookings(updatedBookings);
     saveBookingsToStorage(updatedBookings); // Save to localStorage
 
-    // Send procurement notification if there are orders
-    sendProcurementNotification(newBooking);
 
     // 📧 EMAIL NOTIFICATIONS - Send booking confirmation and admin notifications
     try {
@@ -1008,8 +1051,8 @@ const BookingBoard = () => {
     setSelectedTime('');
   };
 
-  // Show landing page if not authenticated
-  if (showLandingPage || !isAuthenticated) {
+  // Show landing page with automatic login modal if not authenticated
+  if (!isAuthenticated) {
     return (
       <div className="booking-container">
         <LandingPage
@@ -1089,134 +1132,448 @@ const BookingBoard = () => {
         {/* Date Selector */}
         <div className="date-section">
           <div className="date-header">
-            <h2 className="date-title">Select Date</h2>
-
-            <div className="admin-controls">
+            <div className="admin-controls" style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              gap: '12px'
+            }}>
               {currentUser ? (
-                <div className="user-panel">
-                  <span className="user-info">
+                <>
+                  <span style={{
+                    fontSize: '14px',
+                    color: '#374151',
+                    fontWeight: '500',
+                    marginRight: '8px'
+                  }}>
                     {currentUser.name}
                     {currentUser.role !== 'super_admin' && (
-                      <span className={`role-badge role-${currentUser.role}`}>
+                      <span className={`role-badge role-${currentUser.role}`} style={{
+                        marginLeft: '8px',
+                        fontSize: '12px',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        background: '#e5e7eb',
+                        color: '#4b5563'
+                      }}>
                         {currentUser.role === 'room_admin' ? 'Room Admin' :
                           currentUser.role === 'procurement_officer' ? 'Procurement Officer' : 'User'}
                       </span>
                     )}
                   </span>
+
                   {currentUser.role === 'super_admin' && (
-                    <>
-                      <button
-                        onClick={() => setShowUserManagement(true)}
-                        className="user-management-btn"
-                        title="Manage Users"
-                      >
-                        Manage Users
-                      </button>
-                    </>
+                    <button
+                      onClick={() => setShowUserManagement(true)}
+                      title="Manage Users"
+                      style={{
+                        padding: '8px 12px',
+                        background: '#f3f4f6',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        color: '#374151',
+                        cursor: 'pointer',
+                        height: '32px',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      👥 Users
+                    </button>
                   )}
+
                   {currentUser.role === 'procurement_officer' && (
                     <button
                       onClick={() => setShowProcurementDashboard(true)}
-                      className="procurement-dashboard-btn"
                       title="View Procurement Dashboard"
+                      style={{
+                        padding: '8px 12px',
+                        background: '#f3f4f6',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        color: '#374151',
+                        cursor: 'pointer',
+                        height: '32px',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
                     >
-                      Procurement Dashboard
+                      📋 Procurement
                     </button>
                   )}
+
                   <button
                     onClick={() => setShowEmailSettings(true)}
-                    className="email-settings-btn"
                     title="Email Notification Settings"
+                    style={{
+                      padding: '8px',
+                      background: '#f3f4f6',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      height: '32px',
+                      width: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
                   >
-                    📧 Email Settings
+                    📧
                   </button>
+
                   <button
                     onClick={toggleDarkMode}
-                    className="dark-mode-btn"
                     title={`Switch to ${isDarkMode ? 'Light' : 'Dark'} Mode`}
+                    style={{
+                      padding: '8px',
+                      background: '#f3f4f6',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      height: '32px',
+                      width: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
                   >
-                    {isDarkMode ? '☀️' : '🌙'} {isDarkMode ? 'Light' : 'Dark'} Mode
+                    {isDarkMode ? '🌙' : '☀️'}
                   </button>
+
                   <button
                     onClick={handleUserLogout}
-                    className="admin-logout-btn"
                     title="Logout"
+                    style={{
+                      padding: '8px 16px',
+                      background: '#f3f4f6',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      color: '#374151',
+                      cursor: 'pointer',
+                      height: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#e5e7eb';
+                      e.target.style.borderColor = '#9ca3af';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = '#f3f4f6';
+                      e.target.style.borderColor = '#d1d5db';
+                    }}
                   >
                     Logout
                   </button>
-                </div>
+                </>
               ) : null}
             </div>
           </div>
 
-          {/* Date Picker Input */}
-          <div className="date-picker-section">
-            <label className="date-picker-label">Choose any date:</label>
-            <input
-              type="date"
-              value={formatDate(selectedDate)}
-              onChange={(e) => setSelectedDate(new Date(e.target.value))}
-              className="date-picker-input"
-            />
+          {/* 12-Column Grid Layout: Date Picker | Meeting Spaces | Time Slots */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(12, 1fr)',
+            gap: '16px',
+            alignItems: 'start',
+            marginTop: '16px'
+          }}
+          className="booking-grid-container">
 
-            {/* Meeting Space Dropdown - positioned below and to the right */}
-            <div style={{ marginTop: '12px', marginLeft: '40px' }}>
-              <div className="room-selector-container" style={{
-                background: 'linear-gradient(135deg, #f0fdf4, #e6fffa)',
-                padding: '8px 12px',
-                border: '1px solid #10b981',
-                borderRadius: '25px',
-                display: 'inline-block',
-                minWidth: '280px',
-                transition: 'all 0.3s ease',
-                cursor: 'pointer'
-              }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-                  e.target.style.transform = 'translateY(-1px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.2)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'linear-gradient(135deg, #f0fdf4, #e6fffa)';
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = 'none';
+            {/* Date Picker - 3/12 columns on desktop, full width on mobile */}
+            <div style={{
+              gridColumn: 'span 3',
+              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+              padding: '16px',
+              border: '1px solid #cbd5e1',
+              borderRadius: '12px',
+              height: 'fit-content',
+              minHeight: '200px'
+            }}
+            className="date-picker-card">
+              <h4 style={{
+                margin: '0 0 12px 0',
+                color: '#475569',
+                fontSize: '14px',
+                fontWeight: '600',
+                textAlign: 'center'
+              }}>
+                📅 Select Date
+              </h4>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  color: '#64748b',
+                  marginBottom: '8px'
                 }}>
-                <select
-                  id="room-selector"
-                  className="room-selector"
-                  value={selectedRoomId}
-                  onChange={(e) => {
-                    setSelectedRoomId(e.target.value);
-                    if (e.target.value) {
-                      const selectedSpace = rooms.find(room => room.id.toString() === e.target.value);
-                      setSelectedMeetingSpace(selectedSpace);
-                      saveMeetingSpaceSelection(e.target.value);
-                    } else {
-                      setSelectedMeetingSpace(null);
-                      clearMeetingSpaceSelection();
-                    }
-                  }}
+                  Choose any date:
+                </label>
+                <input
+                  type="date"
+                  value={formatDate(selectedDate)}
+                  onChange={(e) => setSelectedDate(new Date(e.target.value))}
                   style={{
-                    fontSize: '14px',
-                    padding: '6px 12px',
                     width: '100%',
-                    border: 'none',
-                    background: 'transparent',
-                    color: '#034930',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    outline: 'none'
+                    padding: '10px',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    background: '#ffffff',
+                    color: '#374151'
                   }}
-                >
-                  <option value="">🏢 Select Meeting Space</option>
-                  {rooms.map(room => (
-                    <option key={room.id} value={room.id}>
-                      {room.name} (Cap: {room.capacity})
-                    </option>
-                  ))}
-                </select>
+                />
+              </div>
+              <div style={{
+                padding: '12px',
+                background: '#f8fafc',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <div style={{
+                  fontSize: '12px',
+                  color: '#64748b',
+                  fontWeight: '500',
+                  marginBottom: '6px'
+                }}>
+                  Selected Date:
+                </div>
+                <div style={{
+                  fontSize: '13px',
+                  color: '#374151',
+                  fontWeight: '600'
+                }}>
+                  {selectedDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </div>
               </div>
             </div>
+
+            {/* Meeting Spaces - 5/12 columns on desktop, full width on mobile */}
+            <div style={{
+              gridColumn: 'span 5',
+              background: 'linear-gradient(135deg, #f0fdf4, #e6fffa)',
+              padding: '16px',
+              border: '1px solid #10b981',
+              borderRadius: '12px',
+              height: 'fit-content',
+              minHeight: '200px'
+            }}
+            className="meeting-spaces-card">
+              <h4 style={{
+                margin: '0 0 12px 0',
+                color: '#034930',
+                fontSize: '14px',
+                fontWeight: '600',
+                textAlign: 'center'
+              }}>
+                🏢 Select Meeting Spaces
+              </h4>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '8px',
+                alignItems: 'start'
+              }}
+              className="meeting-spaces-grid">
+                {rooms.map(room => (
+                  <label
+                    key={room.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      padding: '8px',
+                      background: selectedMeetingSpaces.includes(room.id)
+                        ? 'linear-gradient(135deg, #059669, #047857)'
+                        : '#ffffff',
+                      border: selectedMeetingSpaces.includes(room.id)
+                        ? '2px solid #065f46'
+                        : '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      fontSize: '11px',
+                      color: selectedMeetingSpaces.includes(room.id) ? '#ffffff' : '#374151',
+                      fontWeight: selectedMeetingSpaces.includes(room.id) ? '700' : '500',
+                      boxShadow: selectedMeetingSpaces.includes(room.id)
+                        ? '0 2px 4px rgba(5, 150, 105, 0.3)'
+                        : 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!selectedMeetingSpaces.includes(room.id)) {
+                        e.target.style.background = '#f3f4f6';
+                        e.target.style.transform = 'translateY(-1px)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!selectedMeetingSpaces.includes(room.id)) {
+                        e.target.style.background = '#ffffff';
+                        e.target.style.transform = 'translateY(0)';
+                      }
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedMeetingSpaces.includes(room.id)}
+                      onChange={(e) => handleMeetingSpaceChange(room.id, e.target.checked)}
+                      style={{
+                        marginRight: '6px',
+                        marginTop: '2px',
+                        accentColor: '#10b981',
+                        transform: 'scale(1.1)'
+                      }}
+                    />
+                    <div style={{ lineHeight: '1.3', flex: 1 }}>
+                      <div style={{
+                        fontWeight: selectedMeetingSpaces.includes(room.id) ? '700' : '600',
+                        marginBottom: '2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: selectedMeetingSpaces.includes(room.id) ? '#ffffff' : '#374151'
+                      }}>
+                        {selectedMeetingSpaces.includes(room.id) && (
+                          <span style={{
+                            fontSize: '10px',
+                            color: '#ffffff',
+                            fontWeight: '700'
+                          }}>✓</span>
+                        )}
+                        {room.name}
+                      </div>
+                      <div style={{
+                        fontSize: '10px',
+                        color: selectedMeetingSpaces.includes(room.id) ? '#f0fdf4' : '#6b7280',
+                        fontWeight: selectedMeetingSpaces.includes(room.id) ? '600' : '400'
+                      }}>
+                        Capacity: {room.capacity}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {selectedMeetingSpaces.length > 0 && (
+                <div style={{
+                  marginTop: '12px',
+                  padding: '8px 12px',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid #10b981',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  color: '#034930',
+                  textAlign: 'center'
+                }}>
+                  {selectedMeetingSpaces.length} space{selectedMeetingSpaces.length > 1 ? 's' : ''} selected
+                </div>
+              )}
+            </div>
+
+            {/* Time Slots - 4/12 columns on desktop, full width on mobile */}
+            {selectedMeetingSpaces.length > 0 && (
+              <div style={{
+                gridColumn: 'span 4',
+                background: 'linear-gradient(135deg, #fef3e2, #fdf4e6)',
+                padding: '16px',
+                border: '1px solid #f59e0b',
+                borderRadius: '12px',
+                height: 'fit-content',
+                minHeight: '200px',
+                marginTop: '-4px'
+              }}
+              className="time-slots-card">
+                <h4 style={{
+                  margin: '0 0 12px 0',
+                  color: '#92400e',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textAlign: 'center'
+                }}>
+                  ⏰ Select Time Slot
+                </h4>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '6px',
+                  maxHeight: '180px',
+                  overflowY: 'auto'
+                }}
+                className="time-slots-grid">
+                  {getAvailableTimeSlots(selectedDate).map(time => {
+                    const hasConflict = selectedMeetingSpaces.some(roomId =>
+                      isSlotBooked(roomId, time)
+                    );
+                    const isPast = isTimeSlotInPast(selectedDate, time);
+                    const canBook = !hasConflict && !isPast;
+
+                    return (
+                      <button
+                        key={time}
+                        onClick={() => canBook && handleBooking(
+                          rooms.find(r => selectedMeetingSpaces.includes(r.id)),
+                          time
+                        )}
+                        disabled={!canBook}
+                        style={{
+                          padding: '8px 6px',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '6px',
+                          background: canBook
+                            ? 'linear-gradient(135deg, #10b981, #059669)'
+                            : hasConflict
+                              ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                              : '#f3f4f6',
+                          color: canBook ? '#ffffff' : hasConflict ? '#ffffff' : '#9ca3af',
+                          fontSize: '10px',
+                          fontWeight: '600',
+                          cursor: canBook ? 'pointer' : 'not-allowed',
+                          transition: 'all 0.2s ease',
+                          textAlign: 'center',
+                          minHeight: '50px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (canBook) {
+                            e.target.style.transform = 'translateY(-1px)';
+                            e.target.style.boxShadow = '0 2px 6px rgba(16, 185, 129, 0.3)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (canBook) {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = 'none';
+                          }
+                        }}
+                      >
+                        <div style={{ lineHeight: '1.1' }}>
+                          <div style={{ fontWeight: '700' }}>{time}</div>
+                          <div style={{
+                            fontSize: '8px',
+                            opacity: 0.8,
+                            marginTop: '2px'
+                          }}>
+                            {canBook ? 'Available' : hasConflict ? 'Booked' : 'Past'}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Approval Filter for Admins */}
@@ -1236,25 +1593,6 @@ const BookingBoard = () => {
             </div>
           )}
 
-          {/* Quick Date Buttons */}
-          <div className="date-buttons">
-            <p className="quick-dates-label">Quick select (this week):</p>
-            {[...Array(7)].map((_, index) => {
-              const date = new Date();
-              date.setDate(date.getDate() + index);
-              const isSelected = formatDate(date) === formatDate(selectedDate);
-              return (
-                <button
-                  key={index}
-                  onClick={() => setSelectedDate(date)}
-                  className={`date-button ${isSelected ? 'selected' : ''}`}
-                >
-                  <span className="day">{date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                  <span className="date">{date.getDate()}</span>
-                </button>
-              );
-            })}
-          </div>
         </div>
 
         {/* Booking Grid */}
@@ -1313,30 +1651,27 @@ const BookingBoard = () => {
                                   <span className="room-category-icon">{categoryInfo.icon}</span>
                                   {room.name}
                                 </h3>
-                                <div className="capacity-indicator">
-                                  <div className="capacity-visual">
-                                    <span className="capacity-icon">👥</span>
-                                    <span className="capacity-number">{room.capacity}</span>
+                                <div className="room-details">
+                                  <div className="room-detail">
+                                    <span className="room-detail-icon">👥</span>
+                                    <span className="room-detail-text">{room.capacity}</span>
                                   </div>
-                                  <div className="capacity-bar">
-                                    <div
-                                      className={`capacity-fill ${getCapacityLevel(room.capacity)}`}
-                                      style={{
-                                        width: `${Math.min((room.capacity / 200) * 100, 100)}%`,
-                                        backgroundColor: getCapacityColor(room.capacity)
-                                      }}
-                                    ></div>
+                                  <div className="room-detail">
+                                    <span className="room-detail-icon">🏷️</span>
+                                    <span className="room-detail-text">{categoryInfo.label}</span>
                                   </div>
                                 </div>
                               </div>
-                              <div className="room-amenities">
-                                {room.amenities.map(amenity => (
-                                  <span key={amenity} className="amenity-tag" title={amenity}>
-                                    <span className="amenity-icon">{getAmenityIcon(amenity)}</span>
-                                    <span className="amenity-text">{amenity}</span>
-                                  </span>
-                                ))}
-                              </div>
+                              {room.amenities && room.amenities.length > 0 && (
+                                <div className="room-amenities">
+                                  {room.amenities.slice(0, 3).map((amenity, index) => (
+                                    <span key={index} className="amenity-tag">{amenity}</span>
+                                  ))}
+                                  {room.amenities.length > 3 && (
+                                    <span className="amenity-tag more">+{room.amenities.length - 3}</span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </td>
                           {getAvailableTimeSlots(selectedDate).map(time => {
@@ -1362,85 +1697,86 @@ const BookingBoard = () => {
                                         booking.approvalStatus === 'rejected' ? '❌' : '⏳'}
                                     </div>
                                     <div className="slot-content">
-                                      <div className="slot-title">{booking.title}</div>
-                                      <div className="slot-subtitle">{booking.organizer}</div>
-                                      {booking.bookingType !== 'hourly' && (
-                                        <div className="slot-duration">
-                                          {booking.bookingType === 'full-day' ? 'Full Day' :
-                                            booking.bookingType === 'weekly' ? 'Weekly' :
-                                              booking.bookingType === 'multi-day' ?
-                                                `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}` :
-                                                'Extended'}
-                                        </div>
+                                      <div className="slot-title">
+                                        {booking.title}
+                                      </div>
+                                      <div className="slot-subtitle">
+                                        {booking.userName}
+                                      </div>
+                                      {booking.bookingType === 'full-day' && (
+                                        <div className="booking-type-badge">Full Day</div>
                                       )}
-                                    </div>
-                                    <div className={`slot-status booked-status ${booking.approvalStatus || 'pending'}`}>
-                                      <span className="status-text">
-                                        {booking.approvalStatus === 'approved' && 'Approved'}
-                                        {booking.approvalStatus === 'rejected' && 'Rejected'}
-                                        {(!booking.approvalStatus || booking.approvalStatus === 'pending') && 'Pending'}
-                                      </span>
-                                      <div className={`status-pulse ${booking.approvalStatus || 'pending'}`}></div>
-                                    </div>
-                                    {canManageBooking(booking) && (
-                                      <div className="admin-booking-controls">
-                                        <button
-                                          onClick={() => editBooking(booking)}
-                                          className="edit-booking-btn"
-                                          title="Edit this booking"
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          onClick={() => cancelBooking(booking.id)}
-                                          className="cancel-booking-btn"
-                                          title="Cancel this booking"
-                                        >
-                                          Cancel
-                                        </button>
+                                      {booking.bookingType === 'multi-day' && (
+                                        <div className="booking-type-badge">Multi-Day</div>
+                                      )}
+                                      {booking.bookingType === 'weekly' && (
+                                        <div className="booking-type-badge">Weekly</div>
+                                      )}
+                                      <div className="slot-controls">
+                                        {/* Only show edit/cancel for booking owner or admin */}
+                                        {(booking.userId === currentUser?.id ||
+                                          (booking.createdBy === currentUser?.email) ||
+                                          (booking.createdByName === currentUser?.name) ||
+                                          canApproveBooking(booking)) && (
+                                          <div className="slot-actions">
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setEditingBooking(booking);
+                                                setShowEditForm(true);
+                                              }}
+                                              className="slot-action-btn edit"
+                                              title="Edit booking"
+                                            >
+                                              ✏️
+                                            </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (window.confirm('Cancel this booking?')) {
+                                                  cancelBooking(booking.id);
+                                                }
+                                              }}
+                                              className="slot-action-btn cancel"
+                                              title="Cancel booking"
+                                            >
+                                              ❌
+                                            </button>
+                                          </div>
+                                        )}
+                                        {/* Admin approval buttons */}
+                                        {currentUser && canApproveBooking(booking) && booking.approvalStatus === 'pending' && (
+                                          <div className="approval-actions">
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                approveBooking(booking.id);
+                                              }}
+                                              className="approval-btn approve"
+                                              title="Approve booking"
+                                            >
+                                              ✅
+                                            </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                const reason = prompt('Reason for rejection (optional):');
+                                                rejectBooking(booking.id, reason);
+                                              }}
+                                              className="approval-btn reject"
+                                              title="Reject booking"
+                                            >
+                                              ❌
+                                            </button>
+                                          </div>
+                                        )}
                                       </div>
-                                    )}
-                                    {/* Approval Controls for Room Admins and Super Admins */}
-                                    {canApproveBooking(booking) && (!booking.approvalStatus || booking.approvalStatus === 'pending') && (
-                                      <div className="approval-controls">
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            approveBooking(booking.id);
-                                          }}
-                                          className="approve-booking-btn"
-                                          title="Approve this booking"
-                                        >
-                                          ✅ Approve
-                                        </button>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            rejectBooking(booking.id);
-                                          }}
-                                          className="reject-booking-btn"
-                                          title="Reject this booking"
-                                        >
-                                          ❌ Reject
-                                        </button>
-                                      </div>
-                                    )}
+                                    </div>
                                   </div>
                                 ) : (
-                                  <button
-                                    onClick={() => handleBooking(room, time)}
-                                    className="modern-time-slot available"
-                                  >
-                                    <div className="slot-icon">⏰</div>
-                                    <div className="slot-content">
-                                      <div className="slot-title">Available</div>
-                                      <div className="slot-subtitle">Click to book</div>
-                                    </div>
-                                    <div className="slot-status available-status">
-                                      <span className="status-indicator">✅</span>
-                                      <div className="availability-pulse"></div>
-                                    </div>
-                                  </button>
+                                  <div className="modern-time-slot empty-slot">
+                                    {/* Empty cell for available slots - maintains grid alignment */}
+                                  </div>
                                 )}
                               </td>
                             );
@@ -1793,8 +2129,7 @@ const BookingForm = ({ room, time, date, currentUser, onConfirm, onCancel }) => 
     startTime: initialStartTime,
     endTime: calculateEndTime(initialStartTime, 0.5),
     description: '',
-    attendeeCount: 1,
-    procurementOrders: []
+    attendeeCount: 1
   });
 
   const isTimeSlotInPast = (date, time) => {
@@ -2167,24 +2502,6 @@ const BookingForm = ({ room, time, date, currentUser, onConfirm, onCancel }) => 
               </div>
             </div>
 
-            <div className="form-field-group full-width">
-              <div className="procurement-card">
-                <div className="procurement-header">
-                  <div className="procurement-icon">🛍️</div>
-                  <div className="procurement-title">
-                    <h4>Procurement Orders</h4>
-                    <p>Optional catering and supplies for your meeting</p>
-                  </div>
-                </div>
-                <div className="procurement-content">
-                  <ProcurementOrdersSection
-                    orders={formData.procurementOrders}
-                    attendeeCount={formData.attendeeCount}
-                    onOrdersChange={(orders) => setFormData({ ...formData, procurementOrders: orders })}
-                  />
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="booking-form-actions">
@@ -2341,6 +2658,65 @@ const UserSignupModal = ({ onSignup, onCancel, onSwitchToLogin }) => {
   });
   const [validationErrors, setValidationErrors] = useState({});
 
+  // OTP related states
+  const [showOTPStep, setShowOTPStep] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [generatedOTP, setGeneratedOTP] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Generate 6-digit OTP
+  const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+
+  // Send OTP via email (simulated for now - you can integrate with real email service)
+  const sendOTP = async (email) => {
+    const otp = generateOTP();
+    setGeneratedOTP(otp);
+
+    try {
+      // For now, we'll just log the OTP (in production, send via email service)
+      console.log(`OTP for ${email}: ${otp}`);
+
+      // Simulate email sending success
+      alert(`Verification code has been sent to ${email}\n\nFor demo purposes, your OTP is: ${otp}\n\n(In production, this would be sent via email)`);
+
+      setOtpSent(true);
+      setOtpError('');
+
+      // Start resend cooldown (60 seconds)
+      setResendCooldown(60);
+      const timer = setInterval(() => {
+        setResendCooldown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return true;
+    } catch (error) {
+      console.error('Failed to send OTP:', error);
+      setOtpError('Failed to send verification code. Please try again.');
+      return false;
+    }
+  };
+
+  // Verify OTP
+  const verifyOTP = () => {
+    if (otpCode === generatedOTP) {
+      setOtpError('');
+      return true;
+    } else {
+      setOtpError('Invalid verification code. Please try again.');
+      return false;
+    }
+  };
+
   const calculatePasswordStrength = (password) => {
     let score = 0;
     let text = '';
@@ -2418,17 +2794,36 @@ const UserSignupModal = ({ onSignup, onCancel, onSwitchToLogin }) => {
     return errors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
-      return;
-    }
+    if (!showOTPStep) {
+      // Step 1: Validate form and send OTP
+      const errors = validateForm();
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        return;
+      }
 
-    setValidationErrors({});
-    onSignup(formData);
+      setValidationErrors({});
+
+      // Send OTP to email
+      const otpSent = await sendOTP(formData.email);
+      if (otpSent) {
+        setShowOTPStep(true);
+      }
+    } else {
+      // Step 2: Verify OTP and complete signup
+      if (!otpCode) {
+        setOtpError('Please enter the verification code');
+        return;
+      }
+
+      if (verifyOTP()) {
+        // OTP verified successfully, proceed with signup
+        onSignup(formData);
+      }
+    }
   };
 
   const handleChange = (e) => {
@@ -2478,16 +2873,12 @@ const UserSignupModal = ({ onSignup, onCancel, onSwitchToLogin }) => {
             <p className="branding-subtitle">Create your account to start booking meeting rooms and accessing our services</p>
             <div className="branding-features">
               <div className="feature-item">
-                <span className="feature-icon">🚀</span>
-                <span className="feature-text">Quick account setup</span>
+                <span className="feature-icon">📧</span>
+                <span className="feature-text">Only ICPAC and IGAD email addresses are accepted</span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">🔐</span>
-                <span className="feature-text">Secure authentication</span>
-              </div>
-              <div className="feature-item">
-                <span className="feature-icon">🎯</span>
-                <span className="feature-text">Personalized experience</span>
+                <span className="feature-icon">✅</span>
+                <span className="feature-text">Examples: user@icpac.net, staff@igad.int</span>
               </div>
             </div>
           </div>
@@ -2500,100 +2891,169 @@ const UserSignupModal = ({ onSignup, onCancel, onSwitchToLogin }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="auth-form">
-              <div className="floating-label-group">
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  onFocus={() => handleFocus('name')}
-                  onBlur={() => handleBlur('name')}
-                  className={`floating-input ${formData.name ? 'has-value' : ''} ${validationErrors.name ? 'error' : ''}`}
-                  required
-                  id="signup-name"
-                />
-                <label htmlFor="signup-name" className="floating-label">
-                  Full Name
-                </label>
-                {validationErrors.name && <span className="error-message">{validationErrors.name}</span>}
-              </div>
-
-              <div className="floating-label-group">
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  onFocus={() => handleFocus('email')}
-                  onBlur={() => handleBlur('email')}
-                  className={`floating-input ${formData.email ? 'has-value' : ''} ${validationErrors.email ? 'error' : ''}`}
-                  required
-                  id="signup-email"
-                />
-                <label htmlFor="signup-email" className="floating-label">
-                  Email Address
-                </label>
-                {validationErrors.email && <span className="error-message">{validationErrors.email}</span>}
-              </div>
-
-              <div className="floating-label-group">
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  onFocus={() => handleFocus('password')}
-                  onBlur={() => handleBlur('password')}
-                  className={`floating-input ${formData.password ? 'has-value' : ''} ${validationErrors.password ? 'error' : ''}`}
-                  required
-                  id="signup-password"
-                />
-                <label htmlFor="signup-password" className="floating-label">
-                  Password (min 6 characters)
-                </label>
-                {formData.password && (
-                  <div className="password-strength">
-                    <div className="strength-bar">
-                      <div
-                        className="strength-fill"
-                        style={{
-                          width: `${(passwordStrength.score / 6) * 100}%`,
-                          backgroundColor: passwordStrength.color
-                        }}
-                      />
-                    </div>
-                    <span className="strength-text" style={{ color: passwordStrength.color }}>
-                      {passwordStrength.text}
-                    </span>
+              {!showOTPStep && (
+                <>
+                  <div className="floating-label-group">
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      onFocus={() => handleFocus('name')}
+                      onBlur={() => handleBlur('name')}
+                      className={`floating-input ${formData.name ? 'has-value' : ''} ${validationErrors.name ? 'error' : ''}`}
+                      required
+                      id="signup-name"
+                    />
+                    <label htmlFor="signup-name" className="floating-label">
+                      Full Name
+                    </label>
+                    {validationErrors.name && <span className="error-message">{validationErrors.name}</span>}
                   </div>
-                )}
-                {validationErrors.password && <span className="error-message">{validationErrors.password}</span>}
-              </div>
 
-              <div className="floating-label-group">
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  onFocus={() => handleFocus('confirmPassword')}
-                  onBlur={() => handleBlur('confirmPassword')}
-                  className={`floating-input ${formData.confirmPassword ? 'has-value' : ''} ${validationErrors.confirmPassword ? 'error' : ''}`}
-                  required
-                  id="signup-confirm-password"
-                />
-                <label htmlFor="signup-confirm-password" className="floating-label">
-                  Confirm Password
-                </label>
-                {validationErrors.confirmPassword && <span className="error-message">{validationErrors.confirmPassword}</span>}
-              </div>
+                  <div className="floating-label-group">
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      onFocus={() => handleFocus('email')}
+                      onBlur={() => handleBlur('email')}
+                      className={`floating-input ${formData.email ? 'has-value' : ''} ${validationErrors.email ? 'error' : ''}`}
+                      required
+                      id="signup-email"
+                    />
+                    <label htmlFor="signup-email" className="floating-label">
+                      Email Address
+                    </label>
+                    {validationErrors.email && <span className="error-message">{validationErrors.email}</span>}
+                  </div>
+
+                  <div className="floating-label-group">
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      onFocus={() => handleFocus('password')}
+                      onBlur={() => handleBlur('password')}
+                      className={`floating-input ${formData.password ? 'has-value' : ''} ${validationErrors.password ? 'error' : ''}`}
+                      required
+                      id="signup-password"
+                    />
+                    <label htmlFor="signup-password" className="floating-label">
+                      Password (min 6 characters)
+                    </label>
+                    {formData.password && (
+                      <div className="password-strength">
+                        <div className="strength-bar">
+                          <div
+                            className="strength-fill"
+                            style={{
+                              width: `${(passwordStrength.score / 6) * 100}%`,
+                              backgroundColor: passwordStrength.color
+                            }}
+                          />
+                        </div>
+                        <span className="strength-text" style={{ color: passwordStrength.color }}>
+                          {passwordStrength.text}
+                        </span>
+                      </div>
+                    )}
+                    {validationErrors.password && <span className="error-message">{validationErrors.password}</span>}
+                  </div>
+                </>
+              )}
+
+              {!showOTPStep && (
+                <div className="floating-label-group">
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    onFocus={() => handleFocus('confirmPassword')}
+                    onBlur={() => handleBlur('confirmPassword')}
+                    className={`floating-input ${formData.confirmPassword ? 'has-value' : ''} ${validationErrors.confirmPassword ? 'error' : ''}`}
+                    required
+                    id="signup-confirm-password"
+                  />
+                  <label htmlFor="signup-confirm-password" className="floating-label">
+                    Confirm Password
+                  </label>
+                  {validationErrors.confirmPassword && <span className="error-message">{validationErrors.confirmPassword}</span>}
+                </div>
+              )}
+
+              {showOTPStep && (
+                <div className="otp-verification-section">
+                  <div className="otp-header">
+                    <h3 style={{ color: '#065f46', marginBottom: '0.5rem' }}>📧 Verify Your Email</h3>
+                    <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                      We've sent a verification code to <strong>{formData.email}</strong>
+                    </p>
+                  </div>
+
+                  <div className="floating-label-group">
+                    <input
+                      type="text"
+                      value={otpCode}
+                      onChange={(e) => {
+                        setOtpCode(e.target.value);
+                        setOtpError('');
+                      }}
+                      className={`floating-input ${otpCode ? 'has-value' : ''} ${otpError ? 'error' : ''}`}
+                      placeholder="Enter 6-digit code"
+                      maxLength="6"
+                      style={{
+                        textAlign: 'center',
+                        fontSize: '1.2rem',
+                        letterSpacing: '0.2rem',
+                        fontWeight: 'bold'
+                      }}
+                      id="otp-input"
+                    />
+                    <label htmlFor="otp-input" className="floating-label">
+                      Verification Code
+                    </label>
+                    {otpError && <span className="error-message">{otpError}</span>}
+                  </div>
+
+                  <div className="otp-actions" style={{ textAlign: 'center', marginTop: '1rem' }}>
+                    {resendCooldown > 0 ? (
+                      <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
+                        Resend code in {resendCooldown}s
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => sendOTP(formData.email)}
+                        className="auth-link-btn"
+                        style={{ background: 'none', border: 'none', color: '#065f46', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        Resend verification code
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="auth-form-actions">
                 <button type="button" onClick={onCancel} className="auth-secondary-btn">
                   Cancel
                 </button>
+                {showOTPStep && (
+                  <button
+                    type="button"
+                    onClick={() => setShowOTPStep(false)}
+                    className="auth-secondary-btn"
+                    style={{ marginRight: '0.5rem' }}
+                  >
+                    ← Back
+                  </button>
+                )}
                 <button type="submit" className="auth-primary-btn">
-                  Create Account
+                  {showOTPStep ? 'Verify & Create Account' : 'Send Verification Code'}
                 </button>
               </div>
             </form>
@@ -3072,8 +3532,7 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
     date: booking.date || '',
     time: booking.time || '',
     roomId: booking.roomId || 1,
-    attendeeCount: booking.attendeeCount || 1,
-    procurementOrders: booking.procurementOrders || []
+    attendeeCount: booking.attendeeCount || 1
   });
 
   // Generate time slots with 15-minute intervals
@@ -3235,18 +3694,6 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              Procurement Orders <span className="optional">(optional)</span>
-            </label>
-            <div className="procurement-section">
-              <ProcurementOrdersSection
-                orders={formData.procurementOrders}
-                attendeeCount={formData.attendeeCount}
-                onOrdersChange={(orders) => setFormData({ ...formData, procurementOrders: orders })}
-              />
-            </div>
-          </div>
 
           <div className="form-buttons">
             <button type="button" onClick={onCancel} className="form-button secondary">
@@ -3591,7 +4038,6 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
     const name = room.name.toLowerCase();
     if (name.includes('ground floor')) return 'Ground Floor';
     if (name.includes('first floor') || name.includes('1st floor')) return 'First Floor';
-    if (name.includes('underground')) return 'Underground';
     return 'Main Building';
   };
 
@@ -4795,7 +5241,6 @@ const MeetingSpaceSelectionModal = ({ rooms, onSelect, currentUser }) => {
     if (name.toLowerCase().includes('ground floor')) return 'Ground Floor';
     if (name.toLowerCase().includes('first floor')) return 'First Floor';
     if (name.toLowerCase().includes('1st floor')) return '1st Floor';
-    if (name.toLowerCase().includes('underground')) return 'Underground';
     return 'Main Building';
   };
 
@@ -4864,3 +5309,46 @@ const MeetingSpaceSelectionModal = ({ rooms, onSelect, currentUser }) => {
 };
 
 export default BookingBoard;
+
+{/* CSS Styles for Mobile Responsiveness */}
+<style jsx>{`
+  @media (max-width: 768px) {
+    .booking-grid-container {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 16px !important;
+    }
+
+    .date-picker-card,
+    .meeting-spaces-card,
+    .time-slots-card {
+      grid-column: span 12 !important;
+      width: 100% !important;
+    }
+
+    .meeting-spaces-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .time-slots-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .time-slots-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .booking-grid-container {
+      gap: 12px !important;
+    }
+
+    .date-picker-card,
+    .meeting-spaces-card,
+    .time-slots-card {
+      padding: 12px !important;
+      min-height: auto !important;
+    }
+  }
+`}</style>
