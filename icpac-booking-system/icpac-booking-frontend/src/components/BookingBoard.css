@@ -40,8 +40,8 @@
 }
 
 .booking-wrapper {
-  max-width: 100%;
-  margin: 0 20px;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
 /* Header Styles */
@@ -567,7 +567,7 @@
   border-radius: 6px;
   font-size: 0.875rem;
   background: white;
-  width: 240px;
+  width: 200px;
   cursor: pointer;
 }
 
@@ -651,15 +651,12 @@
 
 .grid-table-container {
   overflow-x: auto;
-  width: 100%;
-  -webkit-overflow-scrolling: touch;
+  min-width: 100%;
 }
 
 .grid-table {
   width: 100%;
-  min-width: 1600px;
   border-collapse: collapse;
-  table-layout: fixed;
 }
 
 .grid-table thead {
@@ -667,18 +664,15 @@
 }
 
 .grid-table th {
-  text-align: center;
-  padding: 8px 12px;
+  text-align: left;
+  padding: 6px 8px;
   font-weight: 600;
   color: #374151;
-  width: calc((100% - 240px) / 11);
-  min-width: 110px;
+  min-width: 70px;
 }
 
 .grid-table th:first-child {
-  width: 240px;
-  min-width: 240px;
-  text-align: left;
+  min-width: 180px;
   color: #10b981;
   background-color: #dcfce7;
 }
@@ -688,9 +682,8 @@
 }
 
 .grid-table tbody tr {
-  border-bottom: none;
+  border-bottom: 1px solid #e5e7eb;
   background-color: #f0fdf4 !important;
-  height: auto;
 }
 
 .grid-table tbody tr:hover {
@@ -698,53 +691,16 @@
 }
 
 .grid-table td {
-  padding: 8px 12px;
-  width: calc((100% - 240px) / 11);
-  min-width: 110px;
+  padding: 4px 8px;
 }
 
 .grid-table td:first-child {
   background-color: #dcfce7 !important;
-  width: 240px;
-  min-width: 240px;
 }
 
 .grid-table td:not(:first-child) {
-  padding: 6px 8px;
+  padding: 2px 4px;
   text-align: center;
-  vertical-align: middle;
-}
-
-.grid-table td:not(:first-child) .modern-time-slot {
-  height: 100%;
-  min-height: 64px;
-  padding: clamp(0.6rem, 1vw, 0.85rem) clamp(0.75rem, 1.2vw, 1rem);
-  border-radius: 8px;
-}
-
-.grid-table td:not(:first-child) .slot-content {
-  gap: 0.2rem;
-}
-
-.grid-table td:not(:first-child) .slot-title {
-  font-size: clamp(0.85rem, 0.9vw, 1rem);
-  line-height: 1.25;
-}
-
-.grid-table td:not(:first-child) .slot-subtitle,
-.grid-table td:not(:first-child) .status-text {
-  font-size: clamp(0.75rem, 0.8vw, 0.9rem);
-  line-height: 1.2;
-}
-
-.grid-table td:not(:first-child) .slot-icon {
-  min-width: clamp(24px, 3vw, 30px);
-  height: clamp(24px, 3vw, 30px);
-  font-size: clamp(0.95rem, 1.1vw, 1.15rem);
-}
-
-.grid-table td:not(:first-child) .slot-status {
-  min-width: clamp(70px, 8vw, 90px);
 }
 
 /* Room Info Styles */
@@ -783,57 +739,39 @@
 /* Time Slot Styles */
 .time-slot {
   width: 100%;
-  height: 100px;
-  min-height: 100px;
   border: 1px solid transparent;
-  border-radius: 3px;
-  padding: 0;
-  margin: 0;
+  border-radius: 6px;
+  padding: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   text-align: center;
-  font-size: 1rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  box-sizing: border-box;
+  font-size: 0.875rem;
 }
 
 .time-slot.booked {
-  background: linear-gradient(135deg, #fef2f2, #fee2e2);
-  border-color: #f87171;
+  background: #fef2f2;
+  border-color: #fecaca;
   cursor: not-allowed;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
 }
 
 .time-slot.available {
-  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-  border-color: #22c55e;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+  background: #f0fdf4;
+  border-color: #bbf7d0;
 }
 
 .time-slot.available:hover {
-  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-  border-color: #16a34a;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  background: #dcfce7;
 }
 
 .slot-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  margin: 0 0 6px 0;
-  letter-spacing: 0.2px;
-  line-height: 1.1;
+  font-size: 0.7rem;
+  font-weight: 500;
+  margin: 0 0 1px 0;
 }
 
 .slot-subtitle {
-  font-size: 1.2rem;
+  font-size: 0.65rem;
   margin: 0;
-  font-weight: 700;
-  line-height: 1.1;
 }
 
 .time-slot.booked .slot-title {
@@ -854,64 +792,50 @@
 
 /* Past time slot styles */
 .time-slot.past {
-  background: linear-gradient(135deg, #f9fafb, #f3f4f6);
-  border: 2px solid #d1d5db;
-  border-radius: 8px;
-  height: 70px;
-  min-height: 70px;
-  padding: 12px 10px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 8px;
   text-align: center;
   cursor: not-allowed;
-  opacity: 0.7;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  opacity: 0.6;
 }
 
 .time-slot.past .slot-title {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: #6b7280;
-  margin: 0 0 4px 0;
-  letter-spacing: 0.5px;
+  margin: 0 0 2px 0;
 }
 
 .time-slot.past .slot-subtitle {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: #9ca3af;
   margin: 0;
-  font-weight: 500;
 }
 
 .time-slot.weekend-blocked {
-  background: linear-gradient(135deg, #fee2e2, #fecaca);
-  border: 2px solid #f87171;
-  border-radius: 8px;
-  min-height: 60px;
-  padding: 12px 8px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: 8px;
   text-align: center;
   cursor: not-allowed;
   opacity: 0.8;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
 }
 
 .time-slot.weekend-blocked .slot-title {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: #dc2626;
-  margin: 0 0 4px 0;
-  letter-spacing: 0.5px;
+  margin: 0;
+  margin-bottom: 2px;
 }
 
 .time-slot.weekend-blocked .slot-subtitle {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: #ef4444;
   margin: 0;
-  font-weight: 500;
 }
 
 /* Multi-day booking styles */
@@ -1137,49 +1061,6 @@
 }
 
 /* Responsive Design */
-@media (max-width: 1024px) {
-  .grid-table-container {
-    margin-bottom: 12px;
-  }
-
-  .grid-table {
-    min-width: 1100px;
-  }
-
-  .grid-table td {
-    min-width: 100px;
-  }
-
-  .grid-table th:first-child,
-  .grid-table td:first-child {
-    min-width: 200px;
-  }
-
-  .grid-table td:not(:first-child) .modern-time-slot {
-    min-height: 56px;
-    padding: 0.6rem 0.75rem;
-  }
-  
-  .grid-table td:not(:first-child) .slot-title {
-    font-size: 0.85rem;
-  }
-  
-  .grid-table td:not(:first-child) .slot-subtitle,
-  .grid-table td:not(:first-child) .status-text {
-    font-size: 0.75rem;
-  }
-  
-  .grid-table td:not(:first-child) .slot-icon {
-    min-width: 24px;
-    height: 24px;
-    font-size: 0.95rem;
-  }
-  
-  .grid-table td:not(:first-child) .slot-status {
-    min-width: 70px;
-  }
-}
-
 @media (max-width: 768px) {
   .booking-container {
     padding: 16px;
@@ -1226,39 +1107,18 @@
     padding: 16px;
   }
   
-  .grid-table {
-    min-width: 900px;
-  }
-
+  .grid-table th,
   .grid-table td {
     padding: 4px 6px;
-    min-width: 90px;
   }
-
-  .grid-table th {
-    padding: 4px 6px;
+  
+  .grid-table th:first-child {
+    min-width: 120px;
   }
-
-  .grid-table th:first-child,
-  .grid-table td:first-child {
-    min-width: 170px;
-  }
-
+  
   .modal-content {
     margin: 16px;
     padding: 16px;
-  }
-
-  .mobile-room-card {
-    padding: 14px;
-  }
-
-  .mobile-slots-wrapper {
-    gap: 10px;
-  }
-
-  .mobile-slot-item {
-    flex: 0 0 200px;
   }
 }
 
@@ -1272,19 +1132,6 @@
     padding: 2px 6px;
   }
   
-  .grid-table {
-    min-width: 720px;
-  }
-
-  .grid-table td {
-    min-width: 80px;
-  }
-
-  .grid-table th:first-child,
-  .grid-table td:first-child {
-    min-width: 150px;
-  }
-
   .time-slot {
     padding: 4px;
   }
@@ -1319,18 +1166,6 @@
   .modal-content {
     max-height: 90vh;
     padding: 16px;
-  }
-
-  .mobile-room-card {
-    padding: 12px;
-  }
-
-  .mobile-slot-item {
-    flex: 0 0 180px;
-  }
-
-  .slot-time {
-    font-size: 0.75rem;
   }
 }
 
@@ -2526,37 +2361,30 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px;
+  padding: 16px;
   border-radius: 8px;
   background: white;
   border-left: 4px solid #10b981;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  width: 100%;
-  max-width: 220px;
-  box-sizing: border-box;
-  overflow: visible;
 }
 
 .room-header {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
 }
 
 .room-name {
   font-weight: 600;
   color: #1f2937;
   margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.3;
+  font-size: 1rem;
+  line-height: 1.2;
   display: flex;
   align-items: center;
-  gap: 6px;
-  width: 100%;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: normal;
+  gap: 8px;
+  flex: 1;
 }
 
 .room-category-icon {
@@ -2567,11 +2395,10 @@
 /* Capacity Indicator Styles */
 .capacity-indicator {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
+  gap: 2px;
+  min-width: 60px;
   flex-shrink: 0;
 }
 
@@ -2579,10 +2406,9 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: #374151;
-  white-space: nowrap;
 }
 
 .capacity-icon {
@@ -4548,13 +4374,6 @@
   gap: 0.05rem;
 }
 
-.slot-time {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #1e293b;
-  letter-spacing: 0.3px;
-}
-
 .slot-title {
   font-size: 0.65rem;
   font-weight: 600;
@@ -4606,33 +4425,6 @@
   text-transform: uppercase;
   letter-spacing: 0.3px;
   text-align: center;
-}
-
-.mobile-booking-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.mobile-room-card {
-  background: rgba(236, 253, 245, 0.85);
-  border: 1px solid #bbf7d0;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 12px 25px rgba(16, 185, 129, 0.12);
-}
-
-.mobile-slots-wrapper {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  margin-top: 12px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.mobile-slot-item {
-  flex: 0 0 220px;
 }
 
 /* Availability Pulse Animation */
@@ -5636,84 +5428,75 @@ body.dark-mode .modal-footer-note {
   }
 }
 
-/* Dark Mode - First Column Header Same as Time Headers */
-body.dark-mode .grid-table th:first-child {
-  background: #f8fafc !important;
-  color: #1e293b !important;
+/* Slot Action Buttons */
+.slot-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  justify-content: center;
+  align-items: center;
 }
 
-/* Ensure time header cells stay bright in dark mode */
-body.dark-mode .grid-table th:not(:first-child) {
-  background: #f8fafc !important;
-  color: #1e293b !important;
-}
-
-/* Meeting Rooms Header Styling */
-.table-header-room {
+.slot-action-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px;
+  min-width: 32px;
+  height: 32px;
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  position: relative;
 }
 
-.header-icon {
-  font-size: 20px;
+.slot-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.95);
 }
 
-.header-text {
-  font-weight: 700 !important;
-  font-size: 18px !important;
-  color: #1e293b !important;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.slot-action-btn.edit {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
 }
 
-/* Dark mode header text */
-body.dark-mode .header-text {
-  color: #1e293b !important;
+.slot-action-btn.edit:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
-body.dark-mode .grid-table td:first-child {
-  background: #374151;
+.slot-action-btn.cancel {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
 }
 
-body.dark-mode .room-info {
-  background: #1e293b !important;
-  border: 1px solid #334155 !important;
-  color: #e2e8f0 !important;
+.slot-action-btn.cancel:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
-body.dark-mode .room-header {
-  color: #e2e8f0 !important;
+.slot-action-btn:active {
+  transform: translateY(0);
 }
 
-body.dark-mode .room-name {
-  color: #f1f5f9 !important;
-}
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .slot-action-btn {
+    padding: 8px;
+    min-width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
 
-body.dark-mode .room-category-icon {
-  color: #94a3b8 !important;
-}
-
-body.dark-mode .capacity-indicator {
-  color: #e2e8f0 !important;
-}
-
-body.dark-mode .capacity-visual {
-  color: #e2e8f0 !important;
-}
-
-body.dark-mode .capacity-icon {
-  color: #94a3b8 !important;
-}
-
-body.dark-mode .capacity-number {
-  color: #f1f5f9 !important;
-}
-
-body.dark-mode .amenity-tag {
-  background: #374151 !important;
-  color: #e2e8f0 !important;
-  border: 1px solid #4b5563 !important;
+  .slot-actions {
+    gap: 6px;
+  }
 }
