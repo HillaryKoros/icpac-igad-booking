@@ -59,6 +59,7 @@ const BookingBoard = () => {
   const [selectedRoomId, setSelectedRoomId] = useState('');
   const [selectedMeetingSpace, setSelectedMeetingSpace] = useState(null);
   const [selectedMeetingSpaces, setSelectedMeetingSpaces] = useState([]);
+  const [selectedBookingType, setSelectedBookingType] = useState('hourly');
   const [showMeetingSpaceModal, setShowMeetingSpaceModal] = useState(false);
 
   // localStorage functions
@@ -475,10 +476,29 @@ const BookingBoard = () => {
   };
 
   const updateBooking = (bookingData) => {
+    // Check for conflicts with the new time/date/room combination
+    const hasConflict = bookings.some(booking => {
+      // Skip checking against the current booking being edited
+      if (booking.id === editingBooking.id) return false;
+
+      return booking.date === bookingData.date &&
+             booking.time === bookingData.time &&
+             booking.roomId === parseInt(bookingData.roomId);
+    });
+
+    if (hasConflict) {
+      alert('This time slot is already booked for the selected room. Please choose a different time or room.');
+      return;
+    }
+
     // Preserve original creator information and approval status
     const updatedBooking = {
       ...editingBooking,
       ...bookingData,
+      // Convert numeric fields to proper types
+      roomId: parseInt(bookingData.roomId),
+      duration: parseFloat(bookingData.duration),
+      attendeeCount: parseInt(bookingData.attendeeCount),
       // Preserve original creator info
       createdBy: editingBooking.createdBy,
       createdByName: editingBooking.createdByName,
@@ -1131,23 +1151,27 @@ const BookingBoard = () => {
 
         {/* Date Selector */}
         <div className="date-section">
-          <div className="date-header">
+          <div className="date-header" style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%'
+          }}>
             <div className="admin-controls" style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'flex-end',
+              justifyContent: 'flex-start',
               gap: '12px'
             }}>
               {currentUser ? (
                 <>
                   <span style={{
-                    fontSize: '14px',
-                    color: '#374151',
-                    fontWeight: '500',
-                    marginRight: '8px'
+                    fontSize: '16px',
+                    color: '#ffffff',
+                    fontWeight: '700'
                   }}>
                     {currentUser.name}
-                    {currentUser.role !== 'super_admin' && (
+                    {(currentUser.role === 'room_admin' || currentUser.role === 'procurement_officer') && (
                       <span className={`role-badge role-${currentUser.role}`} style={{
                         marginLeft: '8px',
                         fontSize: '12px',
@@ -1156,8 +1180,7 @@ const BookingBoard = () => {
                         background: '#e5e7eb',
                         color: '#4b5563'
                       }}>
-                        {currentUser.role === 'room_admin' ? 'Room Admin' :
-                          currentUser.role === 'procurement_officer' ? 'Procurement Officer' : 'User'}
+                        {currentUser.role === 'room_admin' ? 'Room Admin' : 'Procurement Officer'}
                       </span>
                     )}
                   </span>
@@ -1294,8 +1317,9 @@ const BookingBoard = () => {
               padding: '16px',
               border: '1px solid #cbd5e1',
               borderRadius: '12px',
-              height: 'fit-content',
-              minHeight: '200px'
+              height: '280px',
+              display: 'flex',
+              flexDirection: 'column'
             }}
             className="date-picker-card">
               <h4 style={{
@@ -1368,8 +1392,9 @@ const BookingBoard = () => {
               padding: '16px',
               border: '1px solid #10b981',
               borderRadius: '12px',
-              height: 'fit-content',
-              minHeight: '200px'
+              height: '280px',
+              display: 'flex',
+              flexDirection: 'column'
             }}
             className="meeting-spaces-card">
               <h4 style={{
@@ -1385,7 +1410,9 @@ const BookingBoard = () => {
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3, 1fr)',
                 gap: '8px',
-                alignItems: 'start'
+                alignItems: 'start',
+                flex: '1',
+                overflowY: 'auto'
               }}
               className="meeting-spaces-grid">
                 {rooms.map(room => (
@@ -1480,98 +1507,89 @@ const BookingBoard = () => {
               )}
             </div>
 
-            {/* Time Slots - 4/12 columns on desktop, full width on mobile */}
+            {/* Booking Type Selector - 4/12 columns on desktop, full width on mobile */}
             {selectedMeetingSpaces.length > 0 && (
               <div style={{
                 gridColumn: 'span 4',
-                background: 'linear-gradient(135deg, #fef3e2, #fdf4e6)',
+                background: 'linear-gradient(135deg, #e0e7ff, #f0f4ff)',
                 padding: '16px',
-                border: '1px solid #f59e0b',
+                border: '1px solid #6366f1',
                 borderRadius: '12px',
-                height: 'fit-content',
-                minHeight: '200px',
-                marginTop: '-4px'
+                height: '280px',
+                display: 'flex',
+                flexDirection: 'column'
               }}
-              className="time-slots-card">
+              className="booking-type-card">
                 <h4 style={{
                   margin: '0 0 12px 0',
-                  color: '#92400e',
+                  color: '#4338ca',
                   fontSize: '14px',
                   fontWeight: '600',
                   textAlign: 'center'
                 }}>
-                  ⏰ Select Time Slot
+                  📝 Select Booking Type
                 </h4>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '6px',
-                  maxHeight: '180px',
-                  overflowY: 'auto'
-                }}
-                className="time-slots-grid">
-                  {getAvailableTimeSlots(selectedDate).map(time => {
-                    const hasConflict = selectedMeetingSpaces.some(roomId =>
-                      isSlotBooked(roomId, time)
-                    );
-                    const isPast = isTimeSlotInPast(selectedDate, time);
-                    const canBook = !hasConflict && !isPast;
-
-                    return (
-                      <button
-                        key={time}
-                        onClick={() => canBook && handleBooking(
-                          rooms.find(r => selectedMeetingSpaces.includes(r.id)),
-                          time
-                        )}
-                        disabled={!canBook}
-                        style={{
-                          padding: '8px 6px',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '6px',
-                          background: canBook
-                            ? 'linear-gradient(135deg, #10b981, #059669)'
-                            : hasConflict
-                              ? 'linear-gradient(135deg, #ef4444, #dc2626)'
-                              : '#f3f4f6',
-                          color: canBook ? '#ffffff' : hasConflict ? '#ffffff' : '#9ca3af',
-                          fontSize: '10px',
-                          fontWeight: '600',
-                          cursor: canBook ? 'pointer' : 'not-allowed',
-                          transition: 'all 0.2s ease',
-                          textAlign: 'center',
-                          minHeight: '50px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (canBook) {
-                            e.target.style.transform = 'translateY(-1px)';
-                            e.target.style.boxShadow = '0 2px 6px rgba(16, 185, 129, 0.3)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (canBook) {
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = 'none';
-                          }
-                        }}
-                      >
-                        <div style={{ lineHeight: '1.1' }}>
-                          <div style={{ fontWeight: '700' }}>{time}</div>
-                          <div style={{
-                            fontSize: '8px',
-                            opacity: 0.8,
-                            marginTop: '2px'
-                          }}>
-                            {canBook ? 'Available' : hasConflict ? 'Booked' : 'Past'}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
+                  gap: '8px',
+                  flex: '1'
+                }}>
+                  {[
+                    { value: 'hourly', label: '⏰ Hourly Booking', desc: 'Book for specific hours' },
+                    { value: 'full-day', label: '📅 Full Day', desc: 'Entire day booking' },
+                    { value: 'multi-day', label: '📊 Multi-Day', desc: 'Multiple consecutive days' },
+                    { value: 'weekly', label: '🗓️ Weekly', desc: 'Recurring weekly booking' }
+                  ].map(type => (
+                    <button
+                      key={type.value}
+                      onClick={() => {
+                        setSelectedBookingType(type.value);
+                        if (selectedMeetingSpaces.length === 1) {
+                          const room = rooms.find(r => r.id === selectedMeetingSpaces[0]);
+                          setSelectedRoom(room);
+                          setSelectedTime(''); // No pre-selected time
+                          setShowBookingForm(true);
+                        }
+                      }}
+                      style={{
+                        padding: '12px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        border: selectedBookingType === type.value ? '2px solid #4338ca' : '2px solid #e5e7eb',
+                        borderRadius: '8px',
+                        background: selectedBookingType === type.value ? '#e0e7ff' : '#ffffff',
+                        color: selectedBookingType === type.value ? '#4338ca' : '#374151',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        textAlign: 'left'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedBookingType !== type.value) {
+                          e.target.style.background = '#f8fafc';
+                          e.target.style.borderColor = '#cbd5e1';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedBookingType !== type.value) {
+                          e.target.style.background = '#ffffff';
+                          e.target.style.borderColor = '#e5e7eb';
+                        }
+                      }}
+                    >
+                      <div style={{ fontWeight: '700', marginBottom: '4px' }}>
+                        {type.label}
+                      </div>
+                      <div style={{
+                        fontSize: '10px',
+                        color: selectedBookingType === type.value ? '#6366f1' : '#6b7280',
+                        fontWeight: '400'
+                      }}>
+                        {type.desc}
+                      </div>
+                    </button>
+                  ))}
                 </div>
+
               </div>
             )}
           </div>
@@ -1831,6 +1849,7 @@ const BookingBoard = () => {
             time={selectedTime}
             date={selectedDate}
             currentUser={currentUser}
+            initialBookingType={selectedBookingType}
             onConfirm={confirmBooking}
             onCancel={() => setShowBookingForm(false)}
           />
@@ -2057,7 +2076,7 @@ const ProcurementOrdersSection = ({ orders, attendeeCount, onOrdersChange }) => 
   );
 };
 
-const BookingForm = ({ room, time, date, currentUser, onConfirm, onCancel }) => {
+const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hourly', onConfirm, onCancel }) => {
   // Generate time slots with 15-minute intervals
   const generateTimeSlots = () => {
     const slots = [];
@@ -2122,7 +2141,7 @@ const BookingForm = ({ room, time, date, currentUser, onConfirm, onCancel }) => 
   const [formData, setFormData] = useState({
     title: '',
     organizer: currentUser ? currentUser.name : '',
-    bookingType: 'hourly',
+    bookingType: initialBookingType,
     duration: 0.5,
     startDate: date.toISOString().split('T')[0],
     endDate: date.toISOString().split('T')[0],
@@ -3563,7 +3582,8 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: name === 'duration' || name === 'roomId' ? parseInt(value) : value
+      [name]: name === 'duration' ? parseFloat(value) :
+              name === 'roomId' || name === 'attendeeCount' ? parseInt(value) : value
     });
   };
 
