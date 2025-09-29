@@ -1,32 +1,23 @@
-# Docker Compose for ICPAC Booking System
-
 services:
   frontend:
-    build:
-      context: ./icpac-booking-frontend
-      dockerfile: ../docker/Dockerfile.frontend
+    image: hkoros254/icpac-booking-frontend:develop
     container_name: icpac-booking-frontend
     ports:
       - "9020:80"
     restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-    volumes:
-      - booking_data:/usr/share/nginx/html/data
     networks:
       - icpac-network
+    depends_on:
+      - backend
 
   backend:
-    build:
-      context: ./icpac-booking-backend
-      dockerfile: ../docker/Dockerfile.backend
+    image: hkoros254/icpac-booking-backend:develop
     container_name: icpac-booking-backend
     ports:
       - "9021:8000"
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://icpac_user:your_secure_password@postgres:5432/icpac_bookings
+      - DATABASE_URL=postgresql://icpac_user:icpac_password@postgres:5432/icpac_bookings
     depends_on:
       - postgres
     networks:
@@ -38,11 +29,11 @@ services:
     environment:
       POSTGRES_DB: icpac_bookings
       POSTGRES_USER: icpac_user
-      POSTGRES_PASSWORD: your_secure_password
+      POSTGRES_PASSWORD: icpac_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "9022:5432"
     networks:
       - icpac-network
 

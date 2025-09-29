@@ -10,12 +10,13 @@ class Room(models.Model):
     Room model representing meeting rooms, conference rooms, etc.
     """
     CATEGORY_CHOICES = [
-        ('conference_room', 'Conference Room'),
-        ('meeting_room', 'Meeting Room'),
+        ('conference', 'Conference Room'),
+        ('meeting', 'Meeting Room'),
         ('boardroom', 'Boardroom'),
-        ('training_room', 'Training Room'),
+        ('training', 'Training Room'),
         ('event_hall', 'Event Hall'),
         ('auditorium', 'Auditorium'),
+        ('other', 'Other'),
     ]
     
     name = models.CharField(
@@ -34,6 +35,12 @@ class Room(models.Model):
         help_text='Type/category of the room'
     )
     
+    floor = models.CharField(
+        max_length=100,
+        default='Ground Floor',
+        help_text='Floor location of the room'
+    )
+
     location = models.CharField(
         max_length=255,
         blank=True,
