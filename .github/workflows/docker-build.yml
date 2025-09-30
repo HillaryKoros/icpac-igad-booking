@@ -11,8 +11,6 @@ on:
 
 env:
   REGISTRY: docker.io
-  FRONTEND_IMAGE_NAME: icpac/booking-frontend
-  BACKEND_IMAGE_NAME: icpac/booking-backend
 
 jobs:
   build-and-push:
@@ -27,8 +25,8 @@ jobs:
         echo "Docker Hub Username: ${{ secrets.DOCKERHUB_USERNAME }}"
         echo "Docker Hub Token exists: ${{ secrets.DOCKERHUB_TOKEN != '' }}"
         echo "Registry: ${{ env.REGISTRY }}"
-        echo "Frontend Image: ${{ env.FRONTEND_IMAGE_NAME }}"
-        echo "Backend Image: ${{ env.BACKEND_IMAGE_NAME }}"
+        echo "Frontend Image: ${{ secrets.DOCKERHUB_USERNAME }}/icpac-booking-frontend"
+        echo "Backend Image: ${{ secrets.DOCKERHUB_USERNAME }}/icpac-booking-backend"
 
     - name: Log in to Docker Hub
       if: github.event_name != 'pull_request'
@@ -42,7 +40,7 @@ jobs:
       id: frontend-meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+        images: ${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/icpac-booking-frontend
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -54,7 +52,7 @@ jobs:
       id: backend-meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
+        images: ${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/icpac-booking-backend
         tags: |
           type=ref,event=branch
           type=ref,event=pr
