@@ -1,0 +1,88 @@
+# Production Docker Compose for ICPAC Booking System
+# Uses pre-built images from Docker Hub
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: icpac-booking-db-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PGDATABASE:-icpac_booking}
+      POSTGRES_USER: ${PGUSER:-koros}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-icpac123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    ports:
+      - "5433:5432"
+    networks:
+      - icpac-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-koros}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Channels and Caching
+  redis:
+    image: redis:7-alpine
+    container_name: icpac-booking-redis-prod
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - icpac-network
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  # Django Backend (from Docker Hub)
+  backend:
+    image: icpac/booking-backend:latest
+    container_name: icpac-booking-backend-prod
+    restart: unless-stopped
+    env_file:
+      - ./icpac-booking-backend/.env
+    environment:
+      - PGHOST=postgres
+      - PGPORT=5432
+      - USE_SQLITE=False
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - icpac-network
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+
+  # React Frontend (from Docker Hub)
+  frontend:
+    image: icpac/booking-frontend:latest
+    container_name: icpac-booking-frontend-prod
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    networks:
+      - icpac-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:
+
+networks:
+  icpac-network:
+    driver: bridge
