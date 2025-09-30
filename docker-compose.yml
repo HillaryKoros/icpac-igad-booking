@@ -1,0 +1,82 @@
+# Docker Compose for ICPAC Booking System
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: icpac-booking-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: icpac_booking
+      POSTGRES_USER: ${PGUSER:-koros}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-icpac123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - icpac-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-koros}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Channels
+  redis:
+    image: redis:7-alpine
+    container_name: icpac-booking-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - icpac-network
+
+  # Django Backend
+  backend:
+    build:
+      context: ./icpac-booking-backend
+      dockerfile: Dockerfile
+    container_name: icpac-booking-backend
+    restart: unless-stopped
+    env_file:
+      - ./icpac-booking-backend/.env
+    environment:
+      - PGHOST=postgres
+      - PGPORT=5432
+      - USE_SQLITE=False
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - icpac-network
+    volumes:
+      - ./icpac-booking-backend/staticfiles:/app/staticfiles
+      - ./icpac-booking-backend/media:/app/media
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./icpac-booking-frontend
+      dockerfile: Dockerfile
+    container_name: icpac-booking-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    networks:
+      - icpac-network
+
+volumes:
+  postgres_data:
+
+networks:
+  icpac-network:
+    driver: bridge
