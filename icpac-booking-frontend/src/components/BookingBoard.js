@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import apiService from '../services/api';
 import emailService from '../services/emailService';
 import EmailSettingsPanel from './EmailSettingsPanel';
 import './BookingBoard.css';
@@ -1100,7 +1101,6 @@ const BookingBoard = () => {
         {/* Signup Modal */}
         {showSignup && (
           <UserSignupModal
-            onSignup={handleUserSignup}
             onCancel={() => setShowSignup(false)}
             onSwitchToLogin={() => {
               setShowSignup(false);
@@ -2657,7 +2657,7 @@ const UserLoginModal = ({ onLogin, onCancel, onSwitchToSignup, onForgotPassword 
   );
 };
 
-const UserSignupModal = ({ onSignup, onCancel, onSwitchToLogin }) => {
+const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -2680,30 +2680,39 @@ const UserSignupModal = ({ onSignup, onCancel, onSwitchToLogin }) => {
   // OTP related states
   const [showOTPStep, setShowOTPStep] = useState(false);
   const [otpCode, setOtpCode] = useState('');
-  const [generatedOTP, setGeneratedOTP] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpError, setOtpError] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  // Generate 6-digit OTP
-  const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  };
-
-  // Send OTP via email (simulated for now - you can integrate with real email service)
-  const sendOTP = async (email) => {
-    const otp = generateOTP();
-    setGeneratedOTP(otp);
-
+  // Register user and trigger OTP email from backend
+  const registerUser = async (userData) => {
     try {
-      // For now, we'll just log the OTP (in production, send via email service)
-      console.log(`OTP for ${email}: ${otp}`);
+      // Split full name into first and last name
+      const nameParts = userData.name.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
 
-      // Simulate email sending success
-      alert(`Verification code has been sent to ${email}\n\nFor demo purposes, your OTP is: ${otp}\n\n(In production, this would be sent via email)`);
+      const registrationData = {
+        first_name: firstName,
+        last_name: lastName,
+        email: userData.email,
+        password: userData.password,
+        password_confirm: userData.confirmPassword || userData.password,
+        phone_number: userData.phoneNumber || '',
+        department: userData.department || ''
+      };
+
+      console.log('Sending registration data:', registrationData);
+
+      // Call backend to register user - this automatically sends OTP
+      const response = await apiService.register(registrationData);
+
+      // Show success message without revealing OTP
+      alert(`Verification code has been sent to ${userData.email}\n\nPlease check your email for the 6-digit verification code.`);
 
       setOtpSent(true);
       setOtpError('');
+      setShowOTPStep(true);
 
       // Start resend cooldown (60 seconds)
       setResendCooldown(60);
@@ -2719,19 +2728,52 @@ const UserSignupModal = ({ onSignup, onCancel, onSwitchToLogin }) => {
 
       return true;
     } catch (error) {
-      console.error('Failed to send OTP:', error);
-      setOtpError('Failed to send verification code. Please try again.');
+      console.error('Registration error:', error);
+      const errorMessage = error.message || 'Failed to register. Please try again.';
+      alert(`Registration Error: ${errorMessage}`);
+      setValidationErrors({ general: errorMessage });
       return false;
     }
   };
 
-  // Verify OTP
-  const verifyOTP = () => {
-    if (otpCode === generatedOTP) {
+  // Resend OTP
+  const resendOTP = async () => {
+    try {
+      await apiService.resendOTP(formData.email);
+      alert('New verification code has been sent to your email.');
+
+      // Reset cooldown
+      setResendCooldown(60);
+      const timer = setInterval(() => {
+        setResendCooldown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (error) {
+      setOtpError('Failed to resend code. Please try again.');
+    }
+  };
+
+  // Verify OTP with backend
+  const verifyOTP = async () => {
+    try {
+      const response = await apiService.verifyEmail(formData.email, otpCode);
+
+      // If verification successful, login the user
+      if (response.access) {
+        localStorage.setItem('access_token', response.access);
+        localStorage.setItem('refresh_token', response.refresh);
+        localStorage.setItem('user', JSON.stringify(response.user));
+      }
+
       setOtpError('');
       return true;
-    } else {
-      setOtpError('Invalid verification code. Please try again.');
+    } catch (error) {
+      setOtpError(error.message || 'Invalid verification code. Please try again.');
       return false;
     }
   };
@@ -2826,10 +2868,10 @@ const UserSignupModal = ({ onSignup, onCancel, onSwitchToLogin }) => {
 
       setValidationErrors({});
 
-      // Send OTP to email
-      const otpSent = await sendOTP(formData.email);
-      if (otpSent) {
-        setShowOTPStep(true);
+      // Register user (this will send OTP via email)
+      const success = await registerUser(formData);
+      if (!success) {
+        console.error('Registration failed');
       }
     } else {
       // Step 2: Verify OTP and complete signup
@@ -2838,9 +2880,11 @@ const UserSignupModal = ({ onSignup, onCancel, onSwitchToLogin }) => {
         return;
       }
 
-      if (verifyOTP()) {
-        // OTP verified successfully, proceed with signup
-        onSignup(formData);
+      const verified = await verifyOTP();
+      if (verified) {
+        // OTP verified successfully, user is now logged in
+        alert('Email verified successfully! You are now logged in.');
+        window.location.reload(); // Reload to update the UI with logged-in state
       }
     }
   };
@@ -2961,7 +3005,7 @@ const UserSignupModal = ({ onSignup, onCancel, onSwitchToLogin }) => {
                       id="signup-password"
                     />
                     <label htmlFor="signup-password" className="floating-label">
-                      Password (min 6 characters)
+                      Password (min 8 characters, not too common)
                     </label>
                     {formData.password && (
                       <div className="password-strength">
@@ -3046,7 +3090,7 @@ const UserSignupModal = ({ onSignup, onCancel, onSwitchToLogin }) => {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => sendOTP(formData.email)}
+                        onClick={() => resendOTP()}
                         className="auth-link-btn"
                         style={{ background: 'none', border: 'none', color: '#065f46', cursor: 'pointer', textDecoration: 'underline' }}
                       >

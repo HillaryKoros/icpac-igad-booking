@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:9021/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 class APIService {
   constructor() {
@@ -59,7 +59,49 @@ class APIService {
     }
 
     const errorData = await response.json();
+
+    // Handle Django field validation errors
+    if (typeof errorData === 'object' && !errorData.message) {
+      const errorMessages = [];
+      for (const [field, errors] of Object.entries(errorData)) {
+        if (Array.isArray(errors)) {
+          errorMessages.push(`${field}: ${errors.join(', ')}`);
+        } else {
+          errorMessages.push(`${field}: ${errors}`);
+        }
+      }
+      throw new Error(errorMessages.join('; '));
+    }
+
     throw new Error(errorData.message || 'Registration failed');
+  }
+
+  async verifyEmail(email, otpCode) {
+    const response = await this.request('/auth/verify-email/', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp_code: otpCode }),
+    });
+
+    if (response.ok) {
+      return await response.json();
+    }
+
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Verification failed');
+  }
+
+  async resendOTP(email) {
+    const response = await this.request('/auth/resend-otp/', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+
+    if (response.ok) {
+      return await response.json();
+    }
+
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to resend OTP');
   }
 
   logout() {

@@ -5,11 +5,15 @@ Django settings for ICPAC Booking System
 from pathlib import Path
 from datetime import timedelta
 import os
+from dotenv import load_dotenv
 
 from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
 
 def get_env_list(var_name, default):
@@ -184,18 +188,31 @@ WSGI_APPLICATION = 'icpac_booking.wsgi.application'
 ASGI_APPLICATION = 'icpac_booking.asgi.application'
 
 # Database - PostgreSQL configuration for both local and production
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('PGDATABASE', 'icpac_booking'),
-        'USER': os.environ.get('PGUSER', 'postgres'),
-        'PASSWORD': os.environ.get('PGPASSWORD', ''),
-        'HOST': os.environ.get('PGHOST', 'localhost'),
-        'PORT': os.environ.get('PGPORT', '5432'),
-        'OPTIONS': {},
-        'CONN_MAX_AGE': 60,
+# Use SQLite for local development if USE_SQLITE is set or no PostgreSQL settings are configured
+USE_SQLITE = get_env_bool('USE_SQLITE', False)
+
+if USE_SQLITE or not os.environ.get('PGDATABASE'):
+    # SQLite configuration for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    # PostgreSQL configuration for production
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('PGDATABASE', 'icpac_booking'),
+            'USER': os.environ.get('PGUSER', 'postgres'),
+            'PASSWORD': os.environ.get('PGPASSWORD', ''),
+            'HOST': os.environ.get('PGHOST', 'localhost'),
+            'PORT': os.environ.get('PGPORT', '5432'),
+            'OPTIONS': {},
+            'CONN_MAX_AGE': 60,
+        }
+    }
 
 # Use DATABASE_URL if available (for hosted deployments)
 if 'DATABASE_URL' in os.environ:
