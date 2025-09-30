@@ -21,10 +21,20 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Debug Docker Hub credentials
+      if: github.event_name != 'pull_request'
+      run: |
+        echo "Docker Hub Username: ${{ secrets.DOCKERHUB_USERNAME }}"
+        echo "Docker Hub Token exists: ${{ secrets.DOCKERHUB_TOKEN != '' }}"
+        echo "Registry: ${{ env.REGISTRY }}"
+        echo "Frontend Image: ${{ env.FRONTEND_IMAGE_NAME }}"
+        echo "Backend Image: ${{ env.BACKEND_IMAGE_NAME }}"
+
     - name: Log in to Docker Hub
       if: github.event_name != 'pull_request'
       uses: docker/login-action@v3
       with:
+        registry: ${{ env.REGISTRY }}
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
