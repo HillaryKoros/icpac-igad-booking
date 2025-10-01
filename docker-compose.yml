@@ -1,4 +1,5 @@
 # Docker Compose for ICPAC Booking System
+# Uses single .env file at root level
 
 services:
   # PostgreSQL Database
@@ -6,18 +7,20 @@ services:
     image: postgres:15-alpine
     container_name: icpac-booking-db
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: icpac_booking
-      POSTGRES_USER: ${PGUSER:-koros}
-      POSTGRES_PASSWORD: ${PGPASSWORD:-icpac123}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "${DB_PORT:-9042}:5432"
     networks:
       - icpac-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-koros}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,7 +31,7 @@ services:
     container_name: icpac-booking-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-9043}:6379"
     networks:
       - icpac-network
 
@@ -40,13 +43,13 @@ services:
     container_name: icpac-booking-backend
     restart: unless-stopped
     env_file:
-      - ./icpac-booking-backend/.env
+      - .env
     environment:
       - PGHOST=postgres
       - PGPORT=5432
       - USE_SQLITE=False
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-9041}:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,14 +66,14 @@ services:
     build:
       context: ./icpac-booking-frontend
       dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_URL=${REACT_APP_API_URL}
     container_name: icpac-booking-frontend
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT:-9040}:80"
     depends_on:
       - backend
-    environment:
-      - REACT_APP_API_URL=http://localhost:8000
     networks:
       - icpac-network
 

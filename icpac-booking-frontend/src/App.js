@@ -12,7 +12,7 @@ const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('access_token');
   
   // Development bypass - set this to true to skip authentication
-  const DEV_BYPASS_AUTH = true;
+  const DEV_BYPASS_AUTH = false;
 
   if (!DEV_BYPASS_AUTH && !user && !token) {
     return <Navigate to="/login" replace />;

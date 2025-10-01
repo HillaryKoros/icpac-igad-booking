@@ -641,106 +641,101 @@ const BookingBoard = () => {
   }, []);
 
   // Initialize data
+  // Load rooms from backend API
   useEffect(() => {
-    // Set up rooms with categories
-    setRooms([
-      { id: 1, name: 'Conference Room - Ground Floor', capacity: 200, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing', 'Audio System'] },
-      { id: 2, name: 'Boardroom - First Floor', capacity: 25, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing'] },
-      { id: 3, name: 'Small Boardroom - 1st Floor', capacity: 12, category: 'conference', amenities: ['TV Screen', 'Whiteboard'] },
-      { id: 4, name: 'Situation Room', capacity: 8, category: 'special', amenities: ['Screen'] },
-      { id: 5, name: 'Computer Lab 1 - Ground Floor', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard',] },
-      { id: 6, name: 'Computer Lab 2 - First Floor', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard',] },
-    ]);
+    const fetchRooms = async () => {
+      try {
+        const response = await apiService.getRooms();
+        // Handle paginated response (check if response has 'results' key)
+        const roomsData = response.results || response;
+        // Transform backend format to frontend format
+        const transformedRooms = roomsData.map(room => ({
+          id: room.id,
+          name: room.name,
+          capacity: room.capacity,
+          category: room.category,
+          // Backend returns amenities as an array (JSONField)
+          amenities: Array.isArray(room.amenities)
+            ? room.amenities
+            : (typeof room.amenities === 'string'
+              ? room.amenities.split(',').map(a => a.trim()).filter(a => a)
+              : [])
+        }));
+        setRooms(transformedRooms);
+      } catch (error) {
+        console.error('Failed to load rooms:', error);
+        // Fallback to hardcoded rooms if API fails
+        setRooms([
+          { id: 1, name: 'Conference Room - Ground Floor', capacity: 200, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing', 'Audio System'] },
+          { id: 2, name: 'Boardroom - First Floor', capacity: 25, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing'] },
+          { id: 3, name: 'Small Boardroom - 1st Floor', capacity: 12, category: 'conference', amenities: ['TV Screen', 'Whiteboard'] },
+          { id: 4, name: 'Situation Room', capacity: 8, category: 'special', amenities: ['Screen'] },
+          { id: 5, name: 'Computer Lab 1 - Ground Floor', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard'] },
+          { id: 6, name: 'Computer Lab 2 - First Floor', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard'] },
+        ]);
+      }
+    };
 
-    // Load bookings from localStorage or use default
-    const savedBookings = loadBookingsFromStorage();
-    if (savedBookings && savedBookings.length > 0) {
-      setBookings(savedBookings);
-    } else {
-      // Default bookings if none saved
-      const defaultBookings = [
-        {
-          id: 1,
-          roomId: 1,
-          date: '2025-01-08',
-          time: '09:00',
-          duration: 'Multi-day',
-          startDate: '2025-01-08',
-          endDate: '2025-01-10',
-          title: 'ICPAC Annual Conference',
-          organizer: 'Dr. Abdi fitar',
-          attendeeCount: 150,
-          approvalStatus: 'approved',
-          approvedBy: 'System',
-          approvedAt: new Date().toISOString(),
-          createdBy: 'admin@icpac.net',
-          createdByName: 'Dr. Abdi fitar'
-        },
-        {
-          id: 2,
-          roomId: 2,
-          date: '2025-01-08',
-          time: '14:00',
-          duration: 'Hourly',
-          title: 'Climate Advisory Meeting',
-          organizer: 'ICPAC Team',
-          attendeeCount: 12,
-          approvalStatus: 'approved',
-          approvedBy: 'System',
-          approvedAt: new Date().toISOString(),
-          createdBy: 'admin@icpac.net',
-          createdByName: 'ICPAC Team'
-        },
-        {
-          id: 3,
-          roomId: 4,
-          date: '2025-01-07',
-          time: '10:00',
-          duration: 'Full day',
-          title: 'Emergency Response Planning',
-          organizer: 'Disaster Risk Management',
-          attendeeCount: 8,
-          approvalStatus: 'approved',
-          approvedBy: 'System',
-          approvedAt: new Date().toISOString(),
-          createdBy: 'admin@icpac.net',
-          createdByName: 'Disaster Risk Management'
-        },
-        {
-          id: 4,
-          roomId: 5,
-          date: new Date().toISOString().split('T')[0], // Today's date
-          time: '08:00',
-          duration: 'Hourly',
-          title: 'GIS Training Workshop',
-          organizer: 'IT Department',
-          attendeeCount: 15,
-          approvalStatus: 'approved',
-          approvedBy: 'System',
-          approvedAt: new Date().toISOString(),
-          createdBy: 'admin@icpac.net',
-          createdByName: 'IT Department'
-        },
-        {
-          id: 5,
-          roomId: 6,
-          date: '2025-01-08',
-          time: '15:00',
-          duration: 'Full day',
-          title: 'Climate Data Analysis Training',
-          organizer: 'Research Team',
-          attendeeCount: 18,
-          approvalStatus: 'approved',
-          approvedBy: 'System',
-          approvedAt: new Date().toISOString(),
-          createdBy: 'admin@icpac.net',
-          createdByName: 'Research Team'
-        },
-      ];
-      setBookings(defaultBookings);
-      saveBookingsToStorage(defaultBookings);
-    }
+    fetchRooms();
+
+    // Load bookings from backend API
+    const fetchBookings = async () => {
+      try {
+        const response = await apiService.getBookings();
+        // Handle paginated response (check if response has 'results' key)
+        const bookingsData = response.results || response;
+        // Transform backend format to frontend format
+        const transformedBookings = bookingsData.map(booking => {
+          // Calculate duration in hours from start and end time
+          const startTime = booking.start_time?.substring(0, 5) || booking.start_time;
+          const endTime = booking.end_time?.substring(0, 5) || booking.end_time;
+          let durationHours = 0.5; // default 30 minutes
+
+          if (startTime && endTime) {
+            const [startHour, startMin] = startTime.split(':').map(Number);
+            const [endHour, endMin] = endTime.split(':').map(Number);
+            durationHours = (endHour * 60 + endMin - startHour * 60 - startMin) / 60;
+          }
+
+          return {
+            id: booking.id,
+            roomId: booking.room_id || booking.room,  // API returns room_id
+            date: booking.start_date,
+            time: startTime,  // Convert "14:00:00" to "14:00"
+            duration: durationHours,  // Duration in hours (e.g., 0.5, 1, 2)
+            bookingType: booking.booking_type || 'hourly',  // Add bookingType field
+            startDate: booking.start_date,
+            endDate: booking.end_date,
+            startTime: startTime,
+            endTime: endTime,
+            title: booking.purpose,
+            organizer: booking.user_name || booking.user_details?.name || 'Unknown',
+            description: booking.special_requirements || '',
+            attendeeCount: booking.expected_attendees || 1,
+            approvalStatus: booking.approval_status || 'pending',
+            approvedBy: booking.approved_by,
+            approvedAt: booking.approved_at,
+            createdBy: booking.user_details?.email,
+            createdByName: booking.user_name || booking.user_details?.name
+          };
+        });
+        console.log('✅ Loaded bookings from API:', transformedBookings);
+        setBookings(transformedBookings);
+        // Also save to localStorage for offline access
+        saveBookingsToStorage(transformedBookings);
+      } catch (error) {
+        console.error('Failed to load bookings from API:', error);
+        // Fallback to localStorage if API fails
+        const savedBookings = loadBookingsFromStorage();
+        if (savedBookings && savedBookings.length > 0) {
+          setBookings(savedBookings);
+        }
+      }
+    };
+
+    fetchBookings();
   }, []);
+
 
   // Generate time slots with 15-minute intervals for more granular booking
   const generateTimeSlots = () => {
@@ -853,7 +848,7 @@ const BookingBoard = () => {
   const isSlotBooked = (roomId, time) => {
     const currentDate = formatDate(selectedDate);
 
-    return bookings.some(booking => {
+    const result = bookings.some(booking => {
       if (booking.roomId !== roomId) {
         return false;
       }
@@ -884,12 +879,29 @@ const BookingBoard = () => {
         const bookingEndIndex = bookingStartIndex + durationInSlots;
         const currentTimeIndex = getTimeSlotIndex(time);
 
-        return currentTimeIndex >= bookingStartIndex && currentTimeIndex < bookingEndIndex;
+        const isBooked = currentTimeIndex >= bookingStartIndex && currentTimeIndex < bookingEndIndex;
+
+        // Debug log
+        if (roomId === 1 && time >= '14:00' && time <= '14:30') {
+          console.log(`🔍 Checking slot ${time} for room ${roomId}:`, {
+            bookingTime: booking.time,
+            bookingDuration: booking.duration,
+            bookingStartIndex,
+            bookingEndIndex,
+            currentTimeIndex,
+            durationInSlots,
+            isBooked
+          });
+        }
+
+        return isBooked;
       }
 
       // For full-day, multi-day, or weekly bookings, all time slots are booked
       return true;
     });
+
+    return result;
   };
 
   const getBookingDetails = (roomId, time) => {
@@ -1017,65 +1029,86 @@ const BookingBoard = () => {
       }
     }
 
-    const newBooking = {
-      id: Date.now(), // Use timestamp for unique ID
-      roomId: selectedRoom.id,
-      // Keep legacy fields for backward compatibility
-      date: bookingData.startDate,
-      time: bookingData.startTime || selectedTime,
-      duration: bookingData.duration || 0.5,
-      // New fields for extended booking
-      bookingType: bookingData.bookingType || 'hourly',
-      startDate: bookingData.startDate,
-      endDate: bookingData.endDate,
-      startTime: bookingData.startTime,
-      endTime: bookingData.endTime,
-      title: bookingData.title,
-      organizer: bookingData.organizer,
-      description: bookingData.description || '',
-      attendeeCount: bookingData.attendeeCount || 1,
-      // Add approval status fields - Auto-approved
-      approvalStatus: 'approved', // automatically approved
-      approvedBy: 'System',
-      approvedAt: new Date().toISOString(),
-      // Add creator information for user permissions
-      userId: currentUser ? currentUser.id : null,
-      userName: currentUser ? currentUser.name : bookingData.organizer,
-      createdBy: currentUser ? currentUser.email : bookingData.organizer,
-      createdByName: currentUser ? currentUser.name : bookingData.organizer
-    };
-
-    const updatedBookings = [...bookings, newBooking];
-    setBookings(updatedBookings);
-    saveBookingsToStorage(updatedBookings); // Save to localStorage
-
-
-    // 📧 EMAIL NOTIFICATIONS - Send booking confirmation and admin notifications
     try {
-      if (currentUser) {
-        // 1. Send booking confirmation to the user
-        await emailService.sendBookingConfirmation(newBooking, selectedRoom, currentUser);
+      // Map frontend data to backend API format
+      const backendBookingData = {
+        room: selectedRoom.id,
+        start_date: bookingData.startDate,
+        end_date: bookingData.endDate || bookingData.startDate,
+        start_time: bookingData.startTime,
+        end_time: bookingData.endTime,
+        purpose: bookingData.title,
+        expected_attendees: bookingData.attendeeCount || 1,
+        special_requirements: bookingData.description || ''
+      };
 
-        // 2. Send admin notifications for new booking
-        const roomAdmins = emailService.getRoomAdmins(selectedRoom.id, users);
-        if (roomAdmins.length > 0) {
-          await emailService.sendAdminNotification(newBooking, selectedRoom, currentUser, roomAdmins);
-        }
+      // Save to backend database
+      const savedBooking = await apiService.createBooking(backendBookingData);
 
-        // 3. Schedule 30-minute meeting reminder
-        const reminderResult = emailService.scheduleReminder(newBooking, selectedRoom, currentUser);
-        if (reminderResult.success) {
-          console.log(`⏰ Meeting reminder scheduled for: ${reminderResult.reminderTime}`);
+      // Transform backend response to frontend format for local state
+      const newBooking = {
+        id: savedBooking.id,
+        roomId: savedBooking.room,
+        // Keep legacy fields for backward compatibility
+        date: savedBooking.start_date,
+        time: savedBooking.start_time,
+        duration: bookingData.duration || 0.5,
+        // New fields for extended booking
+        bookingType: bookingData.bookingType || 'hourly',
+        startDate: savedBooking.start_date,
+        endDate: savedBooking.end_date,
+        startTime: savedBooking.start_time,
+        endTime: savedBooking.end_time,
+        title: savedBooking.purpose,
+        organizer: bookingData.organizer,
+        description: savedBooking.special_requirements || '',
+        attendeeCount: savedBooking.expected_attendees || 1,
+        // Add approval status from backend
+        approvalStatus: savedBooking.approval_status || 'pending',
+        approvedBy: savedBooking.approved_by,
+        approvedAt: savedBooking.approved_at,
+        // Add creator information
+        userId: currentUser ? currentUser.id : null,
+        userName: currentUser ? currentUser.name : bookingData.organizer,
+        createdBy: currentUser ? currentUser.email : bookingData.organizer,
+        createdByName: currentUser ? currentUser.name : bookingData.organizer
+      };
+
+      const updatedBookings = [...bookings, newBooking];
+      setBookings(updatedBookings);
+      saveBookingsToStorage(updatedBookings); // Save to localStorage for offline viewing
+
+      // 📧 EMAIL NOTIFICATIONS - Send booking confirmation and admin notifications
+      try {
+        if (currentUser) {
+          // 1. Send booking confirmation to the user
+          await emailService.sendBookingConfirmation(newBooking, selectedRoom, currentUser);
+
+          // 2. Send admin notifications for new booking
+          const roomAdmins = emailService.getRoomAdmins(selectedRoom.id, users);
+          if (roomAdmins.length > 0) {
+            await emailService.sendAdminNotification(newBooking, selectedRoom, currentUser, roomAdmins);
+          }
+
+          // 3. Schedule 30-minute meeting reminder
+          const reminderResult = emailService.scheduleReminder(newBooking, selectedRoom, currentUser);
+          if (reminderResult.success) {
+            console.log(`⏰ Meeting reminder scheduled for: ${reminderResult.reminderTime}`);
+          }
         }
+      } catch (error) {
+        console.error('Email notification error:', error);
+        // Don't block booking if email fails
       }
-    } catch (error) {
-      console.error('Email notification error:', error);
-      // Don't block booking if email fails
-    }
 
-    setShowBookingForm(false);
-    setSelectedRoom(null);
-    setSelectedTime('');
+      alert('Booking created successfully!');
+      setShowBookingForm(false);
+      setSelectedRoom(null);
+      setSelectedTime('');
+    } catch (error) {
+      console.error('Booking creation error:', error);
+      alert(error.message || 'Failed to create booking. Please try again.');
+    }
   };
 
   // Check if user is authenticated via context
@@ -1158,8 +1191,10 @@ const BookingBoard = () => {
   }, [rooms, bookings]);
 
   const todayBookingsCount = useMemo(() => {
-    return bookings.filter(b => isToday(new Date(b.startDate))).length;
-  }, [bookings]);
+    // Count bookings for the selected date, not just literal "today"
+    const selectedDateStr = formatDate(selectedDate);
+    return bookings.filter(b => b.startDate === selectedDateStr).length;
+  }, [bookings, selectedDate]);
 
   const filteredRooms = useMemo(() => {
     return getFilteredRooms();
