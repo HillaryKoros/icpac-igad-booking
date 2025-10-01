@@ -164,6 +164,9 @@ export const AppProvider = ({ children }) => {
 
   // Initialize data
   useEffect(() => {
+    // Development bypass - set this to true to skip authentication
+    const DEV_BYPASS_AUTH = false;
+    
     // Check if user is already logged in
     const currentUser = apiService.getCurrentUser();
     if (currentUser) {
@@ -171,6 +174,26 @@ export const AppProvider = ({ children }) => {
       // Fetch real data
       fetchRooms();
       fetchBookings();
+    } else if (DEV_BYPASS_AUTH) {
+      // Set a mock user for development
+      const mockUser = {
+        id: 1,
+        username: 'admin@icpac.net',
+        email: 'admin@icpac.net',
+        first_name: 'Admin',
+        last_name: 'User',
+        is_staff: true,
+        is_superuser: true
+      };
+      setUser(mockUser);
+      
+      // Load fallback data
+      loadFallbackData();
+      // Load bookings from localStorage for demo
+      const savedBookings = loadBookingsFromStorage();
+      if (savedBookings && savedBookings.length > 0) {
+        setBookings(savedBookings);
+      }
     } else {
       // Load fallback data if not authenticated
       loadFallbackData();
