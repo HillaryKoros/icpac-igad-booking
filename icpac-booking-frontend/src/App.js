@@ -3,11 +3,21 @@ import { AppProvider, useApp } from './context/AppContext';
 import Footer from './components/Footer';
 import BookingBoard from './components/BookingBoard';
 import DashboardPage from './components/DashboardPage';
-import LoginForm from './components/auth/LoginForm';
+import LoginPage from './components/auth/LoginPage';
 import ProcurementRequisitionForm from './components/ProcurementRequisitionForm';
 
-// Protected Route Component - let BookingBoard handle its own auth flow
+// Protected Route Component - redirects to login if not authenticated
 const ProtectedRoute = ({ children }) => {
+  const { user } = useApp();
+  const token = localStorage.getItem('access_token');
+  
+  // Development bypass - set this to true to skip authentication
+  const DEV_BYPASS_AUTH = true;
+
+  if (!DEV_BYPASS_AUTH && !user && !token) {
+    return <Navigate to="/login" replace />;
+  }
+
   return children;
 };
 
@@ -15,8 +25,11 @@ const ProtectedRoute = ({ children }) => {
 const PublicRoute = ({ children }) => {
   const { user } = useApp();
   const token = localStorage.getItem('access_token');
+  
+  // Development bypass - set this to true to skip authentication
+  const DEV_BYPASS_AUTH = true;
 
-  if (user || token) {
+  if (!DEV_BYPASS_AUTH && (user || token)) {
     return <Navigate to="/" replace />;
   }
 
@@ -33,7 +46,7 @@ const AppContent = () => {
             path="/login"
             element={
               <PublicRoute>
-                <LoginForm onSuccess={() => window.location.href = '/'} />
+                <LoginPage />
               </PublicRoute>
             }
           />
@@ -65,7 +78,7 @@ const AppContent = () => {
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </main>
       <Footer />

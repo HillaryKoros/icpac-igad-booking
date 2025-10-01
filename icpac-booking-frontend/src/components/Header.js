@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 
 const Header = () => {
+  const navigate = useNavigate();
   const { user, logout } = useApp();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -20,6 +22,8 @@ const Header = () => {
   const handleLogout = () => {
     logout();
     setShowUserMenu(false);
+    // Redirect to login page
+    navigate('/login');
   };
 
   return (

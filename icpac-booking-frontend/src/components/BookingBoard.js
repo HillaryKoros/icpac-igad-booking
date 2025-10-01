@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import apiService from '../services/api';
 import emailService from '../services/emailService';
@@ -23,12 +24,15 @@ const getAmenityIcon = (amenity) => {
 };
 
 const BookingBoard = () => {
+  const navigate = useNavigate();
+  
   // Get data from context (API integrated)
   const {
     rooms: contextRooms,
     bookings: contextBookings,
     user,
-    createBooking: apiCreateBooking
+    createBooking: apiCreateBooking,
+    logout: contextLogout
   } = useApp();
 
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -62,6 +66,9 @@ const BookingBoard = () => {
   const [selectedMeetingSpaces, setSelectedMeetingSpaces] = useState([]);
   const [selectedBookingType, setSelectedBookingType] = useState('hourly');
   const [showMeetingSpaceModal, setShowMeetingSpaceModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [selectedRoomForModal, setSelectedRoomForModal] = useState(null);
 
   // localStorage functions
   const saveBookingsToStorage = (bookingsData) => {
@@ -176,6 +183,12 @@ const BookingBoard = () => {
   const handleAdminLogout = () => {
     setIsAdmin(false);
     localStorage.removeItem('icpac_admin');
+    
+    // Use context logout to clear global state and tokens
+    contextLogout();
+    
+    // Redirect to login page
+    navigate('/login');
   };
 
   const handleUserLogin = (email, password) => {
@@ -216,6 +229,7 @@ const BookingBoard = () => {
   };
 
   const handleUserLogout = () => {
+    // Clear local state
     clearMeetingSpaceSelection();
     setCurrentUser(null);
     setSelectedMeetingSpace(null);
@@ -226,6 +240,12 @@ const BookingBoard = () => {
     setShowMeetingSpaceModal(false);
     localStorage.removeItem('icpac_current_user');
     localStorage.removeItem('icpac_admin');
+    
+    // Use context logout to clear global state and tokens
+    contextLogout();
+    
+    // Redirect to login page
+    navigate('/login');
   };
 
   const handleMeetingSpaceSelection = (roomId) => {
@@ -612,59 +632,11 @@ const BookingBoard = () => {
     document.body.classList.toggle('dark-mode', newMode);
   };
 
-  // Check for admin status and current user on load
+  // Load users on mount (if needed for user management features)
   useEffect(() => {
-    const adminStatus = localStorage.getItem('icpac_admin');
-    if (adminStatus === 'true') {
-      setIsAdmin(true);
-    }
-
-    const currentUserData = localStorage.getItem('icpac_current_user');
-    if (currentUserData) {
-      const userData = JSON.parse(currentUserData);
-      setCurrentUser(userData);
-      setIsAuthenticated(true);
-      setShowLandingPage(false);
-
-      // Ensure admin status is set correctly based on user role
-      if (userData.role === 'super_admin' || userData.role === 'room_admin') {
-        setIsAdmin(true);
-        localStorage.setItem('icpac_admin', 'true');
-      }
-    } else {
-      // If no user is logged in, automatically show login modal instead of landing page
-      setShowUserLogin(true);
-      setShowLandingPage(false);
-    }
-
-    // Load users or create default super admin
     const savedUsers = loadUsersFromStorage();
     if (savedUsers && savedUsers.length > 0) {
       setUsers(savedUsers);
-    } else {
-      // Create default super admin and procurement officer
-      const defaultUsers = [
-        {
-          id: 1,
-          name: 'Super Admin',
-          email: 'admin@icpac.net',
-          password: 'admin123',
-          role: 'super_admin',
-          managedRooms: [],
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 2,
-          name: 'Procurement Officer',
-          email: 'procurement@icpac.net',
-          password: 'procurement123',
-          role: 'procurement_officer',
-          managedRooms: [],
-          createdAt: new Date().toISOString()
-        }
-      ];
-      setUsers(defaultUsers);
-      saveUsersToStorage(defaultUsers);
     }
   }, []);
 
@@ -1106,71 +1078,141 @@ const BookingBoard = () => {
     setSelectedTime('');
   };
 
-  // Show landing page with automatic login modal if not authenticated
-  if (!isAuthenticated) {
+  // Check if user is authenticated via context
+  useEffect(() => {
+    if (user) {
+      // Use the authenticated user from context
+      setCurrentUser({
+        id: user.id,
+        name: user.first_name + ' ' + user.last_name,
+        email: user.email,
+        role: user.is_superuser ? 'super_admin' : (user.is_staff ? 'room_admin' : 'regular_user'),
+        managedRooms: [],
+        createdAt: user.date_joined
+      });
+      setIsAuthenticated(true);
+      
+      // Set admin status
+      if (user.is_superuser || user.is_staff) {
+        setIsAdmin(true);
+      }
+    }
+  }, [user]);
+
+  // Helper function to get room status indicator
+  const getRoomStatusIndicator = (room) => {
+    const currentTime = new Date();
+    const hasCurrentBooking = bookings.some(booking => {
+      if (booking.roomId !== room.id) return false;
+      
+      const bookingStart = new Date(booking.startDate + ' ' + booking.startTime);
+      const bookingEnd = new Date(booking.startDate + ' ' + booking.endTime);
+      
+      return currentTime >= bookingStart && currentTime <= bookingEnd;
+    });
+
+    if (hasCurrentBooking) {
+      return (
+        <span className="status-indicator status-occupied" title="Currently Occupied">
+          🔴 Occupied
+        </span>
+      );
+    }
+
+    // Check if room has bookings today
+    const hasTodayBooking = bookings.some(booking => {
+      if (booking.roomId !== room.id) return false;
+      return isToday(new Date(booking.startDate));
+    });
+
+    if (hasTodayBooking) {
+      return (
+        <span className="status-indicator status-partial" title="Has Bookings Today">
+          🟡 Booked Today
+        </span>
+      );
+    }
+
     return (
-      <div className="booking-container">
-        <LandingPage
-          onLogin={() => setShowUserLogin(true)}
-          onSignup={() => setShowSignup(true)}
-          onViewDashboard={() => window.location.href = '/dashboard'}
-        />
-
-        {/* Login Modal */}
-        {showUserLogin && (
-          <UserLoginModal
-            onLogin={handleUserLogin}
-            onCancel={() => setShowUserLogin(false)}
-            onSwitchToSignup={() => {
-              setShowUserLogin(false);
-              setShowSignup(true);
-            }}
-            onForgotPassword={() => {
-              setShowUserLogin(false);
-              setShowForgotPassword(true);
-            }}
-          />
-        )}
-
-        {/* Signup Modal */}
-        {showSignup && (
-          <UserSignupModal
-            onCancel={() => setShowSignup(false)}
-            onSwitchToLogin={() => {
-              setShowSignup(false);
-              setShowUserLogin(true);
-            }}
-          />
-        )}
-
-        {/* Meeting Space Selection Modal */}
-        {showMeetingSpaceModal && (
-          <MeetingSpaceSelectionModal
-            rooms={rooms}
-            onSelect={handleMeetingSpaceSelection}
-            currentUser={currentUser}
-          />
-        )}
-
-        {/* Forgot Password Modal */}
-        {showForgotPassword && (
-          <ForgotPasswordModal
-            onCancel={() => setShowForgotPassword(false)}
-            onBackToLogin={() => {
-              setShowForgotPassword(false);
-              setShowUserLogin(true);
-            }}
-          />
-        )}
-
-      </div>
+      <span className="status-indicator status-available" title="Available">
+        🟢 Available
+      </span>
     );
-  }
+  };
+
+  // Memoized calculations for better performance
+  const availableRoomsCount = useMemo(() => {
+    const currentTime = new Date();
+    return rooms.filter(room => {
+      const hasCurrentBooking = bookings.some(booking => {
+        if (booking.roomId !== room.id) return false;
+        
+        const bookingStart = new Date(booking.startDate + ' ' + booking.startTime);
+        const bookingEnd = new Date(booking.startDate + ' ' + booking.endTime);
+        
+        return currentTime >= bookingStart && currentTime <= bookingEnd;
+      });
+      
+      return !hasCurrentBooking;
+    }).length;
+  }, [rooms, bookings]);
+
+  const todayBookingsCount = useMemo(() => {
+    return bookings.filter(b => isToday(new Date(b.startDate))).length;
+  }, [bookings]);
+
+  const filteredRooms = useMemo(() => {
+    return getFilteredRooms();
+  }, [rooms, selectedRoomId, currentUser, selectedMeetingSpace, selectedMeetingSpaces]);
+
+  const groupedRooms = useMemo(() => {
+    return getGroupedRooms(filteredRooms);
+  }, [filteredRooms]);
+
+  const availableTimeSlots = useMemo(() => {
+    return getAvailableTimeSlots(selectedDate);
+  }, [selectedDate, bookings]);
+
+  // Memoized event handlers for better performance
+  const handleDateChange = useCallback((newDate) => {
+    setSelectedDate(newDate);
+  }, []);
+
+  const handleTimeSlotClick = useCallback((room, time) => {
+    if (isTimeSlotInPast(selectedDate, time) || isWeekend(selectedDate)) {
+      return;
+    }
+
+    const isBooked = isSlotBooked(room.id, time);
+    if (isBooked && !canManageBooking(getBookingDetails(room.id, time))) {
+      return;
+    }
+
+    setSelectedRoom(room);
+    setSelectedTime(time);
+    setShowBookingForm(true);
+  }, [selectedDate]);
+
+  const handleBookingFormClose = useCallback(() => {
+    setShowBookingForm(false);
+    setSelectedRoom(null);
+    setSelectedTime('');
+  }, []);
+
+  const openRoomModal = useCallback((room) => {
+    console.log('Opening room modal for:', room.name);
+    setSelectedRoomForModal(room);
+  }, []);
+
+  const closeRoomModal = useCallback(() => {
+    console.log('Closing room modal');
+    setSelectedRoomForModal(null);
+  }, []);
 
   return (
     <div className="booking-container">
       <div className="booking-wrapper">
-        {/* Header */}
+        {/* Enhanced Header */}
         <div className="booking-header">
           <div className="header-title-row">
             <div className="logo-section">
@@ -1180,8 +1222,47 @@ const BookingBoard = () => {
               <h1 className="booking-title">ICPAC INTERNAL BOOKING SYSTEM</h1>
               <p className="booking-subtitle">Reserve your meeting space with ease - Book conference rooms, manage schedules, and collaborate seamlessly across ICPAC facilities</p>
             </div>
+            {/* Quick Stats */}
+            <div className="quick-stats">
+              <div className="stat-item">
+                <span className="stat-number">{rooms.length}</span>
+                <span className="stat-label">Rooms</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-number">{todayBookingsCount}</span>
+                <span className="stat-label">Today</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-number">{availableRoomsCount}</span>
+                <span className="stat-label">Available</span>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Loading and Error States */}
+        {isLoading && (
+          <div className="loading-overlay">
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p>Loading booking data...</p>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="error-banner">
+            <span className="error-icon">⚠️</span>
+            <span className="error-message">{error}</span>
+            <button 
+              className="error-dismiss"
+              onClick={() => setError(null)}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
 
         {/* Date Selector */}
         <div className="date-section">
@@ -1804,25 +1885,9 @@ const BookingBoard = () => {
           </div>
 
           {shouldShowBookingInterface(selectedDate) ? (
-            <div className="grid-table-container">
-              <table className="grid-table">
-                <thead>
-                  <tr>
-                    <th>
-                      <span className="table-header-room">
-                        <span className="header-icon">🏢</span>
-                        <span className="header-text" style={{ color: 'black', fontWeight: 'bold', fontSize: '16px' }}>Meeting Rooms</span>
-                      </span>
-                    </th>
-                    {getAvailableTimeSlots(selectedDate).map(time => (
-                      <th key={time}>{time}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {getFilteredRooms().length === 0 ? (
-                    <tr>
-                      <td colSpan={getAvailableTimeSlots(selectedDate).length + 1} className="no-rooms-message">
+            <div className="rooms-container">
+              {filteredRooms.length === 0 ? (
+                <div className="no-rooms-message">
                         <div className="no-rooms-content">
                           <h3>No Rooms Available</h3>
                           <p>
@@ -1832,156 +1897,32 @@ const BookingBoard = () => {
                             }
                           </p>
                         </div>
-                      </td>
-                    </tr>
+                </div>
                   ) : (
-                    getFilteredRooms().map(room => {
+                filteredRooms.map(room => {
                       const categoryInfo = getCategoryInfo(room.category);
                       return (
-                        <tr key={room.id} className="room-row">
-                          <td>
-                            <div className="room-info" style={{ borderLeftColor: categoryInfo.color }}>
-                              <div className="room-header">
-                                <h3 className="room-name">
+                    <div key={room.id} className="room-card">
+                      <div 
+                        className="room-card-header" 
+                        onClick={() => openRoomModal(room)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="room-card-title">
                                   <span className="room-category-icon">{categoryInfo.icon}</span>
-                                  {room.name}
-                                </h3>
-                                <div className="room-details">
-                                  <div className="room-detail">
-                                    <span className="room-detail-icon">👥</span>
-                                    <span className="room-detail-text">{room.capacity}</span>
+                          <h3 className="room-card-name">{room.name}</h3>
                                   </div>
-                                  <div className="room-detail">
-                                    <span className="room-detail-icon">🏷️</span>
-                                    <span className="room-detail-text">{categoryInfo.label}</span>
+                        <div className="room-status-badge">
+                          {getRoomStatusIndicator(room)}
                                   </div>
+                        <div className="expand-icon">
+                          ▶
                                 </div>
                               </div>
-                              {room.amenities && room.amenities.length > 0 && (
-                                <div className="room-amenities">
-                                  {room.amenities.slice(0, 3).map((amenity, index) => (
-                                    <span key={index} className="amenity-tag">{amenity}</span>
-                                  ))}
-                                  {room.amenities.length > 3 && (
-                                    <span className="amenity-tag more">+{room.amenities.length - 3}</span>
-                                  )}
                                 </div>
-                              )}
-                            </div>
-                          </td>
-                          {getAvailableTimeSlots(selectedDate).map(time => {
-                            const isBooked = isSlotBooked(room.id, time);
-                            const booking = getBookingDetails(room.id, time);
-                            const isPast = isTimeSlotInPast(selectedDate, time);
-                            const isWeekendDay = isWeekend(selectedDate);
-
-                            return (
-                              <td key={time}>
-                                {isWeekendDay ? (
-                                  <div className="time-slot weekend-blocked">
-                                    <div className="slot-title">Sunday</div>
-                                    <div className="slot-subtitle">Not Available</div>
-                                  </div>
-                                ) : isPast ? (
-                                  // This should never happen now since we filter past slots
-                                  null
-                                ) : isBooked ? (
-                                  <div className={`modern-time-slot booked ${booking.bookingType || 'hourly'} ${booking.approvalStatus || 'pending'}`}>
-                                    <div className="slot-icon">
-                                      {booking.approvalStatus === 'approved' ? '✅' :
-                                        booking.approvalStatus === 'rejected' ? '❌' : '⏳'}
-                                    </div>
-                                    <div className="slot-content">
-                                      <div className="slot-title">
-                                        {booking.title}
-                                      </div>
-                                      <div className="slot-subtitle">
-                                        {booking.userName}
-                                      </div>
-                                      {booking.bookingType === 'full-day' && (
-                                        <div className="booking-type-badge">Full Day</div>
-                                      )}
-                                      {booking.bookingType === 'multi-day' && (
-                                        <div className="booking-type-badge">Multi-Day</div>
-                                      )}
-                                      {booking.bookingType === 'weekly' && (
-                                        <div className="booking-type-badge">Weekly</div>
-                                      )}
-                                      <div className="slot-controls">
-                                        {/* Only show edit/cancel for booking owner or admin */}
-                                        {(booking.userId === currentUser?.id ||
-                                          (booking.createdBy === currentUser?.email) ||
-                                          (booking.createdByName === currentUser?.name) ||
-                                          canApproveBooking(booking)) && (
-                                          <div className="slot-actions">
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setEditingBooking(booking);
-                                                setShowEditForm(true);
-                                              }}
-                                              className="slot-action-btn edit"
-                                              title="Edit booking"
-                                            >
-                                              ✏️
-                                            </button>
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (window.confirm('Cancel this booking?')) {
-                                                  cancelBooking(booking.id);
-                                                }
-                                              }}
-                                              className="slot-action-btn cancel"
-                                              title="Cancel booking"
-                                            >
-                                              ❌
-                                            </button>
-                                          </div>
-                                        )}
-                                        {/* Admin approval buttons */}
-                                        {currentUser && canApproveBooking(booking) && booking.approvalStatus === 'pending' && (
-                                          <div className="approval-actions">
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                approveBooking(booking.id);
-                                              }}
-                                              className="approval-btn approve"
-                                              title="Approve booking"
-                                            >
-                                              ✅
-                                            </button>
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                const reason = prompt('Reason for rejection (optional):');
-                                                rejectBooking(booking.id, reason);
-                                              }}
-                                              className="approval-btn reject"
-                                              title="Reject booking"
-                                            >
-                                              ❌
-                                            </button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="modern-time-slot empty-slot">
-                                    {/* Empty cell for available slots - maintains grid alignment */}
-                                  </div>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
                       );
                     })
                   )}
-                </tbody>
-              </table>
             </div>
           ) : (
             <div className="day-closed-message">
@@ -2044,7 +1985,7 @@ const BookingBoard = () => {
         {showEditForm && editingBooking && (
           <EditBookingForm
             booking={editingBooking}
-            rooms={getFilteredRooms()}
+            rooms={filteredRooms}
             currentUser={currentUser}
             onUpdate={updateBooking}
             onCancel={() => {
@@ -2052,6 +1993,208 @@ const BookingBoard = () => {
               setEditingBooking(null);
             }}
           />
+        )}
+
+        {/* Room Details Modal */}
+        {selectedRoomForModal && (
+          <div className="modal-overlay" onClick={closeRoomModal}>
+            <div className="room-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>{selectedRoomForModal.name}</h2>
+                <button className="modal-close" onClick={closeRoomModal}>×</button>
+              </div>
+              
+              <div className="modal-body">
+                {/* Room Info */}
+                <div className="modal-room-info">
+                  <div className="room-info-chips">
+                    <div className="info-chip capacity-chip">
+                      <span className="chip-label">Capacity</span>
+                      <span className="chip-value">{selectedRoomForModal.capacity}</span>
+                    </div>
+                    {selectedRoomForModal.amenities && selectedRoomForModal.amenities.length > 0 && (
+                      <div className="info-chip amenities-chip">
+                        <span className="chip-label">Amenities</span>
+                        <span className="chip-value">
+                          {selectedRoomForModal.amenities.join(', ')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Day Overview Section */}
+                <div className="day-overview-section">
+                  <div className="day-overview-header">
+                    <h4>Day Overview</h4>
+                    <span className="overview-date">{new Date(selectedDate).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}</span>
+                  </div>
+                  <div className="time-slots-overview">
+                    {availableTimeSlots.map(time => {
+                      const isBooked = isSlotBooked(selectedRoomForModal.id, time);
+                      const booking = getBookingDetails(selectedRoomForModal.id, time);
+                      const isPast = isTimeSlotInPast(selectedDate, time);
+                      const isWeekendDay = isWeekend(selectedDate);
+                      
+                      let status = 'available';
+                      let statusText = 'Available';
+                      let statusColor = '#10b981';
+                      
+                      if (isWeekendDay) {
+                        status = 'weekend';
+                        statusText = 'Weekend';
+                        statusColor = '#f59e0b';
+                      } else if (isPast) {
+                        status = 'past';
+                        statusText = 'Past';
+                        statusColor = '#6b7280';
+                      } else if (isBooked) {
+                        status = 'booked';
+                        statusText = booking.title || 'Booked';
+                        statusColor = '#ef4444';
+                      }
+                      
+                      return (
+                        <div 
+                          key={time} 
+                          className={`overview-slot ${status}`}
+                          title={`${time}: ${statusText}`}
+                          onClick={() => {
+                            // Auto-select this time in the picker below
+                            const timeSelect = document.getElementById(`modal-time-select`);
+                            if (timeSelect) {
+                              timeSelect.value = time;
+                              timeSelect.dispatchEvent(new Event('change'));
+                            }
+                          }}
+                        >
+                          <span className="slot-time">{time}</span>
+                          <div 
+                            className="slot-indicator" 
+                            style={{ backgroundColor: statusColor }}
+                          ></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="overview-legend">
+                    <div className="legend-item">
+                      <div className="legend-color" style={{ backgroundColor: '#10b981' }}></div>
+                      <span>Available</span>
+                    </div>
+                    <div className="legend-item">
+                      <div className="legend-color" style={{ backgroundColor: '#ef4444' }}></div>
+                      <span>Booked</span>
+                    </div>
+                    <div className="legend-item">
+                      <div className="legend-color" style={{ backgroundColor: '#6b7280' }}></div>
+                      <span>Past</span>
+                    </div>
+                    <div className="legend-item">
+                      <div className="legend-color" style={{ backgroundColor: '#f59e0b' }}></div>
+                      <span>Weekend</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Time Picker Section */}
+                <div className="time-picker-section">
+                  <div className="time-picker-header">
+                    <h4>Select Time Slot</h4>
+                    <span className="time-range-info">9:00 AM - 6:00 PM</span>
+                  </div>
+                  
+                  <div className="time-picker-controls">
+                    <div className="time-input-group">
+                      <label htmlFor="modal-time-select">Choose Time:</label>
+                      <select 
+                        id="modal-time-select"
+                        className="time-select"
+                        onChange={(e) => {
+                          const selectedTime = e.target.value;
+                          if (selectedTime) {
+                            const isBooked = isSlotBooked(selectedRoomForModal.id, selectedTime);
+                            const booking = getBookingDetails(selectedRoomForModal.id, selectedTime);
+                            const isPast = isTimeSlotInPast(selectedDate, selectedTime);
+                            const isWeekendDay = isWeekend(selectedDate);
+                            
+                            // Update the availability display
+                            const availabilityElement = document.getElementById('modal-availability');
+                            if (availabilityElement) {
+                              if (isWeekendDay) {
+                                availabilityElement.innerHTML = `
+                                  <div class="availability-status weekend">
+                                    <span class="status-icon">🚫</span>
+                                    <span class="status-text">Weekend - Not Available</span>
+                                  </div>
+                                `;
+                              } else if (isPast) {
+                                availabilityElement.innerHTML = `
+                                  <div class="availability-status past">
+                                    <span class="status-icon">⏰</span>
+                                    <span class="status-text">Past Time Slot</span>
+                                  </div>
+                                `;
+                              } else if (isBooked) {
+                                availabilityElement.innerHTML = `
+                                  <div class="availability-status booked">
+                                    <span class="status-icon">❌</span>
+                                    <span class="status-text">Booked: ${booking.title}</span>
+                                  </div>
+                                `;
+                              } else {
+                                availabilityElement.innerHTML = `
+                                  <div class="availability-status available">
+                                    <span class="status-icon">✅</span>
+                                    <span class="status-text">Available for Booking</span>
+                                  </div>
+                                `;
+                              }
+                            }
+                          }
+                        }}
+                      >
+                        <option value="">Select a time slot...</option>
+                        {availableTimeSlots.map(time => (
+                          <option key={time} value={time}>{time}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div id="modal-availability" className="availability-display">
+                      <div className="availability-status placeholder">
+                        <span className="status-icon">ℹ️</span>
+                        <span className="status-text">Select a time to check availability</span>
+                      </div>
+                    </div>
+                    
+                    <div className="booking-action">
+                      <button 
+                        className="book-now-btn"
+                        onClick={() => {
+                          const timeSelect = document.getElementById('modal-time-select');
+                          const selectedTime = timeSelect.value;
+                          if (selectedTime && !isSlotBooked(selectedRoomForModal.id, selectedTime) && !isTimeSlotInPast(selectedDate, selectedTime) && !isWeekend(selectedDate)) {
+                            handleBooking(selectedRoomForModal, selectedTime);
+                            closeRoomModal();
+                          } else {
+                            alert('Please select a valid available time slot');
+                          }
+                        }}
+                      >
+                        Book This Time Slot
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
 
@@ -2463,40 +2606,38 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
         <form onSubmit={handleSubmit} className="modern-booking-form">
           <div className="booking-form-grid">
             <div className="form-field-group">
-              <div className="floating-field">
+              <div className="input-field">
                 <input
                   type="text"
                   name="title"
                   required
                   value={formData.title}
                   onChange={handleChange}
-                  className={`modern-input ${formData.title ? 'has-value' : ''}`}
+                  className="modern-input"
                   id="meeting-title"
                 />
-                <label htmlFor="meeting-title" className="floating-label">
+                <label htmlFor="meeting-title" className="input-label">
                   <span className="label-icon">📋</span>
                   Meeting Title *
                 </label>
-                <div className="field-border"></div>
               </div>
             </div>
 
             <div className="form-field-group">
-              <div className="floating-field">
+              <div className="input-field">
                 <input
                   type="text"
                   name="organizer"
                   required
                   value={formData.organizer}
                   onChange={handleChange}
-                  className={`modern-input ${formData.organizer ? 'has-value' : ''}`}
+                  className="modern-input"
                   id="organizer-name"
                 />
-                <label htmlFor="organizer-name" className="floating-label">
+                <label htmlFor="organizer-name" className="input-label">
                   <span className="label-icon">👤</span>
                   Organizer *
                 </label>
-                <div className="field-border"></div>
               </div>
             </div>
 
@@ -2650,26 +2791,24 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
             )}
 
             <div className="form-field-group full-width">
-              <div className="textarea-field">
+              <div className="input-field">
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
                   rows="3"
-                  className={`modern-textarea ${formData.description ? 'has-value' : ''}`}
+                  className="modern-textarea"
                   id="description"
-                  placeholder=" "
                 />
-                <label htmlFor="description" className="floating-label">
+                <label htmlFor="description" className="input-label">
                   <span className="label-icon">📝</span>
                   Description (optional)
                 </label>
-                <div className="field-border"></div>
               </div>
             </div>
 
             <div className="form-field-group">
-              <div className="number-field">
+              <div className="input-field">
                 <input
                   type="number"
                   name="attendeeCount"
@@ -2678,14 +2817,13 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
                   min="1"
                   max="100"
                   required
-                  className={`modern-number-input ${formData.attendeeCount ? 'has-value' : ''}`}
+                  className="modern-input"
                   id="attendee-count"
                 />
-                <label htmlFor="attendee-count" className="floating-label">
+                <label htmlFor="attendee-count" className="input-label">
                   <span className="label-icon">👥</span>
                   Number of Attendees *
                 </label>
-                <div className="field-border"></div>
                 <div className="capacity-indicator">
                   <span className="capacity-text">Max: {room.capacity}</span>
                   <div className="capacity-bar">
@@ -5550,46 +5688,3 @@ const MeetingSpaceSelectionModal = ({ rooms, onSelect, currentUser }) => {
 };
 
 export default BookingBoard;
-
-{/* CSS Styles for Mobile Responsiveness */}
-<style jsx>{`
-  @media (max-width: 768px) {
-    .booking-grid-container {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 16px !important;
-    }
-
-    .date-picker-card,
-    .meeting-spaces-card,
-    .time-slots-card {
-      grid-column: span 12 !important;
-      width: 100% !important;
-    }
-
-    .meeting-spaces-grid {
-      grid-template-columns: 1fr !important;
-    }
-
-    .time-slots-grid {
-      grid-template-columns: repeat(2, 1fr) !important;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .time-slots-grid {
-      grid-template-columns: 1fr !important;
-    }
-
-    .booking-grid-container {
-      gap: 12px !important;
-    }
-
-    .date-picker-card,
-    .meeting-spaces-card,
-    .time-slots-card {
-      padding: 12px !important;
-      min-height: auto !important;
-    }
-  }
-`}</style>
