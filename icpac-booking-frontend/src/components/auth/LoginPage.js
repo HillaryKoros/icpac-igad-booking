@@ -22,6 +22,10 @@ const LoginPage = () => {
     password: '',
     confirmPassword: ''
   });
+
+  // Password visibility state
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Forgot password state
   const [forgotEmail, setForgotEmail] = useState('');
@@ -57,8 +61,8 @@ const LoginPage = () => {
       return;
     }
 
-    if (signupData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    if (passwordStrength.strength === 'weak') {
+      setError('Password is too weak. Please use a stronger password with at least 8 characters, including uppercase, lowercase, numbers, and special characters.');
       return;
     }
 
@@ -116,6 +120,33 @@ const LoginPage = () => {
       [e.target.name]: e.target.value
     });
   };
+
+  // Password strength checker
+  const getPasswordStrength = (password) => {
+    let score = 0;
+    const checks = {
+      length: password.length >= 8,
+      lowercase: /[a-z]/.test(password),
+      uppercase: /[A-Z]/.test(password),
+      number: /\d/.test(password),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    };
+
+    Object.values(checks).forEach(check => {
+      if (check) score++;
+    });
+
+    if (score <= 2) return { strength: 'weak', color: '#ef4444', message: 'Weak password' };
+    if (score <= 3) return { strength: 'fair', color: '#f59e0b', message: 'Fair password' };
+    if (score <= 4) return { strength: 'good', color: '#10b981', message: 'Good password' };
+    return { strength: 'strong', color: '#059669', message: 'Strong password' };
+  };
+
+  // Check if passwords match
+  const passwordsMatch = signupData.password && signupData.confirmPassword && 
+                        signupData.password === signupData.confirmPassword;
+
+  const passwordStrength = getPasswordStrength(signupData.password);
 
   const switchMode = (newMode) => {
     setMode(newMode);
@@ -272,9 +303,9 @@ const LoginPage = () => {
                     </label>
                   </div>
 
-                  <div className="floating-label-group">
+                  <div className="floating-label-group password-field">
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       name="password"
                       value={signupData.password}
                       onChange={handleSignupChange}
@@ -287,11 +318,48 @@ const LoginPage = () => {
                     <label htmlFor="signup-password" className="floating-label">
                       Password
                     </label>
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex="-1"
+                    >
+                      {showPassword ? (
+                        <svg className="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg className="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
+                    </button>
+                    {signupData.password && (
+                      <div className="password-strength-indicator">
+                        <div className="strength-bar">
+                          <div 
+                            className="strength-fill" 
+                            style={{ 
+                              width: `${(passwordStrength.strength === 'weak' ? 25 : passwordStrength.strength === 'fair' ? 50 : passwordStrength.strength === 'good' ? 75 : 100)}%`,
+                              backgroundColor: passwordStrength.color
+                            }}
+                          ></div>
+                        </div>
+                        <span 
+                          className="strength-text" 
+                          style={{ color: passwordStrength.color }}
+                        >
+                          {passwordStrength.message}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="floating-label-group">
+                  <div className="floating-label-group password-field">
                     <input
-                      type="password"
+                      type={showConfirmPassword ? "text" : "password"}
                       name="confirmPassword"
                       value={signupData.confirmPassword}
                       onChange={handleSignupChange}
@@ -303,6 +371,44 @@ const LoginPage = () => {
                     <label htmlFor="signup-confirm-password" className="floating-label">
                       Confirm Password
                     </label>
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      tabIndex="-1"
+                    >
+                      {showConfirmPassword ? (
+                        <svg className="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg className="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
+                    </button>
+                    {signupData.confirmPassword && (
+                      <div className="password-match-indicator">
+                        {passwordsMatch ? (
+                          <div className="match-success">
+                            <svg className="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <polyline points="20,6 9,17 4,12"/>
+                            </svg>
+                            <span>Passwords match</span>
+                          </div>
+                        ) : (
+                          <div className="match-error">
+                            <svg className="x-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <line x1="18" y1="6" x2="6" y2="18"/>
+                              <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                            <span>Passwords don't match</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="auth-form-actions">

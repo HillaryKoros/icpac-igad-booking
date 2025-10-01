@@ -238,6 +238,89 @@ body {
   position: relative;
 }
 
+/* Password Toggle Button */
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #6b7280;
+  transition: color 0.2s ease;
+  z-index: 2;
+}
+
+.password-toggle-btn:hover {
+  color: #374151;
+}
+
+.eye-icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+/* Password Strength Indicator */
+.password-strength-indicator {
+  margin-top: 8px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.strength-bar {
+  width: 100%;
+  height: 4px;
+  background-color: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.strength-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Password Match Indicator */
+.password-match-indicator {
+  margin-top: 8px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.match-success,
+.match-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.match-success {
+  color: #059669;
+}
+
+.match-error {
+  color: #dc2626;
+}
+
+.check-icon,
+.x-icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
 .floating-input {
   width: 100%;
   padding: 0.875rem 0.875rem 0.5rem 0.875rem;
@@ -248,6 +331,11 @@ body {
   transition: all 0.2s ease;
   outline: none;
   color: #111827;
+}
+
+/* Password toggle button positioned over the input */
+.floating-label-group.password-field .password-toggle-btn {
+  right: 8px;
 }
 
 .floating-input:focus {

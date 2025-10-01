@@ -165,7 +165,7 @@ export const AppProvider = ({ children }) => {
   // Initialize data
   useEffect(() => {
     // Development bypass - set this to true to skip authentication
-    const DEV_BYPASS_AUTH = true;
+    const DEV_BYPASS_AUTH = false;
     
     // Check if user is already logged in
     const currentUser = apiService.getCurrentUser();
