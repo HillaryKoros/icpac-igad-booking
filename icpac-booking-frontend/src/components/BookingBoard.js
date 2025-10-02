@@ -1315,6 +1315,46 @@ const BookingBoard = () => {
             }}>
               {currentUser ? (
                 <>
+                  {/* Approval Filter for Admins */}
+                  {canApproveBooking({ roomId: 1 }) && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      backdropFilter: 'blur(10px)'
+                    }}>
+                      <label style={{
+                        fontSize: '14px',
+                        color: '#ffffff',
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        Filter:
+                      </label>
+                      <select
+                        value={approvalFilter}
+                        onChange={(e) => setApprovalFilter(e.target.value)}
+                        style={{
+                          padding: '4px 8px',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          borderRadius: '6px',
+                          background: 'rgba(255, 255, 255, 0.9)',
+                          fontSize: '12px',
+                          color: '#374151',
+                          cursor: 'pointer',
+                          minWidth: '120px'
+                        }}
+                      >
+                        <option value="all">All Bookings</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                    </div>
+                  )}
                   <span style={{
                     fontSize: '16px',
                     color: '#ffffff',
@@ -1887,22 +1927,6 @@ const BookingBoard = () => {
             )}
           </div>
 
-          {/* Approval Filter for Admins */}
-          {currentUser && canApproveBooking({ roomId: 1 }) && (
-            <div className="approval-filter-section">
-              <label className="approval-filter-label">Filter by approval status:</label>
-              <select
-                value={approvalFilter}
-                onChange={(e) => setApprovalFilter(e.target.value)}
-                className="approval-filter-select"
-              >
-                <option value="all">All Bookings</option>
-                <option value="pending">Pending Approval</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-          )}
 
         </div>
 
@@ -2639,7 +2663,8 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
         </div>
 
         <form onSubmit={handleSubmit} className="modern-booking-form">
-          <div className="booking-form-grid">
+          <div className="booking-form-content">
+            <div className="booking-form-grid">
             <div className="form-field-group">
               <div className="input-field">
                 <input
@@ -2870,7 +2895,7 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
                 </div>
               </div>
             </div>
-
+          </div>
           </div>
 
           <div className="booking-form-actions">
