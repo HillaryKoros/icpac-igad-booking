@@ -4477,8 +4477,12 @@ html, body {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   width: 90%;
   max-width: 800px;
+  max-height: 90vh;
   position: relative;
   animation: slideIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
 }
 
 .booking-modal-close {
@@ -4941,14 +4945,48 @@ html, body {
   border: 1px solid #fbbf24;
 }
 
+/* Booking Form Content */
+.modern-booking-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.booking-form-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 0 2rem 1rem 2rem;
+}
+
+.booking-form-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.booking-form-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.booking-form-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.booking-form-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 /* Form Actions */
 .booking-form-actions {
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
-  padding-top: 1.5rem;
+  padding: 1.5rem 2rem;
   border-top: 1px solid #e2e8f0;
-  margin-top: 1.5rem;
+  background: white;
+  flex-shrink: 0;
 }
 
 .booking-btn {
@@ -5017,14 +5055,17 @@ html, body {
   .booking-modal-container {
     width: 95%;
     max-width: none;
+    max-height: 95vh;
     margin: 1rem;
     border-radius: 16px;
+    overflow: auto;
   }
   
   .booking-modal-header {
     padding: 1.5rem 1.5rem 1rem 1.5rem;
     flex-direction: column;
     text-align: center;
+    flex-shrink: 0;
   }
   
   .booking-header-icon {
@@ -5036,13 +5077,10 @@ html, body {
     font-size: 1.5rem;
   }
   
-  .modern-booking-form {
-    padding: 1.5rem;
-  }
-  
   .booking-room-card {
     margin: 1rem 1.5rem;
     padding: 1rem;
+    flex-shrink: 0;
   }
   
   .room-card-header {
@@ -5054,12 +5092,17 @@ html, body {
     justify-content: center;
   }
   
+  .booking-form-content {
+    padding: 0 1.5rem 1rem 1.5rem;
+  }
+  
   .form-row {
     grid-template-columns: 1fr;
   }
   
   .booking-form-actions {
     flex-direction: column;
+    padding: 1.5rem;
   }
   
   .booking-btn {
@@ -5073,17 +5116,29 @@ html, body {
     height: 100vh;
     border-radius: 0;
     max-height: none;
+    overflow: auto;
   }
+  
   
   .booking-modal-header {
     padding: 1rem;
+    flex-shrink: 0;
   }
   
   .booking-modal-title {
     font-size: 1.25rem;
   }
   
-  .modern-booking-form {
+  .booking-room-card {
+    margin: 1rem;
+    flex-shrink: 0;
+  }
+  
+  .booking-form-content {
+    padding: 0 1rem 1rem 1rem;
+  }
+  
+  .booking-form-actions {
     padding: 1rem;
   }
   
@@ -5833,6 +5888,22 @@ html, body {
   .admin-controls {
     gap: 12px;
     flex-wrap: wrap;
+  }
+  
+  /* Mobile responsive approval filter */
+  .admin-controls .approval-filter-container {
+    padding: 8px 10px;
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+    min-width: 140px;
+  }
+  
+  .admin-controls .approval-filter-select {
+    font-size: 14px;
+    padding: 8px 12px;
+    min-width: auto;
+    width: 100%;
   }
 
   /* Larger text for readability */
@@ -6819,6 +6890,46 @@ body.dark-mode .modal-footer-note {
   }
 }
 
+/* Admin Controls Approval Filter */
+.admin-controls .approval-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.admin-controls .approval-filter-container:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.admin-controls .approval-filter-select {
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  color: #374151;
+  cursor: pointer;
+  min-width: 120px;
+  transition: all 0.2s ease;
+}
+
+.admin-controls .approval-filter-select:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.admin-controls .approval-filter-select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
 /* Enhanced Hover Effects and Animations */
 .room-row:hover .room-info {
   transform: translateY(-2px);
@@ -6854,6 +6965,22 @@ body.dark-mode .modal-footer-note {
 .amenity-tag:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Safari-specific overflow fix */
+@media not all and (min-resolution:.001dpcm) {
+  @supports (-webkit-appearance:none) {
+    .room-status-badge {
+      max-width: 120px;
+    }
+    
+    .status-indicator {
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+  }
 }
 
 /* Smooth loading animations */

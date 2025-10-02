@@ -224,7 +224,7 @@ const LoginPage = () => {
 
   return (
     <div className="auth-page-container">
-      {/* Animated Background Slideshow */}
+      {/* Animated Background Slideshow - Reduced on mobile */}
       <div className="auth-background-slideshow">
         <div className="auth-background-slide"></div>
         <div className="auth-background-slide"></div>
@@ -255,7 +255,7 @@ const LoginPage = () => {
             {mode === 'login' && (
               <>
                 <div className="auth-form-header">
-                  <h3 className="auth-form-title">Sign In</h3>
+                  <h3 className="auth-form-title">ICPAC Internal Booking System</h3>
                   <p className="auth-form-subtitle">Enter your credentials to continue</p>
                 </div>
 
@@ -331,7 +331,7 @@ const LoginPage = () => {
             {mode === 'signup' && (
               <>
                 <div className="auth-form-header">
-                  <h3 className="auth-form-title">Create Account</h3>
+                  <h3 className="auth-form-title">ICPAC Internal Booking System</h3>
                   <p className="auth-form-subtitle">Fill in your details to get started</p>
                 </div>
 
