@@ -1,11 +1,96 @@
 # ICPAC Booking System - Deployment Guide
 
-## 🚀 Staging Server Deployment (Fresh Install)
+## 🚀 Quick Start - Staging/Production Deployment (Using Docker Hub Images)
+
+### Prerequisites
+- Docker and Docker Compose installed
+- Ports 9040-9043 available
+- Server IPs: Internal 10.10.1.13, Public 197.254.1.10
+
+### Complete Deployment Steps (No Git Clone Required)
+
+```bash
+# 1. Create project directory
+mkdir icpac-booking-system
+cd icpac-booking-system
+
+# 2. Download docker-compose.prod.yml and .env.example
+# Copy docker-compose.prod.yml and .env.example to this directory
+
+# 3. Create .env from .env.example
+cp .env.example .env
+nano .env
+
+# 4. Edit .env with your staging credentials
+# Update these critical values:
+# - POSTGRES_PASSWORD (use strong password)
+# - SECRET_KEY (generate new key)
+# - EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
+# - FRONTEND_URL and REACT_APP_API_URL (update to your server IP)
+
+# 5. Start all services (pulls images from Docker Hub automatically)
+docker-compose -f docker-compose.prod.yml up -d
+
+# 6. Wait for services to be healthy
+docker-compose -f docker-compose.prod.yml ps
+
+# 7. Run database migrations
+docker-compose -f docker-compose.prod.yml exec backend python manage.py migrate
+
+# 8. Create admin user
+docker-compose -f docker-compose.prod.yml exec backend python manage.py createsuperuser
+
+# 9. Initialize rooms and amenities (see section below)
+
+# 10. Access your application
+# Frontend: http://197.254.1.10:9040 or http://10.10.1.13:9040
+# Backend API: http://197.254.1.10:9041 or http://10.10.1.13:9041
+# Admin: http://197.254.1.10:9041/admin
+```
+
+### Initialize Rooms and Amenities
+```bash
+docker-compose -f docker-compose.prod.yml exec backend python manage.py shell << 'EOF'
+from apps.rooms.models import Room, RoomAmenity
+
+# Create amenities
+amenities_data = [
+    {'name': 'Projector', 'icon': '📽️'},
+    {'name': 'Whiteboard', 'icon': '📝'},
+    {'name': 'Video Conferencing', 'icon': '📹'},
+    {'name': 'Audio System', 'icon': '🎤'},
+    {'name': 'TV Screen', 'icon': '📺'},
+    {'name': 'Screen', 'icon': '🖥️'},
+    {'name': 'Computers', 'icon': '💻'},
+]
+
+for a in amenities_data:
+    RoomAmenity.objects.get_or_create(name=a['name'], defaults=a)
+    print(f"✓ {a['icon']} {a['name']}")
+
+# Create rooms
+rooms_data = [
+    {'name': 'Conference Room - Ground Floor', 'capacity': 200, 'category': 'conference', 'floor': '0', 'is_active': True},
+    {'name': 'Boardroom - First Floor', 'capacity': 25, 'category': 'conference', 'floor': '1', 'is_active': True},
+    {'name': 'Computer Lab 1', 'capacity': 20, 'category': 'training', 'floor': '0', 'is_active': True},
+]
+
+for r in rooms_data:
+    room, created = Room.objects.get_or_create(name=r['name'], defaults=r)
+    print(f"✓ Room: {r['name']}")
+
+print("\n✅ Setup complete!")
+EOF
+```
+
+---
+
+## 🔧 Development Deployment (Build from Source)
 
 ### Prerequisites
 - Docker and Docker Compose installed
 - Git installed
-- Port 3000, 8000, 5433, 6379 available
+- Port 9040-9043 available
 
 ### Complete Deployment Steps
 
