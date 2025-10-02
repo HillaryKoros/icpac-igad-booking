@@ -13,6 +13,10 @@ RUN npm ci --only=production
 # Copy source code
 COPY . .
 
+# Accept build argument for API URL
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+
 # Build the app
 RUN npm run build
 
@@ -20,7 +24,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copy custom nginx config
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built app from build stage
 COPY --from=build /app/build /usr/share/nginx/html

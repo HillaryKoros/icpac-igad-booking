@@ -1,5 +1,7 @@
 # Production Docker Compose for ICPAC Booking System
+# Uses pre-built images from Docker Hub
 # Portable package that can be deployed anywhere
+# Uses single .env file at root level
 
 version: '3.8'
 
@@ -7,55 +9,41 @@ services:
   # PostgreSQL Database - Lightweight and reliable
   postgres:
     image: postgres:15-alpine
-    container_name: ${PROJECT_NAME:-icpac}-booking-db
+    container_name: icpac-booking-db
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: ${DB_NAME:-icpac_bookings}
-      POSTGRES_USER: ${DB_USER:-icpac_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backups:/backups  # For easy backup/restore
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-9042}:5432"
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-icpac_user}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - booking-network
 
-  # Django Backend API
+  # Django Backend API - Pull from Docker Hub
   backend:
-    build:
-      context: ./icpac-booking-backend
-      dockerfile: ../docker/Dockerfile.backend
-    image: ${REGISTRY:-}icpac-booking-backend:${VERSION:-latest}
-    container_name: ${PROJECT_NAME:-icpac}-booking-backend
+    image: hkoros254/icpac-booking-backend:${VERSION:-main}
+    container_name: icpac-booking-backend
+    env_file:
+      - .env
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "${BACKEND_PORT:-9041}:8000"
     restart: always
     environment:
-      # Database Configuration
-      DATABASE_URL: postgresql://${DB_USER:-icpac_user}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-icpac_bookings}
-
-      # Django Settings
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-your-secret-key-here}
-      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}
-
-      # CORS Settings for Frontend
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:9020}
-
-      # Email Configuration (Optional)
-      EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
-      EMAIL_PORT: ${EMAIL_PORT:-587}
-      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
-      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
-
-      # Redis Cache (Optional)
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      # Database Connection
+      - PGHOST=postgres
+      - PGPORT=5432
+      - USE_SQLITE=False
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,19 +60,13 @@ services:
         gunicorn icpac_booking.wsgi:application --bind 0.0.0.0:8000 --workers 3 --reload
       "
 
-  # React Frontend
+  # React Frontend - Pull from Docker Hub
   frontend:
-    build:
-      context: ./icpac-booking-frontend
-      dockerfile: ../docker/Dockerfile.frontend
-    image: ${REGISTRY:-}icpac-booking-frontend:${VERSION:-latest}
-    container_name: ${PROJECT_NAME:-icpac}-booking-frontend
+    image: hkoros254/icpac-booking-frontend:${VERSION:-main}
+    container_name: icpac-booking-frontend
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      - "${FRONTEND_PORT:-9040}:80"
     restart: always
-    environment:
-      REACT_APP_API_URL: ${API_URL:-http://localhost:8000/api}
-      REACT_APP_WEBSOCKET_URL: ${WEBSOCKET_URL:-ws://localhost:8000/ws}
     depends_on:
       - backend
     volumes:
@@ -95,10 +77,10 @@ services:
   # Optional: Redis for caching and real-time features
   redis:
     image: redis:7-alpine
-    container_name: ${PROJECT_NAME:-icpac}-redis
+    container_name: icpac-booking-redis
     restart: always
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_PORT:-9043}:6379"
     volumes:
       - redis_data:/data
     networks:
