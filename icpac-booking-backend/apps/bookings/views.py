@@ -397,6 +397,9 @@ def check_availability(request):
                 'reason': f'Maximum booking duration is {room.max_booking_duration} hours.'
             })
 
+        # Get availability level for the room on this date
+        availability_level = room.get_availability_level(start_date)
+
         # Check for conflicting bookings
         conflicting_bookings = Booking.objects.filter(
             room=room,
@@ -424,6 +427,7 @@ def check_availability(request):
         if conflicts:
             return Response({
                 'available': False,
+                'availability_level': availability_level,
                 'reason': 'Time slot conflicts with existing bookings.',
                 'conflicts': conflicts
             })
@@ -433,6 +437,7 @@ def check_availability(request):
 
         return Response({
             'available': True,
+            'availability_level': availability_level,
             'room': {
                 'id': room.id,
                 'name': room.name,
@@ -456,6 +461,50 @@ def check_availability(request):
             {'error': f'Invalid date/time format: {str(e)}'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def get_rooms_availability_levels(request):
+    """
+    Get availability levels for all rooms on a specific date
+    """
+    date_str = request.query_params.get('date')
+
+    if not date_str:
+        return Response(
+            {'error': 'date parameter is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return Response(
+            {'error': 'Invalid date format. Use YYYY-MM-DD'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    rooms = Room.objects.filter(is_active=True)
+    availability_data = []
+
+    for room in rooms:
+        level = room.get_availability_level(date)
+        availability_data.append({
+            'room_id': room.id,
+            'room_name': room.name,
+            'availability_level': level,
+            'color': {
+                'available': 'green',
+                'partially_booked': 'orange',
+                'fully_booked': 'red'
+            }.get(level, 'gray')
+        })
+
+    return Response({
+        'date': date_str,
+        'rooms': availability_data
+    })
 
 
 @api_view(['GET'])

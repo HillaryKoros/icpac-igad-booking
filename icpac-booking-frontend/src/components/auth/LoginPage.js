@@ -34,6 +34,12 @@ const LoginPage = () => {
   const [otpCode, setOtpCode] = useState('');
   const [verifyEmail, setVerifyEmail] = useState('');
 
+  // Password reset confirmation state
+  const [resetOtpCode, setResetOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -104,22 +110,72 @@ const LoginPage = () => {
 
     try {
       // Note: Password reset endpoint needs to be implemented in backend
-      const response = await apiService.request('/auth/password-reset/', {
+      const response = await apiService.request('/auth/password/reset/', {
         method: 'POST',
         body: JSON.stringify({ email: forgotEmail })
       });
 
       if (response.ok) {
-        setSuccess('Password reset instructions have been sent to your email address.');
+        setSuccess('Password reset code has been sent to your email address.');
+        setResetEmail(forgotEmail);
         setTimeout(() => {
-          setMode('login');
+          setMode('reset-confirm');
           setSuccess('');
-        }, 3000);
+        }, 2000);
       } else {
         throw new Error('Failed to send reset email');
       }
     } catch (err) {
       setError('Failed to send reset email. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Password Reset Confirmation
+  const handleResetConfirm = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (newPassword !== confirmNewPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await apiService.request('/auth/password/reset/confirm/', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: resetEmail,
+          otp: resetOtpCode,
+          new_password: newPassword
+        })
+      });
+
+      if (response.ok) {
+        setSuccess('Password reset successful! You can now login with your new password.');
+        setTimeout(() => {
+          setMode('login');
+          setSuccess('');
+          setResetOtpCode('');
+          setNewPassword('');
+          setConfirmNewPassword('');
+          setResetEmail('');
+        }, 2000);
+      } else {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to reset password');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to reset password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -557,6 +613,99 @@ const LoginPage = () => {
                       onClick={() => switchMode('login')}
                     >
                       Sign in here
+                    </span>
+                  </p>
+                </div>
+              </>
+            )}
+
+            {/* PASSWORD RESET CONFIRMATION MODE */}
+            {mode === 'reset-confirm' && (
+              <>
+                <div className="auth-form-header">
+                  <h3 className="auth-form-title">Reset Password</h3>
+                  <p className="auth-form-subtitle">Enter the code sent to {resetEmail} and your new password</p>
+                </div>
+
+                {error && <div className="auth-error-message">{error}</div>}
+                {success && <div className="auth-success-message">{success}</div>}
+
+                <form onSubmit={handleResetConfirm} className="auth-form">
+                  <div className="floating-label-group">
+                    <input
+                      type="text"
+                      value={resetOtpCode}
+                      onChange={(e) => setResetOtpCode(e.target.value)}
+                      className={`floating-input ${resetOtpCode ? 'has-value' : ''}`}
+                      required
+                      id="reset-otp-code"
+                      autoComplete="off"
+                      maxLength="6"
+                      placeholder=" "
+                    />
+                    <label htmlFor="reset-otp-code" className="floating-label">
+                      Reset Code
+                    </label>
+                  </div>
+
+                  <div className="floating-label-group">
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className={`floating-input ${newPassword ? 'has-value' : ''}`}
+                      required
+                      id="new-password"
+                      autoComplete="new-password"
+                      placeholder=" "
+                    />
+                    <label htmlFor="new-password" className="floating-label">
+                      New Password
+                    </label>
+                  </div>
+
+                  <div className="floating-label-group">
+                    <input
+                      type="password"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      className={`floating-input ${confirmNewPassword ? 'has-value' : ''}`}
+                      required
+                      id="confirm-new-password"
+                      autoComplete="new-password"
+                      placeholder=" "
+                    />
+                    <label htmlFor="confirm-new-password" className="floating-label">
+                      Confirm New Password
+                    </label>
+                  </div>
+
+                  <div className="auth-form-actions">
+                    <button
+                      type="button"
+                      className="auth-secondary-btn"
+                      onClick={() => switchMode('login')}
+                    >
+                      Back to Login
+                    </button>
+                    <button
+                      type="submit"
+                      className="auth-primary-btn"
+                      disabled={loading}
+                    >
+                      {loading ? 'Resetting...' : 'Reset Password'}
+                    </button>
+                  </div>
+                </form>
+
+                <div className="auth-form-footer">
+                  <p className="auth-switch-text">
+                    Didn't receive the code? {' '}
+                    <span
+                      className="auth-switch-link"
+                      onClick={() => switchMode('forgot')}
+                    >
+                      Resend code
                     </span>
                   </p>
                 </div>

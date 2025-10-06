@@ -148,24 +148,44 @@ class BookingCreateUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for creating and updating bookings
     """
+    selected_dates = serializers.ListField(
+        child=serializers.CharField(max_length=10),
+        required=False,
+        allow_empty=True,
+        allow_null=True,
+        help_text='Array of selected dates for multi-day bookings (YYYY-MM-DD format)'
+    )
+
     class Meta:
         model = Booking
         fields = [
             'room', 'start_date', 'end_date', 'start_time', 'end_time',
             'purpose', 'expected_attendees', 'special_requirements',
-            'booking_type', 'approval_status', 'approved_by', 'approved_at'
+            'booking_type', 'selected_dates', 'approval_status', 'approved_by', 'approved_at'
         ]
         read_only_fields = ['approval_status', 'approved_by', 'approved_at']
-    
+
     def validate(self, attrs):
         """Validate booking data"""
+        from datetime import datetime
+
+        booking_type = attrs.get('booking_type', 'hourly')
+        selected_dates = attrs.get('selected_dates', [])
+
+        # For multi_day with selected_dates, auto-populate start_date and end_date
+        if booking_type == 'multi_day' and selected_dates and len(selected_dates) > 0:
+            # Convert string dates to date objects
+            date_objects = [datetime.strptime(d, '%Y-%m-%d').date() if isinstance(d, str) else d for d in selected_dates]
+            attrs['start_date'] = min(date_objects)
+            attrs['end_date'] = max(date_objects)
+
         start_date = attrs.get('start_date')
         end_date = attrs.get('end_date', start_date)
         start_time = attrs.get('start_time')
         end_time = attrs.get('end_time')
         room = attrs.get('room')
         expected_attendees = attrs.get('expected_attendees', 1)
-        
+
         # Basic validations
         if start_date < timezone.now().date():
             raise serializers.ValidationError({
@@ -218,6 +238,13 @@ class BookingCreateUpdateSerializer(serializers.ModelSerializer):
         """Create booking with current user and auto-approve if no conflicts"""
         request = self.context.get('request')
         validated_data['user'] = request.user
+
+        # Debug logging for weekly bookings
+        if validated_data.get('booking_type') == 'weekly':
+            print(f"DEBUG Weekly booking dates: start={validated_data.get('start_date')}, end={validated_data.get('end_date')}")
+            if validated_data.get('start_date') and validated_data.get('end_date'):
+                duration = (validated_data['end_date'] - validated_data['start_date']).days + 1
+                print(f"DEBUG Duration calculation: {duration} days")
 
         # Auto-approve bookings since validation already checked for conflicts
         validated_data['approval_status'] = 'approved'
