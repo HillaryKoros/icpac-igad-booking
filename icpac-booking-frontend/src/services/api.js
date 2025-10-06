@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:9041/api';
+// Use relative URL - nginx will proxy to backend
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 class APIService {
   constructor() {
