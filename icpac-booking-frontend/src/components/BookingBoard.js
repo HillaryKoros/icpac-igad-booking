@@ -1320,9 +1320,51 @@ const BookingBoard = () => {
     }
   }, [user]);
 
+  // Helper function to calculate booking percentage for a room on a given day
+  const calculateBookingPercentage = (roomId, date) => {
+    const totalSlots = timeSlots.length; // 40 slots (8 AM - 6 PM, 15-min intervals)
+    const bookedSlots = new Set();
+
+    // Get all bookings for this room on this date
+    const dayBookings = bookings.filter((booking) => {
+      if (booking.roomId !== roomId) return false;
+      return isSameDay(new Date(booking.startDate), date);
+    });
+
+    // Calculate which time slots are booked
+    dayBookings.forEach((booking) => {
+      const startTime = booking.startTime;
+      const endTime = booking.endTime;
+
+      const startIndex = timeSlots.findIndex((slot) => slot === startTime);
+      const endIndex = timeSlots.findIndex((slot) => slot === endTime);
+
+      if (startIndex !== -1 && endIndex !== -1) {
+        // Mark all slots from start to end as booked
+        for (let i = startIndex; i < endIndex; i++) {
+          bookedSlots.add(i);
+        }
+      }
+    });
+
+    const bookedCount = bookedSlots.size;
+    const percentage = Math.round((bookedCount / totalSlots) * 100);
+
+    return {
+      percentage,
+      bookedSlots: bookedCount,
+      totalSlots,
+      isFullyBooked: percentage === 100,
+      isPartiallyBooked: percentage > 0 && percentage < 100,
+    };
+  };
+
   // Helper function to get room status indicator
   const getRoomStatusIndicator = (room) => {
     const currentTime = new Date();
+    const today = new Date();
+
+    // Check if room is currently occupied
     const hasCurrentBooking = bookings.some((booking) => {
       if (booking.roomId !== room.id) return false;
 
@@ -1345,19 +1387,27 @@ const BookingBoard = () => {
       );
     }
 
-    // Check if room has bookings today
-    const hasTodayBooking = bookings.some((booking) => {
-      if (booking.roomId !== room.id) return false;
-      return isToday(new Date(booking.startDate));
-    });
+    // Calculate booking percentage for today
+    const bookingStats = calculateBookingPercentage(room.id, today);
 
-    if (hasTodayBooking) {
+    if (bookingStats.isFullyBooked) {
+      return (
+        <span
+          className="status-indicator status-fully-booked"
+          title="Fully Booked Today"
+        >
+          🔴 Fully Booked
+        </span>
+      );
+    }
+
+    if (bookingStats.isPartiallyBooked) {
       return (
         <span
           className="status-indicator status-partial"
-          title="Has Bookings Today"
+          title={`${bookingStats.percentage}% booked today (${bookingStats.bookedSlots}/${bookingStats.totalSlots} slots)`}
         >
-          🟡 Booked Today
+          🟡 Partially Booked ({bookingStats.percentage}%)
         </span>
       );
     }
