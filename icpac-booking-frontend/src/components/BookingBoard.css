@@ -1,5 +1,6 @@
 /* Ensure proper scrolling for the entire page */
-html, body {
+html,
+body {
   height: auto !important;
   overflow-x: hidden;
   overflow-y: auto;
@@ -25,26 +26,27 @@ html, body {
   --bg-card: #ffffff;
   --text-primary: #1e293b;
   --text-secondary: #64748b;
-  
+
   /* Accent Colors */
   --color-total-orders: #3b82f6;
   --color-total-items: #10b981;
   --color-today-orders: #f59e0b;
   --color-declined-orders: #ef4444;
-  
+
   /* Typography */
-  --font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   --font-weight-extrabold: 800;
-  
+
   /* Shadows and Effects */
   --shadow-base: 0 4px 20px rgba(0, 0, 0, 0.08);
   --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.12);
   --shadow-button: 0 4px 12px rgba(0, 0, 0, 0.1);
-  
+
   /* Borders */
   --border-color: #e2e8f0;
   --border-radius: 15px;
@@ -78,7 +80,7 @@ html, body {
   .booking-container {
     padding: 30px 40px;
   }
-  
+
   .booking-wrapper {
     max-width: none;
     margin: 0;
@@ -95,7 +97,8 @@ html, body {
 .booking-header {
   background: #034930;
   border-radius: 16px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   padding: 12px;
   margin-bottom: 12px;
 }
@@ -106,11 +109,11 @@ html, body {
     padding: 20px;
     margin-bottom: 20px;
   }
-  
+
   .header-title-row {
     gap: 24px;
   }
-  
+
   .icpac-logo {
     max-width: 240px;
   }
@@ -121,11 +124,11 @@ html, body {
     padding: 30px;
     margin-bottom: 30px;
   }
-  
+
   .header-title-row {
     gap: 32px;
   }
-  
+
   .icpac-logo {
     max-width: 280px;
   }
@@ -176,7 +179,8 @@ html, body {
 .date-section {
   background: #034930;
   border-radius: 16px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   padding: 10px;
   margin-bottom: 12px;
 }
@@ -187,11 +191,11 @@ html, body {
     padding: 20px;
     margin-bottom: 20px;
   }
-  
+
   .date-header {
     gap: 24px;
   }
-  
+
   .date-button {
     padding: 12px 20px;
     font-size: 1rem;
@@ -203,11 +207,11 @@ html, body {
     padding: 30px;
     margin-bottom: 30px;
   }
-  
+
   .date-header {
     gap: 32px;
   }
-  
+
   .date-button {
     padding: 16px 24px;
     font-size: 1.125rem;
@@ -274,13 +278,18 @@ html, body {
 }
 
 .admin-login-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
@@ -312,13 +321,18 @@ html, body {
 }
 
 .admin-logout-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
@@ -371,13 +385,18 @@ html, body {
 }
 
 .edit-booking-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
@@ -409,13 +428,18 @@ html, body {
 }
 
 .cancel-booking-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
@@ -511,13 +535,18 @@ html, body {
 }
 
 .user-management-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
@@ -549,13 +578,18 @@ html, body {
 }
 
 .procurement-dashboard-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
@@ -873,6 +907,12 @@ html, body {
   border: none;
 }
 
+.status-indicator.status-fully-booked {
+  background: #dc2626;
+  color: white;
+  border: none;
+}
+
 .room-card-meta {
   margin-top: 8px;
   padding-top: 12px;
@@ -937,7 +977,6 @@ html, body {
   color: #1e40af;
 }
 
-
 .amenities-chip {
   border-left: 3px solid #f59e0b;
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
@@ -969,39 +1008,39 @@ html, body {
   .room-card.expanded .room-card-body {
     padding: 18px;
   }
-  
+
   .room-card.expanded .day-overview-section {
     padding: 16px;
   }
-  
+
   .room-card.expanded .time-picker-section {
     padding: 0;
   }
-  
+
   /* Optimize day overview for smaller screens */
   .room-card.expanded .time-slots-overview {
     grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
     gap: 4px;
   }
-  
+
   .room-card.expanded .overview-slot {
     padding: 4px 2px;
   }
-  
+
   .room-card.expanded .slot-time {
     font-size: 0.65rem;
   }
-  
+
   /* Optimize time picker controls */
   .room-card.expanded .time-picker-controls {
     gap: 10px;
   }
-  
+
   .room-card.expanded .time-select {
     padding: 6px 8px;
     font-size: 0.8rem;
   }
-  
+
   .room-card.expanded .book-now-btn {
     padding: 8px 16px;
     font-size: 0.8rem;
@@ -1100,109 +1139,109 @@ html, body {
   .modal-overlay {
     padding: 10px;
   }
-  
+
   .room-modal {
     max-height: 95vh;
     border-radius: 12px;
   }
-  
+
   .modal-header {
     padding: 20px;
   }
-  
+
   .modal-header h2 {
     font-size: 1.25rem;
   }
-  
+
   .modal-body {
     padding: 20px;
   }
-  
+
   .modal-room-info {
     padding: 12px;
     margin-bottom: 20px;
   }
-  
+
   .day-overview-section {
     padding: 12px;
     margin-bottom: 16px;
   }
-  
+
   .time-picker-section {
     padding: 0;
   }
-  
+
   .time-picker-header {
     margin-bottom: 16px;
     padding-bottom: 8px;
   }
-  
+
   .time-picker-header h4 {
     font-size: 0.9rem;
   }
-  
+
   .time-range-info {
     font-size: 0.7rem;
   }
-  
+
   .time-picker-controls {
     gap: 12px;
   }
-  
+
   .time-input-group label {
     font-size: 0.8rem;
   }
-  
+
   .time-select {
     padding: 8px 10px;
     font-size: 0.85rem;
   }
-  
+
   .availability-display {
     padding: 12px;
     min-height: 50px;
   }
-  
+
   .availability-status {
     padding: 6px 10px;
   }
-  
+
   .status-icon {
     font-size: 1rem;
   }
-  
+
   .status-text {
     font-size: 0.8rem;
   }
-  
+
   .book-now-btn {
     padding: 10px 20px;
     font-size: 0.85rem;
   }
-  
+
   .time-slots-overview {
     grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
     gap: 4px;
     margin-bottom: 12px;
   }
-  
+
   .overview-slot {
     padding: 4px 2px;
   }
-  
+
   .slot-time {
     font-size: 0.65rem;
   }
-  
+
   .overview-legend {
     gap: 12px;
     padding-top: 8px;
   }
-  
+
   .legend-item {
     font-size: 0.7rem;
   }
-  
+
   .legend-color {
     width: 10px;
     height: 2px;
@@ -1938,57 +1977,57 @@ html, body {
   .booking-container {
     padding: 16px;
   }
-  
+
   .booking-header,
   .date-section {
     padding: 16px;
     margin-bottom: 24px;
   }
-  
+
   .booking-title {
     font-size: 1.875rem;
   }
-  
+
   .header-title-row {
     flex-direction: column;
     gap: 16px;
     text-align: center;
   }
-  
+
   .title-section {
     text-align: center;
   }
-  
+
   .icpac-logo {
     height: 50px;
   }
-  
+
   .date-title {
     font-size: 1.25rem;
   }
-  
+
   .date-buttons {
     gap: 8px;
   }
-  
+
   .date-button {
     padding: 8px 16px;
     min-width: 60px;
   }
-  
+
   .grid-header {
     padding: 16px;
   }
-  
+
   .grid-table th,
   .grid-table td {
     padding: 4px 6px;
   }
-  
+
   .grid-table th:first-child {
     min-width: 120px;
   }
-  
+
   .modal-content {
     margin: 16px;
     padding: 16px;
@@ -1999,43 +2038,43 @@ html, body {
   .room-amenities {
     margin-top: 4px;
   }
-  
+
   .amenity-tag {
     font-size: 0.6875rem;
     padding: 2px 6px;
   }
-  
+
   .time-slot {
     padding: 4px;
   }
-  
+
   .slot-title,
   .slot-subtitle {
     font-size: 0.6rem;
   }
-  
+
   .icpac-logo {
     height: 45px;
   }
-  
+
   .procurement-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 8px;
   }
-  
+
   .procurement-item {
     padding: 10px;
   }
-  
+
   .procurement-summary {
     padding: 12px;
   }
-  
+
   .procurement-orders {
     max-height: 250px;
     padding: 8px;
   }
-  
+
   .modal-content {
     max-height: 90vh;
     padding: 16px;
@@ -2105,7 +2144,6 @@ html, body {
   color: #1f2937;
 }
 
-
 .procurement-item-details {
   border-top: 1px solid #e5e7eb;
   padding-top: 8px;
@@ -2161,7 +2199,6 @@ html, body {
   height: 32px;
 }
 
-
 .procurement-summary {
   background: white;
   border-radius: 6px;
@@ -2203,8 +2240,6 @@ html, body {
   font-size: 0.875rem;
 }
 
-
-
 .procurement-note {
   margin-top: 8px;
   padding: 8px;
@@ -2234,7 +2269,8 @@ html, body {
   margin-top: 48px;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .footer-content {
@@ -2334,32 +2370,32 @@ html, body {
     gap: 20px;
     padding: 30px 20px;
   }
-  
+
   .footer-logo {
     flex-direction: column;
     text-align: center;
     gap: 12px;
   }
-  
+
   .footer-logo-img {
     width: 50px;
     height: 50px;
   }
-  
+
   .footer-section h4 {
     text-align: center;
     margin-bottom: 12px;
   }
-  
+
   .footer-links {
     text-align: center;
   }
-  
+
   .contact-info,
   .system-stats {
     text-align: center;
   }
-  
+
   .footer-bottom {
     padding: 15px 20px;
   }
@@ -2471,7 +2507,7 @@ html, body {
 /* Procurement Dashboard Styles */
 /* FORCE MODERN PROCUREMENT DASHBOARD STYLES - OVERRIDE ALL */
 .modal-content.large .procurement-dashboard {
-  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
   border-radius: 0 0 15px 15px !important;
   padding: 20px !important;
@@ -2552,7 +2588,7 @@ html, body {
 
 .procurement-dashboard .stat-card::before,
 .modal-content.large .stat-card::before {
-  content: '' !important;
+  content: "" !important;
   position: absolute !important;
   left: 0 !important;
   top: 0 !important;
@@ -2637,22 +2673,22 @@ html, body {
 }
 
 .stat-card h4::after {
-  content: '📦';
+  content: "📦";
   font-size: 1.5rem;
   opacity: 0.6;
 }
 
 .stat-card:nth-child(2) h4::after {
-  content: '📋';
+  content: "📋";
 }
 
 .stat-card:nth-child(3) h4::after {
-  content: '⏰';
+  content: "⏰";
 }
 
 .stat-card:nth-child(4) h4::after,
 .declined-stat h4::after {
-  content: '❌';
+  content: "❌";
 }
 
 .stat-number {
@@ -2695,7 +2731,7 @@ html, body {
   width: 100% !important;
   border-collapse: collapse !important;
   background: #ffffff !important;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
 .procurement-dashboard .orders-table th,
@@ -2988,8 +3024,10 @@ html, body {
   gap: 12px !important;
 }
 
-.modal-overlay .modal-content.large.modern-procurement-modal .procurement-dashboard {
-  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+.modal-overlay
+  .modal-content.large.modern-procurement-modal
+  .procurement-dashboard {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
   border-radius: 0 0 15px 15px !important;
   padding: 20px !important;
@@ -3015,8 +3053,10 @@ html, body {
   overflow: hidden !important;
 }
 
-.modal-overlay .modal-content.large.modern-procurement-modal .stat-card::before {
-  content: '' !important;
+.modal-overlay
+  .modal-content.large.modern-procurement-modal
+  .stat-card::before {
+  content: "" !important;
   position: absolute !important;
   left: 0 !important;
   top: 0 !important;
@@ -3025,19 +3065,27 @@ html, body {
   transition: width 0.3s ease !important;
 }
 
-.modal-overlay .modal-content.large.modern-procurement-modal .stat-card:nth-child(1)::before {
+.modal-overlay
+  .modal-content.large.modern-procurement-modal
+  .stat-card:nth-child(1)::before {
   background: #3b82f6 !important;
 }
 
-.modal-overlay .modal-content.large.modern-procurement-modal .stat-card:nth-child(2)::before {
+.modal-overlay
+  .modal-content.large.modern-procurement-modal
+  .stat-card:nth-child(2)::before {
   background: #10b981 !important;
 }
 
-.modal-overlay .modal-content.large.modern-procurement-modal .stat-card:nth-child(3)::before {
+.modal-overlay
+  .modal-content.large.modern-procurement-modal
+  .stat-card:nth-child(3)::before {
   background: #f59e0b !important;
 }
 
-.modal-overlay .modal-content.large.modern-procurement-modal .stat-card:nth-child(4)::before {
+.modal-overlay
+  .modal-content.large.modern-procurement-modal
+  .stat-card:nth-child(4)::before {
   background: #ef4444 !important;
 }
 
@@ -3055,13 +3103,18 @@ html, body {
 }
 
 .download-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
@@ -3124,27 +3177,27 @@ html, body {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .download-btn {
     padding: 4px 8px;
     font-size: 0.75rem;
   }
-  
+
   .modal-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .dashboard-stats {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .orders-table-container {
     overflow-x: scroll;
   }
-  
+
   .orders-table {
     min-width: 800px;
   }
@@ -3154,7 +3207,8 @@ html, body {
 .day-closed-message {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   padding: 40px;
   margin-top: 20px;
   text-align: center;
@@ -3245,13 +3299,17 @@ html, body {
 }
 
 .room-info::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.02) 0%, rgba(16, 185, 129, 0.01) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.02) 0%,
+    rgba(16, 185, 129, 0.01) 100%
+  );
   pointer-events: none;
 }
 
@@ -3427,39 +3485,39 @@ html, body {
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .capacity-indicator {
     align-items: flex-start;
     min-width: 50px;
   }
-  
+
   .capacity-visual {
     font-size: 0.7rem;
   }
-  
+
   .capacity-bar {
     width: 40px;
     height: 3px;
   }
-  
+
   .category-title {
     padding: 6px 12px;
     font-size: 0.9rem;
   }
-  
+
   .category-icon {
     font-size: 1rem;
   }
-  
+
   .room-info {
     padding: 12px;
   }
-  
+
   .amenity-tag {
     font-size: 0.7rem;
     padding: 3px 6px;
   }
-  
+
   .amenity-text {
     font-size: 0.7rem;
   }
@@ -3469,20 +3527,20 @@ html, body {
   .room-amenities {
     gap: 4px;
   }
-  
+
   .amenity-tag {
     font-size: 0.65rem;
     padding: 2px 5px;
   }
-  
+
   .amenity-text {
     display: none;
   }
-  
+
   .capacity-visual {
     font-size: 0.65rem;
   }
-  
+
   .capacity-number {
     font-size: 0.875rem;
   }
@@ -3632,12 +3690,12 @@ html, body {
     font-size: 0.6rem;
     padding: 1px 4px;
   }
-  
+
   .approval-controls {
     gap: 2px;
     margin-top: 4px;
   }
-  
+
   .approve-booking-btn,
   .reject-booking-btn {
     padding: 2px 6px;
@@ -3709,13 +3767,18 @@ html, body {
 }
 
 .auth-branding-sidebar::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
   animation: shimmer 3s infinite;
 }
 
@@ -3908,13 +3971,18 @@ html, body {
 }
 
 .auth-primary-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
@@ -4042,76 +4110,76 @@ html, body {
     max-width: none;
     margin: 1rem;
   }
-  
+
   .auth-split-layout {
     flex-direction: column;
     min-height: auto;
   }
-  
+
   .auth-branding-sidebar {
     padding: 2rem 1.5rem;
     min-height: 200px;
   }
-  
+
   .branding-logo {
     width: 60px;
     height: 60px;
     font-size: 1.5rem;
     margin-bottom: 1rem;
   }
-  
+
   .branding-logo img {
     width: 45px;
     height: 45px;
     padding: 6px;
   }
-  
+
   .branding-title {
     font-size: 1.5rem;
   }
-  
+
   .branding-subtitle {
     font-size: 0.875rem;
     margin-bottom: 1rem;
   }
-  
+
   .branding-features {
     gap: 0.75rem;
   }
-  
+
   .feature-item {
     padding: 0.5rem 0.75rem;
   }
-  
+
   .feature-text {
     font-size: 0.8rem;
   }
-  
+
   .auth-form-section {
     padding: 2rem 1.5rem;
   }
-  
+
   .auth-form-title {
     font-size: 1.5rem;
   }
-  
+
   .auth-form-subtitle {
     font-size: 0.875rem;
   }
-  
+
   .floating-input {
     padding: 0.875rem 0.875rem 0.5rem 0.875rem;
   }
-  
+
   .floating-label {
     left: 0.875rem;
   }
-  
+
   .auth-primary-btn {
     padding: 0.875rem;
     font-size: 1rem;
   }
-  
+
   .auth-secondary-btn {
     padding: 0.875rem;
     font-size: 0.875rem;
@@ -4125,68 +4193,68 @@ html, body {
     border-radius: 0;
     max-height: none;
   }
-  
+
   .auth-branding-sidebar {
     padding: 1.5rem 1rem;
     min-height: 150px;
   }
-  
+
   .branding-logo {
     width: 50px;
     height: 50px;
     font-size: 1.25rem;
   }
-  
+
   .branding-logo img {
     width: 35px;
     height: 35px;
     padding: 4px;
   }
-  
+
   .branding-title {
     font-size: 1.25rem;
   }
-  
+
   .branding-subtitle {
     font-size: 0.8rem;
   }
-  
+
   .auth-form-section {
     padding: 1.5rem 1rem;
   }
-  
+
   .auth-form-title {
     font-size: 1.25rem;
   }
-  
+
   .auth-form {
     gap: 1.25rem;
   }
-  
+
   .floating-input {
     padding: 0.75rem 0.75rem 0.5rem 0.75rem;
     font-size: 0.9rem;
   }
-  
+
   .floating-label {
     left: 0.75rem;
     font-size: 0.9rem;
   }
-  
+
   .auth-primary-btn {
     padding: 0.75rem;
     font-size: 0.9rem;
   }
-  
+
   .auth-secondary-btn {
     padding: 0.75rem;
     font-size: 0.8rem;
   }
-  
+
   .auth-form-footer {
     margin-top: 1rem;
   }
-  
+
   .auth-switch-text {
     font-size: 0.8rem;
   }
@@ -4246,9 +4314,16 @@ html, body {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
 }
 
 /* Enhanced Password Strength Responsive */
@@ -4256,12 +4331,12 @@ html, body {
   .password-strength {
     gap: 0.5rem;
   }
-  
+
   .strength-text {
     font-size: 0.7rem;
     min-width: 50px;
   }
-  
+
   .error-message {
     font-size: 0.7rem;
   }
@@ -4273,15 +4348,15 @@ html, body {
     align-items: flex-start;
     gap: 0.25rem;
   }
-  
+
   .strength-bar {
     width: 100%;
   }
-  
+
   .strength-text {
     font-size: 0.65rem;
   }
-  
+
   .error-message {
     font-size: 0.65rem;
   }
@@ -4316,8 +4391,12 @@ html, body {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Success State */
@@ -4368,7 +4447,11 @@ html, body {
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
     transform: translateY(0);
   }
   40% {
@@ -4399,28 +4482,28 @@ html, body {
     text-align: center;
     margin-bottom: 0.75rem;
   }
-  
+
   .forgot-password-link .auth-switch-link {
     font-size: 0.8rem;
   }
-  
+
   .success-icon {
     font-size: 3rem;
   }
-  
+
   .success-message h4 {
     font-size: 1.25rem;
   }
-  
+
   .success-message p {
     font-size: 0.875rem;
   }
-  
+
   .reset-email {
     padding: 0.5rem 0.75rem;
     font-size: 0.8rem;
   }
-  
+
   .reset-success {
     padding: 1.5rem 0;
     gap: 1rem;
@@ -4431,24 +4514,24 @@ html, body {
   .forgot-password-link .auth-switch-link {
     font-size: 0.75rem;
   }
-  
+
   .success-icon {
     font-size: 2.5rem;
   }
-  
+
   .success-message h4 {
     font-size: 1.125rem;
   }
-  
+
   .success-message p {
     font-size: 0.8rem;
   }
-  
+
   .reset-email {
     padding: 0.5rem;
     font-size: 0.75rem;
   }
-  
+
   .loading-spinner {
     width: 14px;
     height: 14px;
@@ -5007,13 +5090,18 @@ html, body {
 }
 
 .booking-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
@@ -5060,51 +5148,51 @@ html, body {
     border-radius: 16px;
     overflow: auto;
   }
-  
+
   .booking-modal-header {
     padding: 1.5rem 1.5rem 1rem 1.5rem;
     flex-direction: column;
     text-align: center;
     flex-shrink: 0;
   }
-  
+
   .booking-header-icon {
     width: 50px;
     height: 50px;
   }
-  
+
   .booking-modal-title {
     font-size: 1.5rem;
   }
-  
+
   .booking-room-card {
     margin: 1rem 1.5rem;
     padding: 1rem;
     flex-shrink: 0;
   }
-  
+
   .room-card-header {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .room-meta {
     justify-content: center;
   }
-  
+
   .booking-form-content {
     padding: 0 1.5rem 1rem 1.5rem;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .booking-form-actions {
     flex-direction: column;
     padding: 1.5rem;
   }
-  
+
   .booking-btn {
     justify-content: center;
   }
@@ -5118,63 +5206,62 @@ html, body {
     max-height: none;
     overflow: auto;
   }
-  
-  
+
   .booking-modal-header {
     padding: 1rem;
     flex-shrink: 0;
   }
-  
+
   .booking-modal-title {
     font-size: 1.25rem;
   }
-  
+
   .booking-room-card {
     margin: 1rem;
     flex-shrink: 0;
   }
-  
+
   .booking-form-content {
     padding: 0 1rem 1rem 1rem;
   }
-  
+
   .booking-form-actions {
     padding: 1rem;
   }
-  
+
   .booking-room-card {
     margin: 1rem;
     padding: 1rem;
   }
-  
+
   .room-name {
     font-size: 1.125rem;
   }
-  
+
   .modern-input,
   .modern-select,
   .modern-date-input,
   .modern-number-input {
     padding: 0.875rem;
   }
-  
+
   .modern-textarea {
     padding: 0.875rem;
   }
-  
+
   .floating-label {
     left: 0.875rem;
     top: -0.5rem;
   }
-  
+
   .select-arrow {
     right: 0.875rem;
   }
-  
+
   .capacity-indicator {
     gap: 0.4rem;
   }
-  
+
   .booking-btn {
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
@@ -5196,13 +5283,17 @@ html, body {
 }
 
 .time-slot-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
@@ -5303,13 +5394,18 @@ html, body {
 }
 
 .modern-time-slot::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -5528,7 +5624,8 @@ html, body {
 
 /* Pulse Animation */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -5610,150 +5707,150 @@ html, body {
     grid-template-columns: 1fr !important;
     gap: 16px;
   }
-  
+
   .room-card {
     border-radius: 16px;
   }
-  
+
   .room-card-header {
     padding: 20px;
   }
-  
+
   .room-card-body {
     padding: 20px;
   }
-  
+
   .room-card-name {
     font-size: 1.125rem;
   }
-  
+
   .room-card-title {
     width: calc(100% - 60px);
   }
-  
+
   .room-status-badge {
     right: 40px;
   }
-  
+
   .expand-icon {
     right: 16px;
   }
-  
+
   .status-indicator {
     font-size: 0.7rem;
     padding: 4px 8px;
   }
-  
+
   .room-info-chips {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .info-chip {
     padding: 6px 10px;
   }
-  
+
   .chip-label {
     font-size: 0.65rem;
   }
-  
+
   .chip-value {
     font-size: 0.8rem;
   }
-  
+
   .time-slots-grid {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 8px;
   }
-  
+
   .day-overview-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .time-slots-overview {
     grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
     gap: 6px;
   }
-  
+
   .overview-slot {
     padding: 6px 3px;
   }
-  
+
   .slot-time {
     font-size: 0.7rem;
   }
-  
+
   .overview-legend {
     gap: 12px;
   }
-  
+
   .legend-item {
     font-size: 0.7rem;
   }
-  
+
   .time-picker-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .time-range-info {
     font-size: 0.75rem;
     padding: 3px 6px;
   }
-  
+
   .time-picker-controls {
     gap: 12px;
   }
-  
+
   .time-select {
     padding: 8px 10px;
     font-size: 0.85rem;
   }
-  
+
   .availability-display {
     padding: 12px;
     min-height: 50px;
   }
-  
+
   .book-now-btn {
     padding: 10px 20px;
     font-size: 0.85rem;
   }
-  
+
   .time-slot-card {
     padding: 12px;
   }
-  
+
   .time-slot-time {
     font-size: 0.8rem;
   }
-  
+
   .time-slot-status {
     font-size: 0.7rem;
   }
-  
+
   .grid-header {
     padding: 20px;
     margin-bottom: 24px;
   }
-  
+
   .grid-header h2 {
     font-size: 1.5rem;
   }
-  
+
   .status-indicator {
     width: 20px;
     height: 20px;
     font-size: 0.875rem;
   }
-  
+
   .status-text {
     font-size: 0.65rem;
   }
-  
+
   .availability-pulse,
   .status-pulse {
     width: 20px;
@@ -5767,35 +5864,35 @@ html, body {
     padding: 0.25rem;
     min-height: 30px;
   }
-  
+
   .slot-icon {
     min-width: 20px;
     height: 20px;
     font-size: 0.875rem;
   }
-  
+
   .slot-title {
     font-size: 0.75rem;
   }
-  
+
   .slot-subtitle {
     font-size: 0.65rem;
   }
-  
+
   .slot-duration {
     font-size: 0.6rem;
   }
-  
+
   .status-indicator {
     width: 18px;
     height: 18px;
     font-size: 0.75rem;
   }
-  
+
   .status-text {
     font-size: 0.6rem;
   }
-  
+
   .availability-pulse,
   .status-pulse {
     width: 18px;
@@ -5862,7 +5959,7 @@ html, body {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .edit-user-btn,
   .delete-user-btn {
     padding: 4px 8px;
@@ -5889,7 +5986,7 @@ html, body {
     gap: 12px;
     flex-wrap: wrap;
   }
-  
+
   /* Mobile responsive approval filter */
   .admin-controls .approval-filter-container {
     padding: 8px 10px;
@@ -5898,7 +5995,7 @@ html, body {
     align-items: stretch;
     min-width: 140px;
   }
-  
+
   .admin-controls .approval-filter-select {
     font-size: 14px;
     padding: 8px 12px;
@@ -6054,7 +6151,6 @@ html, body {
   box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
 }
 
-
 /* Dark mode theme */
 body.dark-mode {
   background: #0f172a;
@@ -6192,7 +6288,6 @@ body.dark-mode .email-notification {
   background: rgba(30, 41, 59, 0.95);
   border: 1px solid #334155;
 }
-
 
 /* Room Selector */
 .room-selector-container {
@@ -6496,7 +6591,7 @@ body.dark-mode .modal-footer-note {
   .meeting-spaces-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .meeting-space-modal {
     margin: 20px;
     max-height: 85vh;
@@ -6508,7 +6603,6 @@ body.dark-mode .modal-footer-note {
     padding: 8px 12px;
     font-size: 0.8rem;
   }
-  
 }
 
 /* Modern Procurement Dashboard Responsive Design */
@@ -6518,11 +6612,11 @@ body.dark-mode .modal-footer-note {
     gap: 15px;
     text-align: center;
   }
-  
+
   .modal-header .download-section {
     align-items: center;
   }
-  
+
   .dashboard-stats {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
@@ -6534,53 +6628,53 @@ body.dark-mode .modal-footer-note {
     padding: 15px;
     max-height: 85vh;
   }
-  
+
   .modal-header {
     padding: 15px;
     align-items: center;
   }
-  
+
   .modal-title {
     font-size: 1.5rem;
   }
-  
+
   .dashboard-stats {
     grid-template-columns: 1fr;
     gap: 15px;
   }
-  
+
   .stat-card {
     padding: 15px;
   }
-  
+
   .stat-value {
     font-size: 2rem;
   }
-  
+
   .download-group {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .download-btn {
     justify-content: center;
     width: 100%;
   }
-  
+
   .orders-table-container {
     overflow-x: auto;
     border-radius: 12px;
   }
-  
+
   .orders-table {
     min-width: 800px;
   }
-  
+
   .orders-table th,
   .orders-table td {
     padding: 12px;
   }
-  
+
   .item-row {
     flex-direction: column;
     align-items: flex-start;
@@ -6592,34 +6686,34 @@ body.dark-mode .modal-footer-note {
   .procurement-dashboard {
     padding: 10px;
   }
-  
+
   .modal-header {
     padding: 10px;
   }
-  
+
   .modal-title {
     font-size: 1.25rem;
   }
-  
+
   .stat-card {
     padding: 12px;
   }
-  
+
   .stat-value {
     font-size: 1.75rem;
   }
-  
+
   .download-btn {
     padding: 10px 15px;
     font-size: 0.8rem;
   }
-  
+
   .orders-table th,
   .orders-table td {
     padding: 8px;
     font-size: 0.8rem;
   }
-  
+
   .duration-badge,
   .status-badge {
     font-size: 0.7rem;
@@ -6714,7 +6808,8 @@ body.dark-mode .modal-footer-note {
 }
 
 /* Today - Orange accent */
-.week-strip button[style*="border: 1px solid #10b981"]:not([style*="border: 2px solid"]) {
+.week-strip
+  button[style*="border: 1px solid #10b981"]:not([style*="border: 2px solid"]) {
   border: 2px solid #fb923c !important;
   background: linear-gradient(135deg, #ffedd5, #fed7aa) !important;
   color: #c2410c !important;
@@ -6780,16 +6875,16 @@ body.dark-mode .modal-footer-note {
   .quick-stats {
     gap: 30px;
   }
-  
+
   .stat-item {
     padding: 12px 16px;
     min-width: 80px;
   }
-  
+
   .stat-number {
     font-size: 24px;
   }
-  
+
   .stat-label {
     font-size: 14px;
   }
@@ -6799,16 +6894,16 @@ body.dark-mode .modal-footer-note {
   .quick-stats {
     gap: 40px;
   }
-  
+
   .stat-item {
     padding: 16px 20px;
     min-width: 100px;
   }
-  
+
   .stat-number {
     font-size: 28px;
   }
-  
+
   .stat-label {
     font-size: 16px;
   }
@@ -6819,16 +6914,16 @@ body.dark-mode .modal-footer-note {
   .quick-stats {
     gap: 12px;
   }
-  
+
   .stat-item {
     min-width: 50px;
     padding: 6px 8px;
   }
-  
+
   .stat-number {
     font-size: 16px;
   }
-  
+
   .stat-label {
     font-size: 10px;
   }
@@ -6876,6 +6971,12 @@ body.dark-mode .modal-footer-note {
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
+.status-fully-booked {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
 /* Responsive room status indicators */
 @media (max-width: 768px) {
   .room-title-row {
@@ -6883,7 +6984,7 @@ body.dark-mode .modal-footer-note {
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .status-indicator {
     font-size: 11px;
     padding: 3px 6px;
@@ -6968,12 +7069,12 @@ body.dark-mode .modal-footer-note {
 }
 
 /* Safari-specific overflow fix */
-@media not all and (min-resolution:.001dpcm) {
-  @supports (-webkit-appearance:none) {
+@media not all and (min-resolution: 0.001dpcm) {
+  @supports (-webkit-appearance: none) {
     .room-status-badge {
       max-width: 120px;
     }
-    
+
     .status-indicator {
       font-size: 0.7rem;
       padding: 4px 8px;
@@ -6999,27 +7100,39 @@ body.dark-mode .modal-footer-note {
   animation: fadeInUp 0.5s ease forwards;
 }
 
-.room-row:nth-child(1) { animation-delay: 0.1s; }
-.room-row:nth-child(2) { animation-delay: 0.2s; }
-.room-row:nth-child(3) { animation-delay: 0.3s; }
-.room-row:nth-child(4) { animation-delay: 0.4s; }
-.room-row:nth-child(5) { animation-delay: 0.5s; }
-.room-row:nth-child(6) { animation-delay: 0.6s; }
+.room-row:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.room-row:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.room-row:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.room-row:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.room-row:nth-child(5) {
+  animation-delay: 0.5s;
+}
+.room-row:nth-child(6) {
+  animation-delay: 0.6s;
+}
 
 /* Enhanced room row layout for large screens */
 @media (min-width: 1400px) {
   .room-info {
     padding: 20px;
   }
-  
+
   .room-title-row {
     gap: 16px;
   }
-  
+
   .room-name {
     font-size: 1.125rem;
   }
-  
+
   .room-location {
     font-size: 0.875rem;
   }
@@ -7029,94 +7142,92 @@ body.dark-mode .modal-footer-note {
   .room-info {
     padding: 24px;
   }
-  
+
   .room-title-row {
     gap: 20px;
   }
-  
+
   .room-name {
     font-size: 1.25rem;
   }
-  
+
   .room-location {
     font-size: 1rem;
   }
 }
-
 
 /* Enhanced Mobile Responsiveness */
 @media (max-width: 768px) {
   .booking-container {
     padding: 10px;
   }
-  
+
   .booking-header {
     padding: 15px;
   }
-  
+
   .header-title-row {
     flex-direction: column;
     gap: 15px;
     text-align: center;
   }
-  
+
   .booking-title {
     font-size: 18px;
     line-height: 1.3;
   }
-  
+
   .booking-subtitle {
     font-size: 14px;
   }
-  
+
   .quick-stats {
     justify-content: center;
     margin-top: 10px;
   }
-  
-  
+
   .date-section {
     margin-bottom: 15px;
   }
-  
+
   .date-header {
     flex-direction: column;
     gap: 10px;
     align-items: stretch !important;
   }
-  
+
   .admin-controls {
     justify-content: center !important;
     flex-wrap: wrap;
   }
-  
+
   .booking-grid {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .booking-table {
     min-width: 600px;
   }
-  
+
   .room-info {
     min-width: 200px;
   }
-  
+
   .room-name {
     font-size: 14px;
   }
-  
+
   .time-slot {
     min-width: 60px;
     padding: 8px 4px;
     font-size: 11px;
   }
-  
+
   .time-slot .slot-title {
     font-size: 10px;
   }
-  
+
   .amenity-tag {
     font-size: 10px;
     padding: 2px 6px;
@@ -7131,18 +7242,17 @@ body.dark-mode .modal-footer-note {
     align-items: center;
     justify-content: center;
   }
-  
-  
+
   .room-row:hover .room-info {
     transform: none;
     box-shadow: none;
   }
-  
+
   .room-row:active .room-info {
     transform: scale(0.98);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
-  
+
   .time-slot:active:not(.booked):not(.weekend-blocked):not(.past) {
     transform: scale(0.95);
     background: #f1f5f9;
@@ -7155,11 +7265,10 @@ body.dark-mode .modal-footer-note {
     flex-direction: row;
     justify-content: space-around;
   }
-  
+
   .stat-item {
     min-width: 40px;
   }
-  
 }
 
 /* Loading and Error States */
@@ -7195,8 +7304,12 @@ body.dark-mode .modal-footer-note {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-banner {
