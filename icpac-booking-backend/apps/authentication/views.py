@@ -67,6 +67,7 @@ class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []  # No authentication required for registration
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
