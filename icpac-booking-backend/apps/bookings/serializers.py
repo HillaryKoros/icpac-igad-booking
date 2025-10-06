@@ -28,7 +28,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'id', 'room', 'room_id', 'room_name', 'user', 'user_name',
             'start_date', 'end_date', 'start_time', 'end_time',
             'purpose', 'expected_attendees', 'special_requirements',
-            'approval_status', 'approval_status_display', 'approved_by',
+            'booking_type', 'approval_status', 'approval_status_display', 'approved_by',
             'approved_at', 'rejection_reason', 'duration_hours',
             'can_modify', 'created_at', 'updated_at'
         ]
@@ -140,7 +140,7 @@ class BookingListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'room_id', 'room_name', 'user_name', 'start_date', 'end_date',
             'start_time', 'end_time', 'purpose', 'expected_attendees',
-            'approval_status', 'approval_status_display'
+            'booking_type', 'approval_status', 'approval_status_display'
         ]
 
 
@@ -153,7 +153,7 @@ class BookingCreateUpdateSerializer(serializers.ModelSerializer):
         fields = [
             'room', 'start_date', 'end_date', 'start_time', 'end_time',
             'purpose', 'expected_attendees', 'special_requirements',
-            'approval_status', 'approved_by', 'approved_at'
+            'booking_type', 'approval_status', 'approved_by', 'approved_at'
         ]
         read_only_fields = ['approval_status', 'approved_by', 'approved_at']
     
