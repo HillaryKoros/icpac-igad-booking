@@ -104,6 +104,13 @@ CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
 
+# Exempt specific URLs from CSRF validation
+CSRF_EXEMPT_URLS = [
+    '/api/auth/register/',
+    '/api/auth/password/reset/',
+    '/api/auth/password/reset/confirm/',
+]
+
 # Frontend URL for admin "View site" link
 FRONTEND_URL = os.environ.get('FRONTEND_URL', DEFAULT_FRONTEND_URL)
 
@@ -157,6 +164,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'icpac_booking.middleware.DisableCSRFForExemptURLs',  # Must be before CsrfViewMiddleware
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django_otp.middleware.OTPMiddleware',
