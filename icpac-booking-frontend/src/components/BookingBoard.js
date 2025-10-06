@@ -1199,16 +1199,27 @@ const BookingBoard = () => {
     }
 
     try {
+      // Automatically set times for full_day, weekly, and multi_day bookings
+      let startTime = bookingData.startTime;
+      let endTime = bookingData.endTime;
+
+      if (bookingData.bookingType === "full_day" || bookingData.bookingType === "weekly" || bookingData.bookingType === "multi_day") {
+        startTime = "08:00";
+        endTime = "18:00";
+      }
+
       // Map frontend data to backend API format
       const backendBookingData = {
         room: selectedRoom.id,
         start_date: bookingData.startDate,
         end_date: bookingData.endDate || bookingData.startDate,
-        start_time: bookingData.startTime,
-        end_time: bookingData.endTime,
+        start_time: startTime,
+        end_time: endTime,
         purpose: bookingData.title,
         expected_attendees: bookingData.attendeeCount || 1,
         special_requirements: bookingData.description || "",
+        booking_type: bookingData.bookingType || "hourly",
+        selected_dates: bookingData.selectedDates || [],
       };
 
       // Save to backend database
@@ -1322,7 +1333,9 @@ const BookingBoard = () => {
 
   // Helper function to calculate booking percentage for a room on a given day
   const calculateBookingPercentage = (roomId, date) => {
-    const totalSlots = timeSlots.length; // 40 slots (8 AM - 6 PM, 15-min intervals)
+    // Total working slots: 8 AM - 6 PM = 10 hours × 4 slots/hour = 40 slots
+    // (The last slot 18:00 is the end boundary, not a bookable slot)
+    const totalWorkingSlots = 40;
     const bookedSlots = new Set();
 
     // Get all bookings for this room on this date
@@ -1348,13 +1361,13 @@ const BookingBoard = () => {
     });
 
     const bookedCount = bookedSlots.size;
-    const percentage = Math.round((bookedCount / totalSlots) * 100);
+    const percentage = Math.round((bookedCount / totalWorkingSlots) * 100);
 
     return {
       percentage,
       bookedSlots: bookedCount,
-      totalSlots,
-      isFullyBooked: percentage === 100,
+      totalSlots: totalWorkingSlots,
+      isFullyBooked: percentage >= 100,
       isPartiallyBooked: percentage > 0 && percentage < 100,
     };
   };
@@ -1362,10 +1375,11 @@ const BookingBoard = () => {
   // Helper function to get room status indicator
   const getRoomStatusIndicator = (room) => {
     const currentTime = new Date();
-    const today = new Date();
+    const checkDate = new Date(selectedDate); // Use selected date instead of hardcoded today
 
-    // Check if room is currently occupied
-    const hasCurrentBooking = bookings.some((booking) => {
+    // Check if room is currently occupied (only for today)
+    const isToday = checkDate.toDateString() === currentTime.toDateString();
+    const hasCurrentBooking = isToday && bookings.some((booking) => {
       if (booking.roomId !== room.id) return false;
 
       const bookingStart = new Date(
@@ -1387,14 +1401,16 @@ const BookingBoard = () => {
       );
     }
 
-    // Calculate booking percentage for today
-    const bookingStats = calculateBookingPercentage(room.id, today);
+    // Calculate booking percentage for selected date
+    const bookingStats = calculateBookingPercentage(room.id, checkDate);
+
+    const dateLabel = isToday ? "today" : "on this date";
 
     if (bookingStats.isFullyBooked) {
       return (
         <span
           className="status-indicator status-fully-booked"
-          title="Fully Booked Today"
+          title={`Fully Booked ${dateLabel}`}
         >
           🔴 Fully Booked
         </span>
@@ -1405,7 +1421,7 @@ const BookingBoard = () => {
       return (
         <span
           className="status-indicator status-partial"
-          title={`${bookingStats.percentage}% booked today (${bookingStats.bookedSlots}/${bookingStats.totalSlots} slots)`}
+          title={`${bookingStats.percentage}% booked ${dateLabel} (${bookingStats.bookedSlots}/${bookingStats.totalSlots} slots)`}
         >
           🟡 Partially Booked ({bookingStats.percentage}%)
         </span>
@@ -1413,7 +1429,7 @@ const BookingBoard = () => {
     }
 
     return (
-      <span className="status-indicator status-available" title="Available">
+      <span className="status-indicator status-available" title={`Available ${dateLabel}`}>
         🟢 Available
       </span>
     );
@@ -1992,7 +2008,7 @@ const BookingBoard = () => {
                 padding: "16px",
                 border: "1px solid #10b981",
                 borderRadius: "12px",
-                height: "280px",
+                minHeight: "280px",
                 display: "flex",
                 flexDirection: "column",
               }}
@@ -2278,7 +2294,7 @@ const BookingBoard = () => {
                   padding: "16px",
                   border: "1px solid #6366f1",
                   borderRadius: "12px",
-                  height: "280px",
+                  minHeight: "280px",
                   display: "flex",
                   flexDirection: "column",
                 }}
@@ -2309,19 +2325,19 @@ const BookingBoard = () => {
                       desc: "Book for specific hours",
                     },
                     {
-                      value: "full-day",
+                      value: "full_day",
                       label: "📅 Full Day",
-                      desc: "Entire day booking",
+                      desc: "8 AM - 6 PM (entire day)",
                     },
                     {
-                      value: "multi-day",
+                      value: "multi_day",
                       label: "📊 Multi-Day",
-                      desc: "Multiple consecutive days",
+                      desc: "Select 2-6 days",
                     },
                     {
                       value: "weekly",
                       label: "🗓️ Weekly",
-                      desc: "Recurring weekly booking",
+                      desc: "7 consecutive days",
                     },
                   ].map((type) => (
                     <button
@@ -3099,6 +3115,36 @@ const BookingForm = ({
     return timeSlots[endIndex];
   };
 
+  // Get ISO week number (1-52/53)
+  const getWeekNumber = (d) => {
+    const date = new Date(d);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + 4 - (date.getDay() || 7));
+    const yearStart = new Date(date.getFullYear(), 0, 1);
+    const weekNumber = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    return weekNumber;
+  };
+
+  // Helper function to format date as YYYY-MM-DD in local timezone
+  const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Get start date of a week number in a given year
+  const getWeekStartDate = (year, weekNumber) => {
+    const jan4 = new Date(year, 0, 4);
+    const dayOffset = (jan4.getDay() || 7) - 1;
+    const weekStartOffset = (weekNumber - 1) * 7 - dayOffset;
+    const weekStart = new Date(year, 0, 4 + weekStartOffset);
+    return weekStart;
+  };
+
+  // Get current year
+  const currentYear = new Date().getFullYear();
+
   const initialStartTime = getCurrentTimeSlot();
 
   const [formData, setFormData] = useState({
@@ -3112,6 +3158,10 @@ const BookingForm = ({
     endTime: calculateEndTime(initialStartTime, 0.5),
     description: "",
     attendeeCount: 1,
+    selectedDates: [], // For multi-day individual date selection
+    weekNumber: getWeekNumber(date), // For weekly booking week number
+    weekYear: currentYear, // Year for week number
+    useWeekNumber: false, // Toggle between date picker and week number
   });
 
   const isTimeSlotInPast = (date, time) => {
@@ -3154,7 +3204,7 @@ const BookingForm = ({
       if (name === "bookingType") {
         const startDate = new Date(prev.startDate);
         switch (value) {
-          case "full-day":
+          case "full_day":
             newData.endDate = prev.startDate;
             newData.startTime = "08:00";
             newData.endTime = "18:00";
@@ -3166,7 +3216,7 @@ const BookingForm = ({
             newData.startTime = "08:00";
             newData.endTime = "18:00";
             break;
-          case "multi-day":
+          case "multi_day":
             const multiEndDate = new Date(startDate);
             multiEndDate.setDate(startDate.getDate() + 1);
             newData.endDate = multiEndDate.toISOString().split("T")[0];
@@ -3191,8 +3241,15 @@ const BookingForm = ({
         newData.endTime = calculateEndTime(value, parseInt(prev.duration));
       }
 
-      // Ensure end date is not before start date
-      if (name === "endDate" && new Date(value) < new Date(prev.startDate)) {
+      // Auto-adjust end date for weekly booking when start date changes
+      if (name === "startDate" && prev.bookingType === "weekly") {
+        const weekStartDate = new Date(value);
+        weekStartDate.setDate(weekStartDate.getDate() + 6);
+        newData.endDate = weekStartDate.toISOString().split("T")[0];
+      }
+
+      // Ensure end date is not before start date (except for weekly which auto-calculates)
+      if (name === "endDate" && prev.bookingType !== "weekly" && new Date(value) < new Date(prev.startDate)) {
         newData.endDate = prev.startDate;
       }
 
@@ -3305,10 +3362,10 @@ const BookingForm = ({
                     id="booking-type"
                   >
                     <option value="hourly">⏰ Hourly Booking</option>
-                    <option value="full-day">
+                    <option value="full_day">
                       🌅 Full Day (8:00 AM - 6:00 PM)
                     </option>
-                    <option value="multi-day">📅 Multi-Day Booking</option>
+                    <option value="multi_day">📅 Multi-Day Booking</option>
                     <option value="weekly">📆 Weekly Booking (7 days)</option>
                   </select>
                   <label htmlFor="booking-type" className="select-label">
@@ -3349,7 +3406,107 @@ const BookingForm = ({
                 </div>
               )}
 
-              <div className="form-row">
+              {/* Week number picker for weekly bookings */}
+              {formData.bookingType === "weekly" && (
+                <div className="form-row">
+                  <div className="form-field-group">
+                    <div className="select-field">
+                      <select
+                        name="weekYear"
+                        value={formData.weekYear}
+                        onChange={(e) => {
+                          const year = parseInt(e.target.value);
+                          const weekStart = getWeekStartDate(year, formData.weekNumber);
+                          const weekEnd = new Date(weekStart);
+                          weekEnd.setDate(weekEnd.getDate() + 6);
+                          setFormData(prev => ({
+                            ...prev,
+                            weekYear: year,
+                            startDate: formatLocalDate(weekStart),
+                            endDate: formatLocalDate(weekEnd)
+                          }));
+                        }}
+                        className="modern-select"
+                        id="week-year"
+                      >
+                        {[currentYear - 1, currentYear, currentYear + 1].map(year => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                      <label htmlFor="week-year" className="select-label">
+                        <span className="label-icon">📅</span>
+                        Year *
+                      </label>
+                      <div className="select-arrow">▼</div>
+                    </div>
+                  </div>
+
+                  <div className="form-field-group">
+                    <div className="select-field">
+                      <select
+                        name="weekNumber"
+                        value={formData.weekNumber}
+                        onChange={(e) => {
+                          const weekNum = parseInt(e.target.value);
+                          const weekStart = getWeekStartDate(formData.weekYear, weekNum);
+                          const weekEnd = new Date(weekStart);
+                          weekEnd.setDate(weekEnd.getDate() + 6);
+                          setFormData(prev => ({
+                            ...prev,
+                            weekNumber: weekNum,
+                            startDate: formatLocalDate(weekStart),
+                            endDate: formatLocalDate(weekEnd)
+                          }));
+                        }}
+                        className="modern-select"
+                        id="week-number"
+                      >
+                        {Array.from({ length: 52 }, (_, i) => i + 1).map(week => {
+                          const weekStart = getWeekStartDate(formData.weekYear, week);
+                          const weekEnd = new Date(weekStart);
+                          weekEnd.setDate(weekEnd.getDate() + 6);
+                          return (
+                            <option key={week} value={week}>
+                              Week {week} ({weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <label htmlFor="week-number" className="select-label">
+                        <span className="label-icon">📆</span>
+                        Week Number *
+                      </label>
+                      <div className="select-arrow">▼</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Date field - only for hourly bookings */}
+              {formData.bookingType === "hourly" && (
+                <div className="form-row">
+                  <div className="form-field-group">
+                    <div className="date-field">
+                      <input
+                        type="date"
+                        name="startDate"
+                        required
+                        value={formData.startDate}
+                        onChange={handleChange}
+                        className="modern-date-input"
+                        id="start-date"
+                      />
+                      <label htmlFor="start-date" className="date-label">
+                        <span className="label-icon">📅</span>
+                        Date *
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Single date for full day booking */}
+              {formData.bookingType === "full_day" && (
                 <div className="form-field-group">
                   <div className="date-field">
                     <input
@@ -3357,38 +3514,121 @@ const BookingForm = ({
                       name="startDate"
                       required
                       value={formData.startDate}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          startDate: e.target.value,
+                          endDate: e.target.value // Same as start for full day
+                        }));
+                      }}
                       className="modern-date-input"
-                      id="start-date"
+                      id="full-day-date"
                     />
-                    <label htmlFor="start-date" className="date-label">
+                    <label htmlFor="full-day-date" className="date-label">
                       <span className="label-icon">📅</span>
-                      Start Date *
+                      Select Date *
                     </label>
                   </div>
                 </div>
+              )}
 
-                {formData.bookingType === "multi-day" && (
-                  <div className="form-field-group">
-                    <div className="date-field">
+              {/* Info message for booking types */}
+              {formData.bookingType === "full_day" && (
+                <div style={{ padding: "10px", backgroundColor: "#e0f2fe", borderRadius: "8px", marginBottom: "15px", fontSize: "14px" }}>
+                  ℹ️ Full day booking: 8:00 AM - 6:00 PM on selected date
+                </div>
+              )}
+              {formData.bookingType === "weekly" && (
+                <div style={{ padding: "10px", backgroundColor: "#e0f2fe", borderRadius: "8px", marginBottom: "15px", fontSize: "14px" }}>
+                  ℹ️ Weekly booking: 7 consecutive days (8:00 AM - 6:00 PM each day)
+                </div>
+              )}
+              {formData.bookingType === "multi_day" && (
+                <>
+                  <div style={{ padding: "10px", backgroundColor: "#e0f2fe", borderRadius: "8px", marginBottom: "15px", fontSize: "14px" }}>
+                    ℹ️ Multi-day booking: Select 2-6 individual days (8:00 AM - 6:00 PM each day)
+                  </div>
+
+                  {/* Individual Date Selection */}
+                  <div style={{ marginBottom: "20px", padding: "15px", backgroundColor: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                    <label style={{ display: "block", marginBottom: "12px", fontWeight: "600", color: "#1e293b", fontSize: "14px" }}>
+                      📅 Select Individual Dates (Click to Add/Remove)
+                    </label>
+                    <div style={{ marginBottom: "12px" }}>
                       <input
                         type="date"
-                        name="endDate"
-                        required
-                        value={formData.endDate}
-                        onChange={handleChange}
-                        className="modern-date-input"
-                        id="end-date"
-                        min={formData.startDate}
+                        value=""
+                        min={new Date().toISOString().split('T')[0]}
+                        onChange={(e) => {
+                          const selectedDate = e.target.value;
+                          if (selectedDate && !formData.selectedDates.includes(selectedDate)) {
+                            if (formData.selectedDates.length < 6) {
+                              const newDates = [...formData.selectedDates, selectedDate].sort();
+                              setFormData(prev => ({
+                                ...prev,
+                                selectedDates: newDates,
+                                startDate: newDates[0], // First date (earliest)
+                                endDate: newDates[newDates.length - 1] // Last date (latest)
+                              }));
+                              e.target.value = ''; // Reset input
+                            } else {
+                              alert('Maximum 6 days allowed for multi-day booking');
+                            }
+                          }
+                        }}
+                        style={{
+                          padding: "10px",
+                          borderRadius: "6px",
+                          border: "1px solid #cbd5e1",
+                          width: "100%",
+                          fontSize: "14px"
+                        }}
                       />
-                      <label htmlFor="end-date" className="date-label">
-                        <span className="label-icon">📅</span>
-                        End Date *
-                      </label>
                     </div>
+
+                    {/* Selected Dates Display */}
+                    {formData.selectedDates.length > 0 && (
+                      <div style={{ marginTop: "12px" }}>
+                        <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>
+                          Selected: {formData.selectedDates.length} day{formData.selectedDates.length !== 1 ? 's' : ''}
+                        </div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                          {formData.selectedDates.map(dateStr => (
+                            <div
+                              key={dateStr}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "6px 12px",
+                                backgroundColor: "#10b981",
+                                color: "white",
+                                borderRadius: "6px",
+                                fontSize: "13px",
+                                cursor: "pointer"
+                              }}
+                              onClick={() => {
+                                setFormData(prev => {
+                                  const newDates = prev.selectedDates.filter(d => d !== dateStr).sort();
+                                  return {
+                                    ...prev,
+                                    selectedDates: newDates,
+                                    startDate: newDates.length > 0 ? newDates[0] : prev.startDate,
+                                    endDate: newDates.length > 0 ? newDates[newDates.length - 1] : prev.endDate
+                                  };
+                                });
+                              }}
+                            >
+                              {new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              <span style={{ fontSize: "16px", marginLeft: "4px" }}>×</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
 
               {formData.bookingType === "hourly" && (
                 <div className="form-row">
@@ -5553,14 +5793,14 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
 
   const getBookingDuration = (booking) => {
     if (booking.bookingType === "weekly") return "Weekly";
-    if (booking.bookingType === "multi-day") return "Multi-day";
-    if (booking.bookingType === "full-day") return "Full day";
+    if (booking.bookingType === "multi_day") return "Multi-day";
+    if (booking.bookingType === "full_day") return "Full day";
     return "Hourly";
   };
 
   const getTotalBookingDays = (booking) => {
     if (booking.bookingType === "weekly") return 7;
-    if (booking.bookingType === "multi-day") {
+    if (booking.bookingType === "multi_day") {
       const startDate = new Date(booking.startDate);
       const endDate = new Date(booking.endDate);
       const diffTime = Math.abs(endDate - startDate);

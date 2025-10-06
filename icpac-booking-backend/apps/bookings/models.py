@@ -59,7 +59,14 @@ class Booking(models.Model):
     end_date = models.DateField(help_text='End date of booking')
     start_time = models.TimeField(help_text='Start time')
     end_time = models.TimeField(help_text='End time')
-    
+
+    # For multi-day bookings with non-consecutive dates
+    selected_dates = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='Array of selected dates for multi-day bookings (e.g., ["2025-10-06", "2025-10-08", "2025-10-10"])'
+    )
+
     # Booking configuration
     booking_type = models.CharField(
         max_length=20,
@@ -121,33 +128,105 @@ class Booking(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.purpose} - {self.room.name} ({self.start_date})"
+        # Format dates based on booking type
+        if self.booking_type == 'multi_day' and self.selected_dates and len(self.selected_dates) > 0:
+            # Show individual dates with commas and "and" for the last one
+            date_strs = [str(d) if hasattr(d, 'year') else d for d in self.selected_dates]
+            if len(date_strs) == 1:
+                dates_display = date_strs[0]
+            elif len(date_strs) == 2:
+                dates_display = f"{date_strs[0]} and {date_strs[1]}"
+            else:
+                # Use commas and "and" for last: "date1, date2, and date3"
+                dates_display = ', '.join(date_strs[:-1]) + f", and {date_strs[-1]}"
+            return f"{self.purpose} - {self.room.name} ({dates_display})"
+        elif self.start_date == self.end_date:
+            return f"{self.purpose} - {self.room.name} ({self.start_date})"
+        else:
+            return f"{self.purpose} - {self.room.name} ({self.start_date} to {self.end_date})"
     
     def clean(self):
         """Validate booking data"""
         errors = {}
-        
+
         # Validate dates
         if self.start_date and self.end_date and self.start_date > self.end_date:
             errors['end_date'] = 'End date must be after start date.'
-        
+
         # Validate times
         if self.start_time and self.end_time and self.start_time >= self.end_time:
             errors['end_time'] = 'End time must be after start time.'
-        
+
         # Check if booking is in the past
         if self.start_date and self.start_date < timezone.now().date():
             errors['start_date'] = 'Cannot book in the past.'
-        
+
         if self.start_date == timezone.now().date():
             current_time = timezone.now().time()
             if self.start_time <= current_time:
                 errors['start_time'] = 'Cannot book in the past.'
-        
+
+        # Validate booking type specific rules
+        if self.booking_type == 'full_day':
+            # Full day should be 8 AM to 6 PM
+            if self.start_time != time(8, 0) or self.end_time != time(18, 0):
+                errors['booking_type'] = 'Full day booking must be from 8:00 AM to 6:00 PM.'
+            if self.start_date != self.end_date:
+                errors['booking_type'] = 'Full day booking must be for a single day.'
+
+        elif self.booking_type == 'hourly':
+            # Hourly booking should be within the same day
+            if self.start_date != self.end_date:
+                errors['booking_type'] = 'Hourly booking must be within a single day.'
+
+        elif self.booking_type == 'weekly':
+            # Weekly booking should be exactly 7 days
+            if self.start_date and self.end_date:
+                duration_days = (self.end_date - self.start_date).days + 1
+                if duration_days != 7:
+                    errors['booking_type'] = 'Weekly booking must be exactly 7 consecutive days.'
+
+        elif self.booking_type == 'multi_day':
+            # Multi-day can use selected_dates array for non-consecutive days
+            if self.selected_dates and len(self.selected_dates) > 0:
+                # Validate selected_dates
+                if len(self.selected_dates) < 2:
+                    errors['selected_dates'] = 'Multi-day booking must have at least 2 selected dates.'
+                if len(self.selected_dates) > 6:
+                    errors['selected_dates'] = 'Multi-day booking cannot exceed 6 days.'
+
+                # Ensure all dates are within start_date and end_date range
+                if self.start_date and self.end_date:
+                    for date_item in self.selected_dates:
+                        try:
+                            # Handle both string and date object formats
+                            if isinstance(date_item, str):
+                                date_obj = datetime.strptime(date_item, '%Y-%m-%d').date()
+                            elif hasattr(date_item, 'year'):  # It's already a date object
+                                date_obj = date_item
+                            else:
+                                errors['selected_dates'] = 'Invalid date format in selected_dates.'
+                                break
+
+                            if date_obj < self.start_date or date_obj > self.end_date:
+                                errors['selected_dates'] = 'All selected dates must be within start and end date range.'
+                                break
+                        except (ValueError, TypeError):
+                            errors['selected_dates'] = 'Invalid date format in selected_dates. Use YYYY-MM-DD.'
+                            break
+            else:
+                # If no selected_dates, fall back to consecutive days validation
+                if self.start_date and self.end_date:
+                    duration_days = (self.end_date - self.start_date).days + 1
+                    if duration_days < 2:
+                        errors['booking_type'] = 'Multi-day booking must span at least 2 days.'
+                    if duration_days >= 7:
+                        errors['booking_type'] = 'Multi-day booking should be less than 7 days. Use weekly booking instead.'
+
         # Check attendee count doesn't exceed room capacity
         if self.room and self.expected_attendees > self.room.capacity:
             errors['expected_attendees'] = f'Attendee count ({self.expected_attendees}) exceeds room capacity ({self.room.capacity}).'
-        
+
         # Check for overlapping bookings (only for approved/pending bookings)
         if self.room:
             overlapping = Booking.objects.filter(
@@ -156,7 +235,7 @@ class Booking(models.Model):
                 start_date__lte=self.end_date,
                 end_date__gte=self.start_date,
             ).exclude(pk=self.pk if self.pk else None)
-            
+
             # Check time overlap for same dates
             for booking in overlapping:
                 if (self.start_date <= booking.end_date and self.end_date >= booking.start_date):
@@ -164,7 +243,7 @@ class Booking(models.Model):
                     if (self.start_time < booking.end_time and self.end_time > booking.start_time):
                         errors['start_time'] = f'Time slot conflicts with existing booking: {booking.purpose}'
                         break
-        
+
         if errors:
             raise ValidationError(errors)
     

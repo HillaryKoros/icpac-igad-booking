@@ -83,7 +83,7 @@ class BookingAdmin(admin.ModelAdmin):
             'fields': ('room', 'user', 'purpose', 'special_requirements')
         }),
         ('Schedule', {
-            'fields': ('booking_type', 'start_date', 'end_date', 'start_time', 'end_time', 'expected_attendees')
+            'fields': ('booking_type', 'start_date', 'end_date', 'start_time', 'end_time', 'expected_attendees', 'selected_dates')
         }),
         ('Approval', {
             'fields': ('approval_status', 'approved_by', 'approved_at', 'rejection_reason'),
@@ -110,6 +110,21 @@ class BookingAdmin(admin.ModelAdmin):
                 obj.start_date.strftime('%Y-%m-%d'),
                 obj.start_time.strftime('%H:%M'),
                 obj.end_time.strftime('%H:%M')
+            )
+        elif obj.booking_type == 'multi_day' and obj.selected_dates and len(obj.selected_dates) > 0:
+            # Show individual dates with commas and "and" for the last one
+            date_strs = [str(d) if hasattr(d, 'year') else d for d in obj.selected_dates]
+            if len(date_strs) == 1:
+                dates_display = date_strs[0]
+            elif len(date_strs) == 2:
+                dates_display = f"{date_strs[0]} and {date_strs[1]}"
+            else:
+                # Use commas and "and" for last: "date1, date2, and date3"
+                dates_display = ', '.join(date_strs[:-1]) + f", and {date_strs[-1]}"
+            return format_html(
+                '<div>{}<br><small>{}</small></div>',
+                dates_display,
+                obj.get_booking_type_display()
             )
         else:
             return format_html(

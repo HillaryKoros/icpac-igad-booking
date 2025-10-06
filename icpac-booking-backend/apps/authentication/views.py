@@ -403,3 +403,168 @@ def user_dashboard_stats(request):
         })
     
     return Response(stats)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def request_password_reset(request):
+    """
+    Request password reset - generates OTP and sends to email
+    """
+    email = request.data.get('email')
+
+    if not email:
+        return Response(
+            {'error': 'Email address is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        user = User.objects.get(email__iexact=email)
+    except User.DoesNotExist:
+        # Don't reveal if user exists - security best practice
+        return Response({
+            'message': 'If an account exists with this email, a password reset code will be sent.'
+        })
+
+    # Generate OTP for password reset
+    from apps.security.models import OTPToken
+    from django.utils import timezone
+
+    # Invalidate any existing password reset tokens
+    OTPToken.objects.filter(
+        user=user,
+        token_type='password_reset',
+        is_used=False
+    ).update(is_used=True)
+
+    # Create new OTP
+    otp = OTPToken.create_otp(
+        user=user,
+        token_type='password_reset',
+        expires_in_minutes=30  # 30 minute expiry
+    )
+
+    # Send email with OTP
+    try:
+        subject = 'Password Reset Request - ICPAC Booking System'
+        message = f"""
+Hello {user.get_full_name()},
+
+You requested to reset your password for the ICPAC Booking System.
+
+Your password reset code is: {otp.token}
+
+This code will expire in 30 minutes.
+
+If you did not request this reset, please ignore this email.
+
+Best regards,
+ICPAC Booking System
+        """
+
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+
+        # Log the action
+        from apps.security.models import AuditLog
+        AuditLog.log_action(
+            user=user,
+            action_type='password_reset',
+            description=f'Password reset requested for {user.email}',
+            ip_address=request.META.get('REMOTE_ADDR'),
+            user_agent=request.META.get('HTTP_USER_AGENT', '')
+        )
+
+    except Exception as e:
+        # Log error but don't expose it
+        print(f"Error sending password reset email: {e}")
+
+    return Response({
+        'message': 'If an account exists with this email, a password reset code will be sent.',
+        'email': email
+    })
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def reset_password_confirm(request):
+    """
+    Confirm password reset with OTP and set new password
+    """
+    email = request.data.get('email')
+    otp_code = request.data.get('otp')
+    new_password = request.data.get('new_password')
+
+    if not all([email, otp_code, new_password]):
+        return Response(
+            {'error': 'Email, OTP code, and new password are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        user = User.objects.get(email__iexact=email)
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'Invalid reset request'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Find valid OTP token
+    from apps.security.models import OTPToken
+
+    try:
+        otp = OTPToken.objects.filter(
+            user=user,
+            token_type='password_reset',
+            is_used=False
+        ).latest('created_at')
+    except OTPToken.DoesNotExist:
+        return Response(
+            {'error': 'No valid reset request found. Please request a new password reset.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Verify OTP
+    if not otp.verify(otp_code):
+        if otp.attempts >= otp.max_attempts:
+            return Response(
+                {'error': 'Too many invalid attempts. Please request a new password reset.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(
+            {'error': f'Invalid OTP code. {otp.max_attempts - otp.attempts} attempts remaining.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Validate password strength (basic validation)
+    if len(new_password) < 8:
+        return Response(
+            {'error': 'Password must be at least 8 characters long'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Set new password
+    user.set_password(new_password)
+    user.save()
+
+    # Log the action
+    from apps.security.models import AuditLog
+    AuditLog.log_action(
+        user=user,
+        action_type='password_change',
+        description=f'Password reset completed for {user.email}',
+        ip_address=request.META.get('REMOTE_ADDR'),
+        user_agent=request.META.get('HTTP_USER_AGENT', '')
+    )
+
+    return Response({
+        'message': 'Password reset successful. You can now login with your new password.'
+    })

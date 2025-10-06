@@ -137,6 +137,81 @@ class Room(models.Model):
             approval_status__in=['pending', 'approved']
         ).order_by('start_time')
 
+    def get_availability_level(self, date):
+        """
+        Get availability level for a specific date
+        Returns: 'available', 'partially_booked', or 'fully_booked'
+        """
+        from datetime import time
+        from apps.bookings.models import Booking
+
+        # Get all approved/pending bookings for this date
+        bookings = self.get_bookings_for_date(date)
+
+        if not bookings.exists():
+            return 'available'
+
+        # Define working hours (8 AM to 6 PM = 10 hours)
+        working_start = time(8, 0)
+        working_end = time(18, 0)
+        total_working_minutes = 10 * 60  # 600 minutes
+
+        # Calculate total booked minutes
+        booked_minutes = 0
+        for booking in bookings:
+            # Get booking time range for this specific date
+            start_time = max(booking.start_time, working_start)
+            end_time = min(booking.end_time, working_end)
+
+            # Calculate duration in minutes
+            start_minutes = start_time.hour * 60 + start_time.minute
+            end_minutes = end_time.hour * 60 + end_time.minute
+            duration = max(0, end_minutes - start_minutes)
+            booked_minutes += duration
+
+        # Calculate booking percentage
+        booking_percentage = (booked_minutes / total_working_minutes) * 100
+
+        # Determine availability level
+        if booking_percentage >= 100:
+            return 'fully_booked'
+        elif booking_percentage > 0:
+            return 'partially_booked'
+        else:
+            return 'available'
+
+    def can_accept_booking(self, date, start_time, end_time, booking_type='hourly'):
+        """
+        Check if room can accept a new booking
+        Returns: (can_book: bool, reason: str, conflicts: list)
+        """
+        from apps.bookings.models import Booking
+        from datetime import time as datetime_time
+
+        # Check if room is active
+        if not self.is_active:
+            return False, 'Room is currently unavailable', []
+
+        # Get conflicting bookings
+        bookings = self.get_bookings_for_date(date)
+        conflicts = []
+
+        for booking in bookings:
+            # Check for time overlap
+            if (start_time < booking.end_time and end_time > booking.start_time):
+                conflicts.append({
+                    'id': booking.id,
+                    'purpose': booking.purpose,
+                    'start_time': booking.start_time.strftime('%H:%M'),
+                    'end_time': booking.end_time.strftime('%H:%M'),
+                    'booking_type': booking.booking_type
+                })
+
+        if conflicts:
+            return False, 'Time slot conflicts with existing booking(s)', conflicts
+
+        return True, 'Available', []
+
 
 class RoomAmenity(models.Model):
     """

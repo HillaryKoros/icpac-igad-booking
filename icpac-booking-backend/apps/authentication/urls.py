@@ -2,6 +2,7 @@
 Authentication URLs for ICPAC Booking System
 """
 from django.urls import path
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 
@@ -17,7 +18,11 @@ urlpatterns = [
     # Email verification endpoints
     path('verify-email/', views.VerifyEmailOTPView.as_view(), name='verify_email'),
     path('resend-otp/', views.ResendOTPView.as_view(), name='resend_otp'),
-    
+
+    # Password reset endpoints
+    path('password/reset/', csrf_exempt(views.request_password_reset), name='password_reset_request'),
+    path('password/reset/confirm/', csrf_exempt(views.reset_password_confirm), name='password_reset_confirm'),
+
     # User profile endpoints
     path('profile/', views.CurrentUserView.as_view(), name='current_user'),
     path('password/change/', views.PasswordChangeView.as_view(), name='password_change'),
