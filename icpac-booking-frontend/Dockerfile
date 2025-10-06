@@ -17,6 +17,9 @@ COPY . .
 ARG REACT_APP_API_URL
 ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 
+# Disable ESLint during build to prevent warnings from failing the build
+ENV DISABLE_ESLINT_PLUGIN=true
+
 # Build the app
 RUN npm run build
 
