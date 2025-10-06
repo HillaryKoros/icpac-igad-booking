@@ -1,42 +1,42 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
-import apiService from '../services/api';
-import emailService from '../services/emailService';
-import EmailSettingsPanel from './EmailSettingsPanel';
-import './BookingBoard.css';
-import '../services/emailNotifications.css';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useApp } from "../context/AppContext";
+import apiService from "../services/api";
+import emailService from "../services/emailService";
+import EmailSettingsPanel from "./EmailSettingsPanel";
+import "./BookingBoard.css";
+import "../services/emailNotifications.css";
 
 // Utility function for amenity icons
 const getAmenityIcon = (amenity) => {
   const amenityIcons = {
-    'Projector': '📽️',
-    'Whiteboard': '📝',
-    'Video Conferencing': '📹',
-    'Audio System': '🎤',
-    'TV Screen': '📺',
-    'Screen': '🖥️',
-    'Computers': '💻',
-    'Internet Access': '🌐',
-    'Printers': '🖨️'
+    Projector: "📽️",
+    Whiteboard: "📝",
+    "Video Conferencing": "📹",
+    "Audio System": "🎤",
+    "TV Screen": "📺",
+    Screen: "🖥️",
+    Computers: "💻",
+    "Internet Access": "🌐",
+    Printers: "🖨️",
   };
-  return amenityIcons[amenity] || '🔧';
+  return amenityIcons[amenity] || "🔧";
 };
 
 const BookingBoard = () => {
   const navigate = useNavigate();
-  
+
   // Get data from context (API integrated)
   const {
     rooms: contextRooms,
     bookings: contextBookings,
     user,
     createBooking: apiCreateBooking,
-    logout: contextLogout
+    logout: contextLogout,
   } = useApp();
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState('');
+  const [selectedTime, setSelectedTime] = useState("");
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [showBookingForm, setShowBookingForm] = useState(false);
@@ -49,22 +49,23 @@ const BookingBoard = () => {
   const [showUserLogin, setShowUserLogin] = useState(false);
   const [users, setUsers] = useState([]);
   const [showUserManagement, setShowUserManagement] = useState(false);
-  const [showProcurementDashboard, setShowProcurementDashboard] = useState(false);
+  const [showProcurementDashboard, setShowProcurementDashboard] =
+    useState(false);
   const [showSignup, setShowSignup] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLandingPage, setShowLandingPage] = useState(true);
-  const [approvalFilter, setApprovalFilter] = useState('all'); // all, pending, approved, rejected
+  const [approvalFilter, setApprovalFilter] = useState("all"); // all, pending, approved, rejected
   const [showEmailSettings, setShowEmailSettings] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('icpac_dark_mode');
+    const saved = localStorage.getItem("icpac_dark_mode");
     return saved ? JSON.parse(saved) : false;
   });
-  const [selectedRoomId, setSelectedRoomId] = useState('');
+  const [selectedRoomId, setSelectedRoomId] = useState("");
   const [selectedMeetingSpace, setSelectedMeetingSpace] = useState(null);
   const [selectedMeetingSpaces, setSelectedMeetingSpaces] = useState([]);
-  const [selectedBookingType, setSelectedBookingType] = useState('hourly');
+  const [selectedBookingType, setSelectedBookingType] = useState("hourly");
   const [showMeetingSpaceModal, setShowMeetingSpaceModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -73,30 +74,35 @@ const BookingBoard = () => {
   // localStorage functions
   const saveBookingsToStorage = (bookingsData) => {
     try {
-      localStorage.setItem('icpac_bookings', JSON.stringify(bookingsData));
+      localStorage.setItem("icpac_bookings", JSON.stringify(bookingsData));
     } catch (error) {
-      console.error('Error saving bookings to localStorage:', error);
+      console.error("Error saving bookings to localStorage:", error);
     }
   };
 
   const saveMeetingSpaceSelection = (spaceId) => {
     try {
       if (currentUser) {
-        localStorage.setItem(`icpac_selected_space_${currentUser.username}`, spaceId);
+        localStorage.setItem(
+          `icpac_selected_space_${currentUser.username}`,
+          spaceId
+        );
       }
     } catch (error) {
-      console.error('Error saving meeting space selection:', error);
+      console.error("Error saving meeting space selection:", error);
     }
   };
 
   const loadMeetingSpaceSelection = () => {
     try {
       if (currentUser) {
-        return localStorage.getItem(`icpac_selected_space_${currentUser.username}`);
+        return localStorage.getItem(
+          `icpac_selected_space_${currentUser.username}`
+        );
       }
       return null;
     } catch (error) {
-      console.error('Error loading meeting space selection:', error);
+      console.error("Error loading meeting space selection:", error);
       return null;
     }
   };
@@ -107,42 +113,41 @@ const BookingBoard = () => {
         localStorage.removeItem(`icpac_selected_space_${currentUser.username}`);
       }
     } catch (error) {
-      console.error('Error clearing meeting space selection:', error);
+      console.error("Error clearing meeting space selection:", error);
     }
   };
 
   const loadBookingsFromStorage = () => {
     try {
-      const saved = localStorage.getItem('icpac_bookings');
+      const saved = localStorage.getItem("icpac_bookings");
       if (saved) {
         return JSON.parse(saved);
       }
     } catch (error) {
-      console.error('Error loading bookings from localStorage:', error);
+      console.error("Error loading bookings from localStorage:", error);
     }
     return null;
   };
 
   const saveUsersToStorage = (usersData) => {
     try {
-      localStorage.setItem('icpac_users', JSON.stringify(usersData));
+      localStorage.setItem("icpac_users", JSON.stringify(usersData));
     } catch (error) {
-      console.error('Error saving users to localStorage:', error);
+      console.error("Error saving users to localStorage:", error);
     }
   };
 
   const loadUsersFromStorage = () => {
     try {
-      const saved = localStorage.getItem('icpac_users');
+      const saved = localStorage.getItem("icpac_users");
       if (saved) {
         return JSON.parse(saved);
       }
     } catch (error) {
-      console.error('Error loading users from localStorage:', error);
+      console.error("Error loading users from localStorage:", error);
     }
     return null;
   };
-
 
   const shouldShowBookingInterface = (date) => {
     const now = new Date();
@@ -171,40 +176,43 @@ const BookingBoard = () => {
   };
 
   const handleAdminLogin = (password) => {
-    if (password === 'admin123') { // Simple password check
+    if (password === "admin123") {
+      // Simple password check
       setIsAdmin(true);
       setShowAdminLogin(false);
-      localStorage.setItem('icpac_admin', 'true');
+      localStorage.setItem("icpac_admin", "true");
     } else {
-      alert('Invalid admin password');
+      alert("Invalid admin password");
     }
   };
 
   const handleAdminLogout = () => {
     setIsAdmin(false);
-    localStorage.removeItem('icpac_admin');
-    
+    localStorage.removeItem("icpac_admin");
+
     // Use context logout to clear global state and tokens
     contextLogout();
-    
+
     // Redirect to login page
-    navigate('/login');
+    navigate("/login");
   };
 
   const handleUserLogin = (email, password) => {
-    const user = users.find(u => u.email === email && u.password === password);
+    const user = users.find(
+      (u) => u.email === email && u.password === password
+    );
     if (user) {
       setCurrentUser(user);
       setIsAuthenticated(true);
       setShowLandingPage(false);
       setShowUserLogin(false);
-      localStorage.setItem('icpac_current_user', JSON.stringify(user));
+      localStorage.setItem("icpac_current_user", JSON.stringify(user));
 
       // Delay meeting space check to allow rooms to be initialized
       setTimeout(() => {
         const savedSpace = loadMeetingSpaceSelection();
         if (savedSpace && rooms.length > 0) {
-          const space = rooms.find(room => room.id.toString() === savedSpace);
+          const space = rooms.find((room) => room.id.toString() === savedSpace);
           if (space) {
             setSelectedMeetingSpace(space);
             setSelectedRoomId(savedSpace);
@@ -219,12 +227,12 @@ const BookingBoard = () => {
       }, 100);
 
       // Set admin status based on user role
-      if (user.role === 'super_admin' || user.role === 'room_admin') {
+      if (user.role === "super_admin" || user.role === "room_admin") {
         setIsAdmin(true);
-        localStorage.setItem('icpac_admin', 'true');
+        localStorage.setItem("icpac_admin", "true");
       }
     } else {
-      alert('Invalid email or password');
+      alert("Invalid email or password");
     }
   };
 
@@ -233,23 +241,25 @@ const BookingBoard = () => {
     clearMeetingSpaceSelection();
     setCurrentUser(null);
     setSelectedMeetingSpace(null);
-    setSelectedRoomId('');
+    setSelectedRoomId("");
     setIsAdmin(false);
     setIsAuthenticated(false);
     setShowLandingPage(true);
     setShowMeetingSpaceModal(false);
-    localStorage.removeItem('icpac_current_user');
-    localStorage.removeItem('icpac_admin');
-    
+    localStorage.removeItem("icpac_current_user");
+    localStorage.removeItem("icpac_admin");
+
     // Use context logout to clear global state and tokens
     contextLogout();
-    
+
     // Redirect to login page
-    navigate('/login');
+    navigate("/login");
   };
 
   const handleMeetingSpaceSelection = (roomId) => {
-    const selectedRoom = rooms.find(room => room.id.toString() === roomId.toString());
+    const selectedRoom = rooms.find(
+      (room) => room.id.toString() === roomId.toString()
+    );
     if (selectedRoom) {
       setSelectedMeetingSpace(selectedRoom);
       setSelectedRoomId(roomId.toString());
@@ -260,9 +270,16 @@ const BookingBoard = () => {
 
   const handleUserSignup = (userData) => {
     // Check if email already exists
-    const emailExists = users.some(user => user.email && userData.email && user.email.toLowerCase() === userData.email.toLowerCase());
+    const emailExists = users.some(
+      (user) =>
+        user.email &&
+        userData.email &&
+        user.email.toLowerCase() === userData.email.toLowerCase()
+    );
     if (emailExists) {
-      alert('Error: A user with this email address already exists. Please use a different email.');
+      alert(
+        "Error: A user with this email address already exists. Please use a different email."
+      );
       return;
     }
 
@@ -272,9 +289,9 @@ const BookingBoard = () => {
       name: userData.name,
       email: userData.email,
       password: userData.password,
-      role: 'user',
+      role: "user",
       managedRooms: [],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     const updatedUsers = [...users, newUser];
@@ -286,9 +303,9 @@ const BookingBoard = () => {
     setIsAuthenticated(true);
     setShowLandingPage(false);
     setShowSignup(false);
-    localStorage.setItem('icpac_current_user', JSON.stringify(newUser));
+    localStorage.setItem("icpac_current_user", JSON.stringify(newUser));
 
-    alert('Account created successfully! You are now logged in.');
+    alert("Account created successfully! You are now logged in.");
   };
 
   const sendProcurementNotification = (booking) => {
@@ -305,29 +322,37 @@ const BookingBoard = () => {
       time: booking.time || booking.startTime,
       attendeeCount: booking.attendeeCount,
       procurementOrders: booking.procurementOrders,
-      status: 'pending',
-      createdAt: new Date().toISOString()
+      status: "pending",
+      createdAt: new Date().toISOString(),
     };
 
     // Save to localStorage (in a real app, this would be sent to a server)
-    const existingNotifications = JSON.parse(localStorage.getItem('icpac_procurement_notifications') || '[]');
+    const existingNotifications = JSON.parse(
+      localStorage.getItem("icpac_procurement_notifications") || "[]"
+    );
     existingNotifications.push(notificationData);
-    localStorage.setItem('icpac_procurement_notifications', JSON.stringify(existingNotifications));
+    localStorage.setItem(
+      "icpac_procurement_notifications",
+      JSON.stringify(existingNotifications)
+    );
 
     // Show a simple alert (in a real app, this would be proper notification)
-    const orderSummary = booking.procurementOrders.map(order =>
-      `${order.quantity} ${order.itemName}(s)`
-    ).join(', ');
+    const orderSummary = booking.procurementOrders
+      .map((order) => `${order.quantity} ${order.itemName}(s)`)
+      .join(", ");
 
-    alert(`Procurement notification sent!\n\nBooking: ${booking.title}\nOrganizer: ${booking.organizer}\nAttendees: ${booking.attendeeCount}\nOrders: ${orderSummary}\n\nProcurement officer has been notified.`);
+    alert(
+      `Procurement notification sent!\n\nBooking: ${booking.title}\nOrganizer: ${booking.organizer}\nAttendees: ${booking.attendeeCount}\nOrders: ${orderSummary}\n\nProcurement officer has been notified.`
+    );
   };
-
 
   const canManageRoom = (roomId) => {
     if (!currentUser) return false;
-    if (currentUser.role === 'super_admin') return true;
-    if (currentUser.role === 'room_admin') {
-      return currentUser.managedRooms && currentUser.managedRooms.includes(roomId);
+    if (currentUser.role === "super_admin") return true;
+    if (currentUser.role === "room_admin") {
+      return (
+        currentUser.managedRooms && currentUser.managedRooms.includes(roomId)
+      );
     }
     return false;
   };
@@ -335,16 +360,16 @@ const BookingBoard = () => {
   // Handle meeting space checkbox changes
   const handleMeetingSpaceChange = (roomId, isChecked) => {
     if (isChecked) {
-      setSelectedMeetingSpaces(prev => [...prev, roomId]);
+      setSelectedMeetingSpaces((prev) => [...prev, roomId]);
     } else {
-      setSelectedMeetingSpaces(prev => prev.filter(id => id !== roomId));
+      setSelectedMeetingSpaces((prev) => prev.filter((id) => id !== roomId));
     }
   };
 
   const getVisibleRooms = () => {
     // If user has selected specific meeting spaces, show only those spaces
     if (selectedMeetingSpaces.length > 0 && currentUser) {
-      return rooms.filter(room => selectedMeetingSpaces.includes(room.id));
+      return rooms.filter((room) => selectedMeetingSpaces.includes(room.id));
     }
 
     // If user has selected a specific meeting space (legacy single selection), show only that space
@@ -356,12 +381,13 @@ const BookingBoard = () => {
     if (!currentUser) return rooms;
 
     // Super admin can see all rooms (but still filtered by meeting space selection)
-    if (currentUser.role === 'super_admin') return rooms;
+    if (currentUser.role === "super_admin") return rooms;
 
     // Room admin can only see their assigned rooms
-    if (currentUser.role === 'room_admin') {
-      return rooms.filter(room =>
-        currentUser.managedRooms && currentUser.managedRooms.includes(room.id)
+    if (currentUser.role === "room_admin") {
+      return rooms.filter(
+        (room) =>
+          currentUser.managedRooms && currentUser.managedRooms.includes(room.id)
       );
     }
 
@@ -372,23 +398,29 @@ const BookingBoard = () => {
   const getFilteredRooms = () => {
     try {
       const visibleRooms = getVisibleRooms();
-      console.log('getFilteredRooms - selectedRoomId:', selectedRoomId);
-      console.log('getFilteredRooms - visibleRooms:', visibleRooms);
+      console.log("getFilteredRooms - selectedRoomId:", selectedRoomId);
+      console.log("getFilteredRooms - visibleRooms:", visibleRooms);
 
       // If no room is selected or "all" is selected, show all rooms
-      if (!selectedRoomId || selectedRoomId === '' || selectedRoomId === 'all') {
+      if (
+        !selectedRoomId ||
+        selectedRoomId === "" ||
+        selectedRoomId === "all"
+      ) {
         return visibleRooms;
       }
 
       // Filter to show only the selected room
-      const filteredRooms = visibleRooms.filter(room => {
-        return room && room.id && room.id.toString() === selectedRoomId.toString();
+      const filteredRooms = visibleRooms.filter((room) => {
+        return (
+          room && room.id && room.id.toString() === selectedRoomId.toString()
+        );
       });
 
-      console.log('Filtered rooms:', filteredRooms);
+      console.log("Filtered rooms:", filteredRooms);
       return filteredRooms;
     } catch (error) {
-      console.error('Error in getFilteredRooms:', error);
+      console.error("Error in getFilteredRooms:", error);
       return [];
     }
   };
@@ -396,7 +428,7 @@ const BookingBoard = () => {
   const getGroupedRooms = () => {
     const visibleRooms = getVisibleRooms();
     return visibleRooms.reduce((groups, room) => {
-      const category = room.category || 'other';
+      const category = room.category || "other";
       if (!groups[category]) {
         groups[category] = [];
       }
@@ -408,76 +440,88 @@ const BookingBoard = () => {
   const getCategoryInfo = (category) => {
     const categoryConfig = {
       conference: {
-        label: 'Meeting Spaces',
-        color: '#10b981',
-        icon: '🏛️'
+        label: "Meeting Spaces",
+        color: "#10b981",
+        icon: "🏛️",
       },
       computer_lab: {
-        label: 'Computer Labs',
-        color: '#3b82f6',
-        icon: '💻'
+        label: "Computer Labs",
+        color: "#3b82f6",
+        icon: "💻",
       },
       special: {
-        label: 'Special Rooms',
-        color: '#f59e0b',
-        icon: '⚡'
+        label: "Special Rooms",
+        color: "#f59e0b",
+        icon: "⚡",
       },
       other: {
-        label: 'Other Rooms',
-        color: '#6b7280',
-        icon: '🏢'
-      }
+        label: "Other Rooms",
+        color: "#6b7280",
+        icon: "🏢",
+      },
     };
     return categoryConfig[category] || categoryConfig.other;
   };
 
-
   const getCapacityLevel = (capacity) => {
-    if (capacity <= 10) return 'small';
-    if (capacity <= 25) return 'medium';
-    if (capacity <= 50) return 'large';
-    return 'extra-large';
+    if (capacity <= 10) return "small";
+    if (capacity <= 25) return "medium";
+    if (capacity <= 50) return "large";
+    return "extra-large";
   };
 
   const getCapacityColor = (capacity) => {
-    if (capacity <= 10) return '#f59e0b';
-    if (capacity <= 25) return '#10b981';
-    if (capacity <= 50) return '#3b82f6';
-    return '#8b5cf6';
+    if (capacity <= 10) return "#f59e0b";
+    if (capacity <= 25) return "#10b981";
+    if (capacity <= 50) return "#3b82f6";
+    return "#8b5cf6";
   };
 
   const canManageBooking = (booking) => {
     if (!currentUser) return false;
 
     // Super admin can manage all bookings
-    if (currentUser.role === 'super_admin') return true;
+    if (currentUser.role === "super_admin") return true;
 
     // Room admin can manage bookings in their rooms
-    if (currentUser.role === 'room_admin') {
-      return currentUser.managedRooms && currentUser.managedRooms.includes(booking.roomId);
+    if (currentUser.role === "room_admin") {
+      return (
+        currentUser.managedRooms &&
+        currentUser.managedRooms.includes(booking.roomId)
+      );
     }
 
     // Users can manage their own bookings (cancel and edit)
     // Check if the current user is the organizer or creator of the booking
-    return booking.organizer === currentUser.name ||
+    return (
+      booking.organizer === currentUser.name ||
       booking.organizer === currentUser.email ||
       booking.createdBy === currentUser.email ||
-      booking.createdBy === currentUser.id;
+      booking.createdBy === currentUser.id
+    );
   };
 
   const cancelBooking = async (bookingId) => {
-    const bookingToCancel = bookings.find(booking => booking.id === bookingId);
-    const roomToCancel = rooms.find(room => room.id === bookingToCancel?.roomId);
+    const bookingToCancel = bookings.find(
+      (booking) => booking.id === bookingId
+    );
+    const roomToCancel = rooms.find(
+      (room) => room.id === bookingToCancel?.roomId
+    );
 
-    if (window.confirm('Are you sure you want to cancel this booking?')) {
-      const updatedBookings = bookings.filter(booking => booking.id !== bookingId);
+    if (window.confirm("Are you sure you want to cancel this booking?")) {
+      const updatedBookings = bookings.filter(
+        (booking) => booking.id !== bookingId
+      );
       setBookings(updatedBookings);
       saveBookingsToStorage(updatedBookings);
 
       // 📧 Send cancellation notification
       try {
         if (currentUser && bookingToCancel && roomToCancel) {
-          const cancellationReason = prompt('Reason for cancellation (optional):') || 'No reason provided';
+          const cancellationReason =
+            prompt("Reason for cancellation (optional):") ||
+            "No reason provided";
           await emailService.sendCancellationNotification(
             bookingToCancel,
             roomToCancel,
@@ -486,7 +530,7 @@ const BookingBoard = () => {
           );
         }
       } catch (error) {
-        console.error('Error sending cancellation notification:', error);
+        console.error("Error sending cancellation notification:", error);
       }
     }
   };
@@ -498,17 +542,21 @@ const BookingBoard = () => {
 
   const updateBooking = (bookingData) => {
     // Check for conflicts with the new time/date/room combination
-    const hasConflict = bookings.some(booking => {
+    const hasConflict = bookings.some((booking) => {
       // Skip checking against the current booking being edited
       if (booking.id === editingBooking.id) return false;
 
-      return booking.date === bookingData.date &&
-             booking.time === bookingData.time &&
-             booking.roomId === parseInt(bookingData.roomId);
+      return (
+        booking.date === bookingData.date &&
+        booking.time === bookingData.time &&
+        booking.roomId === parseInt(bookingData.roomId)
+      );
     });
 
     if (hasConflict) {
-      alert('This time slot is already booked for the selected room. Please choose a different time or room.');
+      alert(
+        "This time slot is already booked for the selected room. Please choose a different time or room."
+      );
       return;
     }
 
@@ -524,15 +572,13 @@ const BookingBoard = () => {
       createdBy: editingBooking.createdBy,
       createdByName: editingBooking.createdByName,
       // Keep auto-approved status
-      approvalStatus: 'approved',
-      approvedBy: 'System',
-      approvedAt: new Date().toISOString()
+      approvalStatus: "approved",
+      approvedBy: "System",
+      approvedAt: new Date().toISOString(),
     };
 
-    const updatedBookings = bookings.map(booking =>
-      booking.id === editingBooking.id
-        ? updatedBooking
-        : booking
+    const updatedBookings = bookings.map((booking) =>
+      booking.id === editingBooking.id ? updatedBooking : booking
     );
     setBookings(updatedBookings);
     saveBookingsToStorage(updatedBookings);
@@ -546,31 +592,47 @@ const BookingBoard = () => {
     if (!currentUser) return false;
 
     // Super admin can approve any booking
-    if (currentUser.role === 'super_admin') return true;
+    if (currentUser.role === "super_admin") return true;
 
     // Room admin can approve bookings for rooms they manage
-    if (currentUser.role === 'room_admin') {
-      return currentUser.managedRooms && currentUser.managedRooms.includes(booking.roomId);
+    if (currentUser.role === "room_admin") {
+      return (
+        currentUser.managedRooms &&
+        currentUser.managedRooms.includes(booking.roomId)
+      );
     }
 
     return false;
   };
 
   const approveBooking = async (bookingId) => {
-    console.log('approveBooking called with ID:', bookingId, 'Current user:', currentUser);
-    if (window.confirm('Are you sure you want to approve this booking?')) {
-      const bookingToApprove = bookings.find(booking => booking.id === bookingId);
-      const selectedRoom = rooms.find(room => room.id === bookingToApprove.roomId);
-      const bookingUser = users.find(user => user.email === bookingToApprove.userEmail || user.name === bookingToApprove.organizer);
+    console.log(
+      "approveBooking called with ID:",
+      bookingId,
+      "Current user:",
+      currentUser
+    );
+    if (window.confirm("Are you sure you want to approve this booking?")) {
+      const bookingToApprove = bookings.find(
+        (booking) => booking.id === bookingId
+      );
+      const selectedRoom = rooms.find(
+        (room) => room.id === bookingToApprove.roomId
+      );
+      const bookingUser = users.find(
+        (user) =>
+          user.email === bookingToApprove.userEmail ||
+          user.name === bookingToApprove.organizer
+      );
 
-      const updatedBookings = bookings.map(booking =>
+      const updatedBookings = bookings.map((booking) =>
         booking.id === bookingId
           ? {
-            ...booking,
-            approvalStatus: 'approved',
-            approvedBy: currentUser.name,
-            approvedAt: new Date().toISOString()
-          }
+              ...booking,
+              approvalStatus: "approved",
+              approvedBy: currentUser.name,
+              approvedAt: new Date().toISOString(),
+            }
           : booking
       );
       setBookings(updatedBookings);
@@ -579,33 +641,52 @@ const BookingBoard = () => {
       // 📧 Send approval notification to the user
       if (bookingUser && selectedRoom) {
         try {
-          await emailService.sendApprovalNotification(bookingToApprove, selectedRoom, bookingUser, currentUser.name);
+          await emailService.sendApprovalNotification(
+            bookingToApprove,
+            selectedRoom,
+            bookingUser,
+            currentUser.name
+          );
         } catch (error) {
-          console.error('Error sending approval notification:', error);
+          console.error("Error sending approval notification:", error);
         }
       }
 
-      console.log('Booking approved successfully');
+      console.log("Booking approved successfully");
     }
   };
 
   const rejectBooking = async (bookingId) => {
-    console.log('rejectBooking called with ID:', bookingId, 'Current user:', currentUser);
-    const reason = prompt('Please provide a reason for rejection (optional):');
-    if (reason !== null) { // User didn't cancel the prompt
-      const bookingToReject = bookings.find(booking => booking.id === bookingId);
-      const selectedRoom = rooms.find(room => room.id === bookingToReject.roomId);
-      const bookingUser = users.find(user => user.email === bookingToReject.userEmail || user.name === bookingToReject.organizer);
+    console.log(
+      "rejectBooking called with ID:",
+      bookingId,
+      "Current user:",
+      currentUser
+    );
+    const reason = prompt("Please provide a reason for rejection (optional):");
+    if (reason !== null) {
+      // User didn't cancel the prompt
+      const bookingToReject = bookings.find(
+        (booking) => booking.id === bookingId
+      );
+      const selectedRoom = rooms.find(
+        (room) => room.id === bookingToReject.roomId
+      );
+      const bookingUser = users.find(
+        (user) =>
+          user.email === bookingToReject.userEmail ||
+          user.name === bookingToReject.organizer
+      );
 
-      const updatedBookings = bookings.map(booking =>
+      const updatedBookings = bookings.map((booking) =>
         booking.id === bookingId
           ? {
-            ...booking,
-            approvalStatus: 'rejected',
-            approvedBy: currentUser.name,
-            approvedAt: new Date().toISOString(),
-            rejectionReason: reason
-          }
+              ...booking,
+              approvalStatus: "rejected",
+              approvedBy: currentUser.name,
+              approvedAt: new Date().toISOString(),
+              rejectionReason: reason,
+            }
           : booking
       );
       setBookings(updatedBookings);
@@ -614,13 +695,19 @@ const BookingBoard = () => {
       // 📧 Send rejection notification to the user
       if (bookingUser && selectedRoom) {
         try {
-          await emailService.sendRejectionNotification(bookingToReject, selectedRoom, bookingUser, currentUser.name, reason);
+          await emailService.sendRejectionNotification(
+            bookingToReject,
+            selectedRoom,
+            bookingUser,
+            currentUser.name,
+            reason
+          );
         } catch (error) {
-          console.error('Error sending rejection notification:', error);
+          console.error("Error sending rejection notification:", error);
         }
       }
 
-      console.log('Booking rejected successfully');
+      console.log("Booking rejected successfully");
     }
   };
 
@@ -628,8 +715,8 @@ const BookingBoard = () => {
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-    localStorage.setItem('icpac_dark_mode', JSON.stringify(newMode));
-    document.body.classList.toggle('dark-mode', newMode);
+    localStorage.setItem("icpac_dark_mode", JSON.stringify(newMode));
+    document.body.classList.toggle("dark-mode", newMode);
   };
 
   // Load users on mount (if needed for user management features)
@@ -649,7 +736,7 @@ const BookingBoard = () => {
         // Handle paginated response (check if response has 'results' key)
         const roomsData = response.results || response;
         // Transform backend format to frontend format
-        const transformedRooms = roomsData.map(room => ({
+        const transformedRooms = roomsData.map((room) => ({
           id: room.id,
           name: room.name,
           capacity: room.capacity,
@@ -657,21 +744,65 @@ const BookingBoard = () => {
           // Backend returns amenities as an array (JSONField)
           amenities: Array.isArray(room.amenities)
             ? room.amenities
-            : (typeof room.amenities === 'string'
-              ? room.amenities.split(',').map(a => a.trim()).filter(a => a)
-              : [])
+            : typeof room.amenities === "string"
+            ? room.amenities
+                .split(",")
+                .map((a) => a.trim())
+                .filter((a) => a)
+            : [],
         }));
         setRooms(transformedRooms);
       } catch (error) {
-        console.error('Failed to load rooms:', error);
+        console.error("Failed to load rooms:", error);
         // Fallback to hardcoded rooms if API fails
         setRooms([
-          { id: 1, name: 'Conference Room - Ground Floor', capacity: 200, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing', 'Audio System'] },
-          { id: 2, name: 'Boardroom - First Floor', capacity: 25, category: 'conference', amenities: ['Projector', 'Whiteboard', 'Video Conferencing'] },
-          { id: 3, name: 'Small Boardroom - 1st Floor', capacity: 12, category: 'conference', amenities: ['TV Screen', 'Whiteboard'] },
-          { id: 4, name: 'Situation Room', capacity: 8, category: 'special', amenities: ['Screen'] },
-          { id: 5, name: 'Computer Lab 1 - Ground Floor', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard'] },
-          { id: 6, name: 'Computer Lab 2 - First Floor', capacity: 20, category: 'computer_lab', amenities: ['Computers', 'Projector', 'Whiteboard'] },
+          {
+            id: 1,
+            name: "Conference Room - Ground Floor",
+            capacity: 200,
+            category: "conference",
+            amenities: [
+              "Projector",
+              "Whiteboard",
+              "Video Conferencing",
+              "Audio System",
+            ],
+          },
+          {
+            id: 2,
+            name: "Boardroom - First Floor",
+            capacity: 25,
+            category: "conference",
+            amenities: ["Projector", "Whiteboard", "Video Conferencing"],
+          },
+          {
+            id: 3,
+            name: "Small Boardroom - 1st Floor",
+            capacity: 12,
+            category: "conference",
+            amenities: ["TV Screen", "Whiteboard"],
+          },
+          {
+            id: 4,
+            name: "Situation Room",
+            capacity: 8,
+            category: "special",
+            amenities: ["Screen"],
+          },
+          {
+            id: 5,
+            name: "Computer Lab 1 - Ground Floor",
+            capacity: 20,
+            category: "computer_lab",
+            amenities: ["Computers", "Projector", "Whiteboard"],
+          },
+          {
+            id: 6,
+            name: "Computer Lab 2 - First Floor",
+            capacity: 20,
+            category: "computer_lab",
+            amenities: ["Computers", "Projector", "Whiteboard"],
+          },
         ]);
       }
     };
@@ -685,46 +816,49 @@ const BookingBoard = () => {
         // Handle paginated response (check if response has 'results' key)
         const bookingsData = response.results || response;
         // Transform backend format to frontend format
-        const transformedBookings = bookingsData.map(booking => {
+        const transformedBookings = bookingsData.map((booking) => {
           // Calculate duration in hours from start and end time
-          const startTime = booking.start_time?.substring(0, 5) || booking.start_time;
+          const startTime =
+            booking.start_time?.substring(0, 5) || booking.start_time;
           const endTime = booking.end_time?.substring(0, 5) || booking.end_time;
           let durationHours = 0.5; // default 30 minutes
 
           if (startTime && endTime) {
-            const [startHour, startMin] = startTime.split(':').map(Number);
-            const [endHour, endMin] = endTime.split(':').map(Number);
-            durationHours = (endHour * 60 + endMin - startHour * 60 - startMin) / 60;
+            const [startHour, startMin] = startTime.split(":").map(Number);
+            const [endHour, endMin] = endTime.split(":").map(Number);
+            durationHours =
+              (endHour * 60 + endMin - startHour * 60 - startMin) / 60;
           }
 
           return {
             id: booking.id,
-            roomId: booking.room_id || booking.room,  // API returns room_id
+            roomId: booking.room_id || booking.room, // API returns room_id
             date: booking.start_date,
-            time: startTime,  // Convert "14:00:00" to "14:00"
-            duration: durationHours,  // Duration in hours (e.g., 0.5, 1, 2)
-            bookingType: booking.booking_type || 'hourly',  // Add bookingType field
+            time: startTime, // Convert "14:00:00" to "14:00"
+            duration: durationHours, // Duration in hours (e.g., 0.5, 1, 2)
+            bookingType: booking.booking_type || "hourly", // Add bookingType field
             startDate: booking.start_date,
             endDate: booking.end_date,
             startTime: startTime,
             endTime: endTime,
             title: booking.purpose,
-            organizer: booking.user_name || booking.user_details?.name || 'Unknown',
-            description: booking.special_requirements || '',
+            organizer:
+              booking.user_name || booking.user_details?.name || "Unknown",
+            description: booking.special_requirements || "",
             attendeeCount: booking.expected_attendees || 1,
-            approvalStatus: booking.approval_status || 'pending',
+            approvalStatus: booking.approval_status || "pending",
             approvedBy: booking.approved_by,
             approvedAt: booking.approved_at,
             createdBy: booking.user_details?.email,
-            createdByName: booking.user_name || booking.user_details?.name
+            createdByName: booking.user_name || booking.user_details?.name,
           };
         });
-        console.log('✅ Loaded bookings from API:', transformedBookings);
+        console.log("✅ Loaded bookings from API:", transformedBookings);
         setBookings(transformedBookings);
         // Also save to localStorage for offline access
         saveBookingsToStorage(transformedBookings);
       } catch (error) {
-        console.error('Failed to load bookings from API:', error);
+        console.error("Failed to load bookings from API:", error);
         // Fallback to localStorage if API fails
         const savedBookings = loadBookingsFromStorage();
         if (savedBookings && savedBookings.length > 0) {
@@ -736,7 +870,6 @@ const BookingBoard = () => {
     fetchBookings();
   }, []);
 
-
   // Generate time slots with 15-minute intervals for more granular booking
   const generateTimeSlots = () => {
     const slots = [];
@@ -745,13 +878,13 @@ const BookingBoard = () => {
 
     for (let hour = startHour; hour <= endHour; hour++) {
       // Add the hour slots (08:00, 09:00, etc.)
-      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      slots.push(`${hour.toString().padStart(2, "0")}:00`);
 
       // Add 15-minute intervals for each hour (except the last hour)
       if (hour < endHour) {
-        slots.push(`${hour.toString().padStart(2, '0')}:15`);
-        slots.push(`${hour.toString().padStart(2, '0')}:30`);
-        slots.push(`${hour.toString().padStart(2, '0')}:45`);
+        slots.push(`${hour.toString().padStart(2, "0")}:15`);
+        slots.push(`${hour.toString().padStart(2, "0")}:30`);
+        slots.push(`${hour.toString().padStart(2, "0")}:45`);
       }
     }
 
@@ -771,21 +904,20 @@ const BookingBoard = () => {
     }
 
     // For today, filter out past time slots
-    return timeSlots.filter(time => !isTimeSlotInPast(date, time));
+    return timeSlots.filter((time) => !isTimeSlotInPast(date, time));
   };
 
   // Apply dark mode on initial load
   useEffect(() => {
-    document.body.classList.toggle('dark-mode', isDarkMode);
+    document.body.classList.toggle("dark-mode", isDarkMode);
   }, [isDarkMode]);
 
-
   const formatDate = (date) => {
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   };
 
   const getTimeSlotIndex = (time) => {
-    return timeSlots.findIndex(slot => slot === time);
+    return timeSlots.findIndex((slot) => slot === time);
   };
 
   const isWeekend = (date) => {
@@ -815,7 +947,7 @@ const BookingBoard = () => {
   };
 
   const getDayAbbrev = (date) => {
-    const abbrevs = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const abbrevs = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     return abbrevs[date.getDay()];
   };
 
@@ -837,25 +969,29 @@ const BookingBoard = () => {
     }
 
     // If it's today, check if the time has passed
-    const [hours, minutes] = time.split(':').map(Number);
+    const [hours, minutes] = time.split(":").map(Number);
     const slotDateTime = new Date(slotDate);
     slotDateTime.setHours(hours, minutes, 0, 0);
 
     return slotDateTime < now;
   };
 
-
   const isSlotBooked = (roomId, time) => {
     const currentDate = formatDate(selectedDate);
 
-    const result = bookings.some(booking => {
+    const result = bookings.some((booking) => {
       if (booking.roomId !== roomId) {
         return false;
       }
 
       // Apply approval filter (only for admins who can see all statuses)
-      if (approvalFilter !== 'all' && (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'room_admin'))) {
-        const bookingStatus = booking.approvalStatus || 'pending';
+      if (
+        approvalFilter !== "all" &&
+        currentUser &&
+        (currentUser.role === "super_admin" ||
+          currentUser.role === "room_admin")
+      ) {
+        const bookingStatus = booking.approvalStatus || "pending";
         if (bookingStatus !== approvalFilter) {
           return false;
         }
@@ -867,22 +1003,27 @@ const BookingBoard = () => {
       const currentDateObj = new Date(currentDate);
 
       // If current date is not within the booking date range, no conflict
-      if (currentDateObj < bookingStartDate || currentDateObj > bookingEndDate) {
+      if (
+        currentDateObj < bookingStartDate ||
+        currentDateObj > bookingEndDate
+      ) {
         return false;
       }
 
       // For hourly bookings, check time slots
-      if (booking.bookingType === 'hourly') {
+      if (booking.bookingType === "hourly") {
         const bookingStartIndex = getTimeSlotIndex(booking.time);
         // Convert duration from hours to number of 15-minute slots
         const durationInSlots = Math.ceil(booking.duration * 4);
         const bookingEndIndex = bookingStartIndex + durationInSlots;
         const currentTimeIndex = getTimeSlotIndex(time);
 
-        const isBooked = currentTimeIndex >= bookingStartIndex && currentTimeIndex < bookingEndIndex;
+        const isBooked =
+          currentTimeIndex >= bookingStartIndex &&
+          currentTimeIndex < bookingEndIndex;
 
         // Debug log
-        if (roomId === 1 && time >= '14:00' && time <= '14:30') {
+        if (roomId === 1 && time >= "14:00" && time <= "14:30") {
           console.log(`🔍 Checking slot ${time} for room ${roomId}:`, {
             bookingTime: booking.time,
             bookingDuration: booking.duration,
@@ -890,7 +1031,7 @@ const BookingBoard = () => {
             bookingEndIndex,
             currentTimeIndex,
             durationInSlots,
-            isBooked
+            isBooked,
           });
         }
 
@@ -907,14 +1048,19 @@ const BookingBoard = () => {
   const getBookingDetails = (roomId, time) => {
     const currentDate = formatDate(selectedDate);
 
-    return bookings.find(booking => {
+    return bookings.find((booking) => {
       if (booking.roomId !== roomId) {
         return false;
       }
 
       // Apply approval filter (only for admins who can see all statuses)
-      if (approvalFilter !== 'all' && (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'room_admin'))) {
-        const bookingStatus = booking.approvalStatus || 'pending';
+      if (
+        approvalFilter !== "all" &&
+        currentUser &&
+        (currentUser.role === "super_admin" ||
+          currentUser.role === "room_admin")
+      ) {
+        const bookingStatus = booking.approvalStatus || "pending";
         if (bookingStatus !== approvalFilter) {
           return false;
         }
@@ -926,19 +1072,25 @@ const BookingBoard = () => {
       const currentDateObj = new Date(currentDate);
 
       // If current date is not within the booking date range, no match
-      if (currentDateObj < bookingStartDate || currentDateObj > bookingEndDate) {
+      if (
+        currentDateObj < bookingStartDate ||
+        currentDateObj > bookingEndDate
+      ) {
         return false;
       }
 
       // For hourly bookings, check time slots
-      if (booking.bookingType === 'hourly') {
+      if (booking.bookingType === "hourly") {
         const bookingStartIndex = getTimeSlotIndex(booking.time);
         // Convert duration from hours to number of 15-minute slots
         const durationInSlots = Math.ceil(booking.duration * 4);
         const bookingEndIndex = bookingStartIndex + durationInSlots;
         const currentTimeIndex = getTimeSlotIndex(time);
 
-        return currentTimeIndex >= bookingStartIndex && currentTimeIndex < bookingEndIndex;
+        return (
+          currentTimeIndex >= bookingStartIndex &&
+          currentTimeIndex < bookingEndIndex
+        );
       }
 
       // For full-day, multi-day, or weekly bookings, all time slots match
@@ -973,11 +1125,15 @@ const BookingBoard = () => {
     const end = new Date(endDate);
 
     // Check each date in the range
-    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-      const dateStr = date.toISOString().split('T')[0];
+    for (
+      let date = new Date(start);
+      date <= end;
+      date.setDate(date.getDate() + 1)
+    ) {
+      const dateStr = date.toISOString().split("T")[0];
 
       // Check if there are any existing bookings on this date for this room
-      const hasConflict = bookings.some(booking => {
+      const hasConflict = bookings.some((booking) => {
         if (booking.roomId !== roomId) return false;
 
         // Check if booking overlaps with the date range
@@ -999,13 +1155,13 @@ const BookingBoard = () => {
   const handleBooking = (room, time) => {
     // Check if the selected date is Sunday
     if (isWeekend(selectedDate)) {
-      alert('Cannot book on Sunday. Please select Monday through Saturday.');
+      alert("Cannot book on Sunday. Please select Monday through Saturday.");
       return;
     }
 
     // Check if the time slot is in the past
     if (isTimeSlotInPast(selectedDate, time)) {
-      alert('Cannot book past time slots. Please select a future time.');
+      alert("Cannot book past time slots. Please select a future time.");
       return;
     }
 
@@ -1016,15 +1172,28 @@ const BookingBoard = () => {
 
   const confirmBooking = async (bookingData) => {
     // Enhanced validation for different booking types
-    if (bookingData.bookingType === 'hourly') {
-      if (!canBookDuration(selectedRoom.id, selectedTime, bookingData.duration)) {
-        alert('Cannot book for the selected duration. Some time slots are already booked or exceed available hours.');
+    if (bookingData.bookingType === "hourly") {
+      if (
+        !canBookDuration(selectedRoom.id, selectedTime, bookingData.duration)
+      ) {
+        alert(
+          "Cannot book for the selected duration. Some time slots are already booked or exceed available hours."
+        );
         return;
       }
     } else {
       // Check for multi-day booking conflicts
-      if (!canBookDateRange(selectedRoom.id, bookingData.startDate, bookingData.endDate, bookingData.bookingType)) {
-        alert('Cannot book for the selected date range. Some dates are already booked.');
+      if (
+        !canBookDateRange(
+          selectedRoom.id,
+          bookingData.startDate,
+          bookingData.endDate,
+          bookingData.bookingType
+        )
+      ) {
+        alert(
+          "Cannot book for the selected date range. Some dates are already booked."
+        );
         return;
       }
     }
@@ -1039,7 +1208,7 @@ const BookingBoard = () => {
         end_time: bookingData.endTime,
         purpose: bookingData.title,
         expected_attendees: bookingData.attendeeCount || 1,
-        special_requirements: bookingData.description || ''
+        special_requirements: bookingData.description || "",
       };
 
       // Save to backend database
@@ -1054,24 +1223,24 @@ const BookingBoard = () => {
         time: savedBooking.start_time,
         duration: bookingData.duration || 0.5,
         // New fields for extended booking
-        bookingType: bookingData.bookingType || 'hourly',
+        bookingType: bookingData.bookingType || "hourly",
         startDate: savedBooking.start_date,
         endDate: savedBooking.end_date,
         startTime: savedBooking.start_time,
         endTime: savedBooking.end_time,
         title: savedBooking.purpose,
         organizer: bookingData.organizer,
-        description: savedBooking.special_requirements || '',
+        description: savedBooking.special_requirements || "",
         attendeeCount: savedBooking.expected_attendees || 1,
         // Add approval status from backend
-        approvalStatus: savedBooking.approval_status || 'pending',
+        approvalStatus: savedBooking.approval_status || "pending",
         approvedBy: savedBooking.approved_by,
         approvedAt: savedBooking.approved_at,
         // Add creator information
         userId: currentUser ? currentUser.id : null,
         userName: currentUser ? currentUser.name : bookingData.organizer,
         createdBy: currentUser ? currentUser.email : bookingData.organizer,
-        createdByName: currentUser ? currentUser.name : bookingData.organizer
+        createdByName: currentUser ? currentUser.name : bookingData.organizer,
       };
 
       const updatedBookings = [...bookings, newBooking];
@@ -1082,32 +1251,47 @@ const BookingBoard = () => {
       try {
         if (currentUser) {
           // 1. Send booking confirmation to the user
-          await emailService.sendBookingConfirmation(newBooking, selectedRoom, currentUser);
+          await emailService.sendBookingConfirmation(
+            newBooking,
+            selectedRoom,
+            currentUser
+          );
 
           // 2. Send admin notifications for new booking
           const roomAdmins = emailService.getRoomAdmins(selectedRoom.id, users);
           if (roomAdmins.length > 0) {
-            await emailService.sendAdminNotification(newBooking, selectedRoom, currentUser, roomAdmins);
+            await emailService.sendAdminNotification(
+              newBooking,
+              selectedRoom,
+              currentUser,
+              roomAdmins
+            );
           }
 
           // 3. Schedule 30-minute meeting reminder
-          const reminderResult = emailService.scheduleReminder(newBooking, selectedRoom, currentUser);
+          const reminderResult = emailService.scheduleReminder(
+            newBooking,
+            selectedRoom,
+            currentUser
+          );
           if (reminderResult.success) {
-            console.log(`⏰ Meeting reminder scheduled for: ${reminderResult.reminderTime}`);
+            console.log(
+              `⏰ Meeting reminder scheduled for: ${reminderResult.reminderTime}`
+            );
           }
         }
       } catch (error) {
-        console.error('Email notification error:', error);
+        console.error("Email notification error:", error);
         // Don't block booking if email fails
       }
 
-      alert('Booking created successfully!');
+      alert("Booking created successfully!");
       setShowBookingForm(false);
       setSelectedRoom(null);
-      setSelectedTime('');
+      setSelectedTime("");
     } catch (error) {
-      console.error('Booking creation error:', error);
-      alert(error.message || 'Failed to create booking. Please try again.');
+      console.error("Booking creation error:", error);
+      alert(error.message || "Failed to create booking. Please try again.");
     }
   };
 
@@ -1117,14 +1301,18 @@ const BookingBoard = () => {
       // Use the authenticated user from context
       setCurrentUser({
         id: user.id,
-        name: user.first_name + ' ' + user.last_name,
+        name: user.first_name + " " + user.last_name,
         email: user.email,
-        role: user.is_superuser ? 'super_admin' : (user.is_staff ? 'room_admin' : 'regular_user'),
+        role: user.is_superuser
+          ? "super_admin"
+          : user.is_staff
+          ? "room_admin"
+          : "regular_user",
         managedRooms: [],
-        createdAt: user.date_joined
+        createdAt: user.date_joined,
       });
       setIsAuthenticated(true);
-      
+
       // Set admin status
       if (user.is_superuser || user.is_staff) {
         setIsAdmin(true);
@@ -1135,32 +1323,40 @@ const BookingBoard = () => {
   // Helper function to get room status indicator
   const getRoomStatusIndicator = (room) => {
     const currentTime = new Date();
-    const hasCurrentBooking = bookings.some(booking => {
+    const hasCurrentBooking = bookings.some((booking) => {
       if (booking.roomId !== room.id) return false;
-      
-      const bookingStart = new Date(booking.startDate + ' ' + booking.startTime);
-      const bookingEnd = new Date(booking.startDate + ' ' + booking.endTime);
-      
+
+      const bookingStart = new Date(
+        booking.startDate + " " + booking.startTime
+      );
+      const bookingEnd = new Date(booking.startDate + " " + booking.endTime);
+
       return currentTime >= bookingStart && currentTime <= bookingEnd;
     });
 
     if (hasCurrentBooking) {
       return (
-        <span className="status-indicator status-occupied" title="Currently Occupied">
+        <span
+          className="status-indicator status-occupied"
+          title="Currently Occupied"
+        >
           🔴 Occupied
         </span>
       );
     }
 
     // Check if room has bookings today
-    const hasTodayBooking = bookings.some(booking => {
+    const hasTodayBooking = bookings.some((booking) => {
       if (booking.roomId !== room.id) return false;
       return isToday(new Date(booking.startDate));
     });
 
     if (hasTodayBooking) {
       return (
-        <span className="status-indicator status-partial" title="Has Bookings Today">
+        <span
+          className="status-indicator status-partial"
+          title="Has Bookings Today"
+        >
           🟡 Booked Today
         </span>
       );
@@ -1176,16 +1372,18 @@ const BookingBoard = () => {
   // Memoized calculations for better performance
   const availableRoomsCount = useMemo(() => {
     const currentTime = new Date();
-    return rooms.filter(room => {
-      const hasCurrentBooking = bookings.some(booking => {
+    return rooms.filter((room) => {
+      const hasCurrentBooking = bookings.some((booking) => {
         if (booking.roomId !== room.id) return false;
-        
-        const bookingStart = new Date(booking.startDate + ' ' + booking.startTime);
-        const bookingEnd = new Date(booking.startDate + ' ' + booking.endTime);
-        
+
+        const bookingStart = new Date(
+          booking.startDate + " " + booking.startTime
+        );
+        const bookingEnd = new Date(booking.startDate + " " + booking.endTime);
+
         return currentTime >= bookingStart && currentTime <= bookingEnd;
       });
-      
+
       return !hasCurrentBooking;
     }).length;
   }, [rooms, bookings]);
@@ -1193,12 +1391,18 @@ const BookingBoard = () => {
   const todayBookingsCount = useMemo(() => {
     // Count bookings for the selected date, not just literal "today"
     const selectedDateStr = formatDate(selectedDate);
-    return bookings.filter(b => b.startDate === selectedDateStr).length;
+    return bookings.filter((b) => b.startDate === selectedDateStr).length;
   }, [bookings, selectedDate]);
 
   const filteredRooms = useMemo(() => {
     return getFilteredRooms();
-  }, [rooms, selectedRoomId, currentUser, selectedMeetingSpace, selectedMeetingSpaces]);
+  }, [
+    rooms,
+    selectedRoomId,
+    currentUser,
+    selectedMeetingSpace,
+    selectedMeetingSpaces,
+  ]);
 
   const groupedRooms = useMemo(() => {
     return getGroupedRooms(filteredRooms);
@@ -1213,34 +1417,37 @@ const BookingBoard = () => {
     setSelectedDate(newDate);
   }, []);
 
-  const handleTimeSlotClick = useCallback((room, time) => {
-    if (isTimeSlotInPast(selectedDate, time) || isWeekend(selectedDate)) {
-      return;
-    }
+  const handleTimeSlotClick = useCallback(
+    (room, time) => {
+      if (isTimeSlotInPast(selectedDate, time) || isWeekend(selectedDate)) {
+        return;
+      }
 
-    const isBooked = isSlotBooked(room.id, time);
-    if (isBooked && !canManageBooking(getBookingDetails(room.id, time))) {
-      return;
-    }
+      const isBooked = isSlotBooked(room.id, time);
+      if (isBooked && !canManageBooking(getBookingDetails(room.id, time))) {
+        return;
+      }
 
-    setSelectedRoom(room);
-    setSelectedTime(time);
-    setShowBookingForm(true);
-  }, [selectedDate]);
+      setSelectedRoom(room);
+      setSelectedTime(time);
+      setShowBookingForm(true);
+    },
+    [selectedDate]
+  );
 
   const handleBookingFormClose = useCallback(() => {
     setShowBookingForm(false);
     setSelectedRoom(null);
-    setSelectedTime('');
+    setSelectedTime("");
   }, []);
 
   const openRoomModal = useCallback((room) => {
-    console.log('Opening room modal for:', room.name);
+    console.log("Opening room modal for:", room.name);
     setSelectedRoomForModal(room);
   }, []);
 
   const closeRoomModal = useCallback(() => {
-    console.log('Closing room modal');
+    console.log("Closing room modal");
     setSelectedRoomForModal(null);
   }, []);
 
@@ -1251,11 +1458,19 @@ const BookingBoard = () => {
         <div className="booking-header">
           <div className="header-title-row">
             <div className="logo-section">
-              <img src="/ICPAC_Website_Header_Logo.svg" alt="ICPAC Logo" className="icpac-logo" />
+              <img
+                src="/ICPAC_Website_Header_Logo.svg"
+                alt="ICPAC Logo"
+                className="icpac-logo"
+              />
             </div>
             <div className="title-section">
               <h1 className="booking-title">ICPAC INTERNAL BOOKING SYSTEM</h1>
-              <p className="booking-subtitle">Reserve your meeting space with ease - Book conference rooms, manage schedules, and collaborate seamlessly across ICPAC facilities</p>
+              <p className="booking-subtitle">
+                Reserve your meeting space with ease - Book conference rooms,
+                manage schedules, and collaborate seamlessly across ICPAC
+                facilities
+              </p>
             </div>
             {/* Quick Stats */}
             <div className="quick-stats">
@@ -1289,63 +1504,69 @@ const BookingBoard = () => {
           <div className="error-banner">
             <span className="error-icon">⚠️</span>
             <span className="error-message">{error}</span>
-            <button 
-              className="error-dismiss"
-              onClick={() => setError(null)}
-            >
+            <button className="error-dismiss" onClick={() => setError(null)}>
               ✕
             </button>
           </div>
         )}
 
-
         {/* Date Selector */}
         <div className="date-section">
-          <div className="date-header" style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            width: '100%'
-          }}>
-            <div className="admin-controls" style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-start',
-              gap: '12px'
-            }}>
+          <div
+            className="date-header"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <div
+              className="admin-controls"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                gap: "12px",
+              }}
+            >
               {currentUser ? (
                 <>
                   {/* Approval Filter for Admins */}
                   {canApproveBooking({ roomId: 1 }) && (
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      backdropFilter: 'blur(10px)'
-                    }}>
-                      <label style={{
-                        fontSize: '14px',
-                        color: '#ffffff',
-                        fontWeight: '600',
-                        whiteSpace: 'nowrap'
-                      }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        background: "rgba(255, 255, 255, 0.1)",
+                        padding: "6px 12px",
+                        borderRadius: "8px",
+                        backdropFilter: "blur(10px)",
+                      }}
+                    >
+                      <label
+                        style={{
+                          fontSize: "14px",
+                          color: "#ffffff",
+                          fontWeight: "600",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         Filter:
                       </label>
                       <select
                         value={approvalFilter}
                         onChange={(e) => setApprovalFilter(e.target.value)}
                         style={{
-                          padding: '4px 8px',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
-                          borderRadius: '6px',
-                          background: 'rgba(255, 255, 255, 0.9)',
-                          fontSize: '12px',
-                          color: '#374151',
-                          cursor: 'pointer',
-                          minWidth: '120px'
+                          padding: "4px 8px",
+                          border: "1px solid rgba(255, 255, 255, 0.3)",
+                          borderRadius: "6px",
+                          background: "rgba(255, 255, 255, 0.9)",
+                          fontSize: "12px",
+                          color: "#374151",
+                          cursor: "pointer",
+                          minWidth: "120px",
                         }}
                       >
                         <option value="all">All Bookings</option>
@@ -1355,62 +1576,70 @@ const BookingBoard = () => {
                       </select>
                     </div>
                   )}
-                  <span style={{
-                    fontSize: '16px',
-                    color: '#ffffff',
-                    fontWeight: '700'
-                  }}>
+                  <span
+                    style={{
+                      fontSize: "16px",
+                      color: "#ffffff",
+                      fontWeight: "700",
+                    }}
+                  >
                     {currentUser.name}
-                    {(currentUser.role === 'room_admin' || currentUser.role === 'procurement_officer') && (
-                      <span className={`role-badge role-${currentUser.role}`} style={{
-                        marginLeft: '8px',
-                        fontSize: '12px',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        background: '#e5e7eb',
-                        color: '#4b5563'
-                      }}>
-                        {currentUser.role === 'room_admin' ? 'Room Admin' : 'Procurement Officer'}
+                    {(currentUser.role === "room_admin" ||
+                      currentUser.role === "procurement_officer") && (
+                      <span
+                        className={`role-badge role-${currentUser.role}`}
+                        style={{
+                          marginLeft: "8px",
+                          fontSize: "12px",
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                          background: "#e5e7eb",
+                          color: "#4b5563",
+                        }}
+                      >
+                        {currentUser.role === "room_admin"
+                          ? "Room Admin"
+                          : "Procurement Officer"}
                       </span>
                     )}
                   </span>
 
-                  {currentUser.role === 'super_admin' && (
+                  {currentUser.role === "super_admin" && (
                     <button
                       onClick={() => setShowUserManagement(true)}
                       title="Manage Users"
                       style={{
-                        padding: '8px 12px',
-                        background: '#f3f4f6',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        color: '#374151',
-                        cursor: 'pointer',
-                        height: '32px',
-                        display: 'flex',
-                        alignItems: 'center'
+                        padding: "8px 12px",
+                        background: "#f3f4f6",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        color: "#374151",
+                        cursor: "pointer",
+                        height: "32px",
+                        display: "flex",
+                        alignItems: "center",
                       }}
                     >
                       👥 Users
                     </button>
                   )}
 
-                  {currentUser.role === 'procurement_officer' && (
+                  {currentUser.role === "procurement_officer" && (
                     <button
                       onClick={() => setShowProcurementDashboard(true)}
                       title="View Procurement Dashboard"
                       style={{
-                        padding: '8px 12px',
-                        background: '#f3f4f6',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        color: '#374151',
-                        cursor: 'pointer',
-                        height: '32px',
-                        display: 'flex',
-                        alignItems: 'center'
+                        padding: "8px 12px",
+                        background: "#f3f4f6",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        color: "#374151",
+                        cursor: "pointer",
+                        height: "32px",
+                        display: "flex",
+                        alignItems: "center",
                       }}
                     >
                       📋 Procurement
@@ -1421,17 +1650,17 @@ const BookingBoard = () => {
                     onClick={() => setShowEmailSettings(true)}
                     title="Email Notification Settings"
                     style={{
-                      padding: '8px',
-                      background: '#f3f4f6',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      cursor: 'pointer',
-                      height: '32px',
-                      width: '32px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                      padding: "8px",
+                      background: "#f3f4f6",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      height: "32px",
+                      width: "32px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     📧
@@ -1439,48 +1668,48 @@ const BookingBoard = () => {
 
                   <button
                     onClick={toggleDarkMode}
-                    title={`Switch to ${isDarkMode ? 'Light' : 'Dark'} Mode`}
+                    title={`Switch to ${isDarkMode ? "Light" : "Dark"} Mode`}
                     style={{
-                      padding: '8px',
-                      background: '#f3f4f6',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      cursor: 'pointer',
-                      height: '32px',
-                      width: '32px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                      padding: "8px",
+                      background: "#f3f4f6",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      height: "32px",
+                      width: "32px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    {isDarkMode ? '🌙' : '☀️'}
+                    {isDarkMode ? "🌙" : "☀️"}
                   </button>
 
                   <button
                     onClick={handleUserLogout}
                     title="Logout"
                     style={{
-                      padding: '8px 16px',
-                      background: '#f3f4f6',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      color: '#374151',
-                      cursor: 'pointer',
-                      height: '32px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontWeight: '500',
-                      transition: 'all 0.2s ease'
+                      padding: "8px 16px",
+                      background: "#f3f4f6",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      color: "#374151",
+                      cursor: "pointer",
+                      height: "32px",
+                      display: "flex",
+                      alignItems: "center",
+                      fontWeight: "500",
+                      transition: "all 0.2s ease",
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.background = '#e5e7eb';
-                      e.target.style.borderColor = '#9ca3af';
+                      e.target.style.background = "#e5e7eb";
+                      e.target.style.borderColor = "#9ca3af";
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.background = '#f3f4f6';
-                      e.target.style.borderColor = '#d1d5db';
+                      e.target.style.background = "#f3f4f6";
+                      e.target.style.borderColor = "#d1d5db";
                     }}
                   >
                     Logout
@@ -1491,44 +1720,51 @@ const BookingBoard = () => {
           </div>
 
           {/* 12-Column Grid Layout: Date Picker | Meeting Spaces | Time Slots */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(12, 1fr)',
-            gap: '16px',
-            alignItems: 'stretch',
-            marginTop: '16px'
-          }}
-          className="booking-grid-container">
-
-            {/* Date Picker - 3/12 columns on desktop, full width on mobile */}
-            <div style={{
-              gridColumn: 'span 3',
-              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-              padding: '16px',
-              border: '1px solid #cbd5e1',
-              borderRadius: '12px',
-              height: '280px',
-              display: 'flex',
-              flexDirection: 'column'
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(12, 1fr)",
+              gap: "16px",
+              alignItems: "stretch",
+              marginTop: "16px",
             }}
-            className="date-picker-card">
-              <h4 style={{
-                margin: '0 0 12px 0',
-                color: '#475569',
-                fontSize: '14px',
-                fontWeight: '800',
-                textAlign: 'center'
-              }}>
+            className="booking-grid-container"
+          >
+            {/* Date Picker - 3/12 columns on desktop, full width on mobile */}
+            <div
+              style={{
+                gridColumn: "span 3",
+                background: "linear-gradient(135deg, #f8fafc, #f1f5f9)",
+                padding: "16px",
+                border: "1px solid #cbd5e1",
+                borderRadius: "12px",
+                height: "280px",
+                display: "flex",
+                flexDirection: "column",
+              }}
+              className="date-picker-card"
+            >
+              <h4
+                style={{
+                  margin: "0 0 12px 0",
+                  color: "#475569",
+                  fontSize: "14px",
+                  fontWeight: "800",
+                  textAlign: "center",
+                }}
+              >
                 📅 Select Date
               </h4>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  color: '#64748b',
-                  marginBottom: '8px'
-                }}>
+              <div style={{ marginBottom: "16px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                    color: "#64748b",
+                    marginBottom: "8px",
+                  }}
+                >
                   Choose any date:
                 </label>
                 <input
@@ -1536,65 +1772,77 @@ const BookingBoard = () => {
                   value={formatDate(selectedDate)}
                   onChange={(e) => setSelectedDate(new Date(e.target.value))}
                   style={{
-                    width: 'calc(100% - 4px)',
-                    padding: '8px',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    background: '#ffffff',
-                    color: '#374151',
-                    boxSizing: 'border-box',
-                    margin: '0 2px'
+                    width: "calc(100% - 4px)",
+                    padding: "8px",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    background: "#ffffff",
+                    color: "#374151",
+                    boxSizing: "border-box",
+                    margin: "0 2px",
                   }}
                 />
               </div>
-              <div style={{
-                padding: '12px',
-                background: '#f8fafc',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0'
-              }}>
-                <div style={{
-                  fontSize: '12px',
-                  color: '#64748b',
-                  fontWeight: '700',
-                  marginBottom: '6px'
-                }}>
+              <div
+                style={{
+                  padding: "12px",
+                  background: "#f8fafc",
+                  borderRadius: "8px",
+                  border: "1px solid #e2e8f0",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    fontWeight: "700",
+                    marginBottom: "6px",
+                  }}
+                >
                   Selected Date:
                 </div>
-                <div style={{
-                  fontSize: '13px',
-                  color: '#374151',
-                  fontWeight: '800'
-                }}>
-                  {selectedDate.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: "#374151",
+                    fontWeight: "800",
+                  }}
+                >
+                  {selectedDate.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
                   })}
                 </div>
               </div>
 
               {/* Current Week Strip */}
-              <div style={{
-                marginTop: '12px'
-              }}>
-                <div style={{
-                  fontSize: '11px',
-                  color: '#64748b',
-                  fontWeight: '700',
-                  marginBottom: '8px',
-                  textAlign: 'center'
-                }}>
+              <div
+                style={{
+                  marginTop: "12px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: "#64748b",
+                    fontWeight: "700",
+                    marginBottom: "8px",
+                    textAlign: "center",
+                  }}
+                >
                   Current Week
                 </div>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(7, 1fr)',
-                  gap: '4px'
-                }}
-                className="week-strip">
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(7, 1fr)",
+                    gap: "4px",
+                  }}
+                  className="week-strip"
+                >
                   {getWeekDays(selectedDate).map((day, index) => {
                     const isSelected = isSameDay(day, selectedDate);
                     const isTodayDay = isToday(day);
@@ -1606,72 +1854,76 @@ const BookingBoard = () => {
                         key={index}
                         onClick={() => !isDisabled && setSelectedDate(day)}
                         disabled={isDisabled}
-                        aria-label={`Select ${day.toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
+                        aria-label={`Select ${day.toLocaleDateString("en-US", {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
                         })}`}
                         style={{
-                          padding: '6px 2px',
+                          padding: "6px 2px",
                           border: isSelected
-                            ? '2px solid #f97316'
+                            ? "2px solid #f97316"
                             : isTodayDay
-                              ? '2px solid #fb923c'
-                              : '1px solid #fdba74',
-                          borderRadius: '6px',
+                            ? "2px solid #fb923c"
+                            : "1px solid #fdba74",
+                          borderRadius: "6px",
                           background: isSelected
-                            ? 'linear-gradient(135deg, #fed7aa, #fdba74)'
+                            ? "linear-gradient(135deg, #fed7aa, #fdba74)"
                             : isTodayDay
-                              ? 'linear-gradient(135deg, #ffedd5, #fed7aa)'
-                              : isDisabled
-                                ? '#f3f4f6'
-                                : 'linear-gradient(135deg, #fff7ed, #ffedd5)',
+                            ? "linear-gradient(135deg, #ffedd5, #fed7aa)"
+                            : isDisabled
+                            ? "#f3f4f6"
+                            : "linear-gradient(135deg, #fff7ed, #ffedd5)",
                           color: isSelected
-                            ? '#000000'
+                            ? "#000000"
                             : isTodayDay
-                              ? '#c2410c'
-                              : isDisabled
-                                ? '#9ca3af'
-                                : '#c2410c',
-                          cursor: isDisabled ? 'not-allowed' : 'pointer',
-                          fontSize: '10px',
-                          fontWeight: isSelected ? '700' : '600',
-                          textAlign: 'center',
-                          transition: 'all 0.3s ease',
+                            ? "#c2410c"
+                            : isDisabled
+                            ? "#9ca3af"
+                            : "#c2410c",
+                          cursor: isDisabled ? "not-allowed" : "pointer",
+                          fontSize: "10px",
+                          fontWeight: isSelected ? "700" : "600",
+                          textAlign: "center",
+                          transition: "all 0.3s ease",
                           opacity: isPastDay && !isTodayDay ? 0.6 : 1,
                           boxShadow: isSelected
-                            ? '0 2px 8px rgba(249, 115, 22, 0.3)'
+                            ? "0 2px 8px rgba(249, 115, 22, 0.3)"
                             : isTodayDay
-                              ? '0 1px 4px rgba(251, 146, 60, 0.2)'
-                              : '0 1px 3px rgba(249, 115, 22, 0.1)'
+                            ? "0 1px 4px rgba(251, 146, 60, 0.2)"
+                            : "0 1px 3px rgba(249, 115, 22, 0.1)",
                         }}
                         onMouseEnter={(e) => {
                           if (!isDisabled && !isSelected) {
-                            e.target.style.background = 'linear-gradient(135deg, #fed7aa, #fdba74)';
-                            e.target.style.borderColor = '#f97316';
-                            e.target.style.transform = 'translateY(-1px)';
-                            e.target.style.boxShadow = '0 3px 8px rgba(249, 115, 22, 0.3)';
+                            e.target.style.background =
+                              "linear-gradient(135deg, #fed7aa, #fdba74)";
+                            e.target.style.borderColor = "#f97316";
+                            e.target.style.transform = "translateY(-1px)";
+                            e.target.style.boxShadow =
+                              "0 3px 8px rgba(249, 115, 22, 0.3)";
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (!isDisabled && !isSelected) {
                             e.target.style.background = isTodayDay
-                              ? 'linear-gradient(135deg, #ffedd5, #fed7aa)'
-                              : 'linear-gradient(135deg, #fff7ed, #ffedd5)';
-                            e.target.style.borderColor = isTodayDay ? '#fb923c' : '#fdba74';
-                            e.target.style.transform = 'translateY(0)';
+                              ? "linear-gradient(135deg, #ffedd5, #fed7aa)"
+                              : "linear-gradient(135deg, #fff7ed, #ffedd5)";
+                            e.target.style.borderColor = isTodayDay
+                              ? "#fb923c"
+                              : "#fdba74";
+                            e.target.style.transform = "translateY(0)";
                             e.target.style.boxShadow = isTodayDay
-                              ? '0 1px 4px rgba(251, 146, 60, 0.2)'
-                              : '0 1px 3px rgba(249, 115, 22, 0.1)';
+                              ? "0 1px 4px rgba(251, 146, 60, 0.2)"
+                              : "0 1px 3px rgba(249, 115, 22, 0.1)";
                           }
                         }}
                       >
-                        <div style={{ lineHeight: '1.1' }}>
-                          <div style={{ fontSize: '9px', marginBottom: '1px' }}>
+                        <div style={{ lineHeight: "1.1" }}>
+                          <div style={{ fontSize: "9px", marginBottom: "1px" }}>
                             {getDayAbbrev(day)}
                           </div>
-                          <div style={{ fontSize: '11px', fontWeight: '600' }}>
+                          <div style={{ fontSize: "11px", fontWeight: "600" }}>
                             {day.getDate()}
                           </div>
                         </div>
@@ -1683,67 +1935,170 @@ const BookingBoard = () => {
             </div>
 
             {/* Meeting Spaces - 5/12 columns on desktop, full width on mobile */}
-            <div style={{
-              gridColumn: 'span 5',
-              background: 'linear-gradient(135deg, #f0fdf4, #e6fffa)',
-              padding: '16px',
-              border: '1px solid #10b981',
-              borderRadius: '12px',
-              height: '280px',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
-            className="meeting-spaces-card">
-              <h4 style={{
-                margin: '0 0 12px 0',
-                color: '#034930',
-                fontSize: '14px',
-                fontWeight: '800',
-                textAlign: 'center'
-              }}>
+            <div
+              style={{
+                gridColumn: "span 5",
+                background: "linear-gradient(135deg, #f0fdf4, #e6fffa)",
+                padding: "16px",
+                border: "1px solid #10b981",
+                borderRadius: "12px",
+                height: "280px",
+                display: "flex",
+                flexDirection: "column",
+              }}
+              className="meeting-spaces-card"
+            >
+              <h4
+                style={{
+                  margin: "0 0 12px 0",
+                  color: "#034930",
+                  fontSize: "14px",
+                  fontWeight: "800",
+                  textAlign: "center",
+                }}
+              >
                 🏢 Select Meeting Spaces
               </h4>
               {selectedMeetingSpaces.length > 0 ? (
-                // Show selected meeting space name
-                <div style={{
-                  flex: '1',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '20px',
-                  background: 'linear-gradient(135deg, #059669, #047857)',
-                  borderRadius: '12px',
-                  border: '2px solid #065f46'
-                }}>
-                  <div style={{
-                    textAlign: 'center',
-                    color: '#ffffff'
-                  }}>
-                    <div style={{
-                      fontSize: '16px',
-                      fontWeight: '800',
-                      marginBottom: '4px'
-                    }}>
+                // Show selected meeting space with amenities
+                <div
+                  style={{
+                    flex: "1",
+                    display: "flex",
+                    flexDirection: "column",
+                    padding: "20px",
+                    background: "linear-gradient(135deg, #059669, #047857)",
+                    borderRadius: "12px",
+                    border: "2px solid #065f46",
+                  }}
+                >
+                  <div
+                    style={{
+                      textAlign: "center",
+                      color: "#ffffff",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: "800",
+                        marginBottom: "4px",
+                      }}
+                    >
                       ✓ Selected Space
                     </div>
-                    <div style={{
-                      fontSize: '14px',
-                      fontWeight: '700'
-                    }}>
-                      {rooms.find(r => r.id === selectedMeetingSpaces[0])?.name}
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "700",
+                      }}
+                    >
+                      {
+                        rooms.find((r) => r.id === selectedMeetingSpaces[0])
+                          ?.name
+                      }
                     </div>
+                  </div>
+
+                  {/* Room Amenities Section */}
+                  {(() => {
+                    const selectedRoom = rooms.find(
+                      (r) => r.id === selectedMeetingSpaces[0]
+                    );
+                    if (
+                      selectedRoom &&
+                      selectedRoom.amenities &&
+                      selectedRoom.amenities.length > 0
+                    ) {
+                      return (
+                        <div
+                          style={{
+                            background: "rgba(255, 255, 255, 0.15)",
+                            borderRadius: "8px",
+                            padding: "12px",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              color: "#ffffff",
+                              marginBottom: "8px",
+                              textAlign: "center",
+                            }}
+                          >
+                            🏢 Room Amenities
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              gap: "6px",
+                              justifyContent: "center",
+                            }}
+                          >
+                            {selectedRoom.amenities
+                              .slice(0, 4)
+                              .map((amenity) => (
+                                <span
+                                  key={amenity}
+                                  style={{
+                                    background: "rgba(255, 255, 255, 0.2)",
+                                    color: "#ffffff",
+                                    padding: "4px 8px",
+                                    borderRadius: "12px",
+                                    fontSize: "10px",
+                                    fontWeight: "500",
+                                    border:
+                                      "1px solid rgba(255, 255, 255, 0.3)",
+                                  }}
+                                >
+                                  {getAmenityIcon(amenity)} {amenity}
+                                </span>
+                              ))}
+                            {selectedRoom.amenities.length > 4 && (
+                              <span
+                                style={{
+                                  background: "rgba(255, 255, 255, 0.2)",
+                                  color: "#ffffff",
+                                  padding: "4px 8px",
+                                  borderRadius: "12px",
+                                  fontSize: "10px",
+                                  fontWeight: "500",
+                                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                                }}
+                              >
+                                +{selectedRoom.amenities.length - 4} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  <div style={{ textAlign: "center" }}>
                     <button
                       onClick={() => setSelectedMeetingSpaces([])}
                       style={{
-                        marginTop: '8px',
-                        padding: '4px 8px',
-                        background: 'rgba(255, 255, 255, 0.2)',
-                        border: '1px solid rgba(255, 255, 255, 0.3)',
-                        borderRadius: '4px',
-                        color: '#ffffff',
-                        fontSize: '10px',
-                        cursor: 'pointer',
-                        fontWeight: '600'
+                        padding: "6px 12px",
+                        background: "rgba(255, 255, 255, 0.2)",
+                        border: "1px solid rgba(255, 255, 255, 0.3)",
+                        borderRadius: "6px",
+                        color: "#ffffff",
+                        fontSize: "11px",
+                        cursor: "pointer",
+                        fontWeight: "600",
+                        transition: "all 0.2s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = "rgba(255, 255, 255, 0.3)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = "rgba(255, 255, 255, 0.2)";
                       }}
                     >
                       Change Selection
@@ -1752,89 +2107,113 @@ const BookingBoard = () => {
                 </div>
               ) : (
                 // Show all meeting spaces for selection
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '8px',
-                  alignItems: 'start',
-                  flex: '1',
-                  overflowY: 'auto'
-                }}
-                className="meeting-spaces-grid">
-                  {rooms.map(room => (
-                  <label
-                    key={room.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      padding: '8px',
-                      background: selectedMeetingSpaces.includes(room.id)
-                        ? 'linear-gradient(135deg, #059669, #047857)'
-                        : '#ffffff',
-                      border: selectedMeetingSpaces.includes(room.id)
-                        ? '2px solid #065f46'
-                        : '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      fontSize: '11px',
-                      color: selectedMeetingSpaces.includes(room.id) ? '#ffffff' : '#374151',
-                      fontWeight: selectedMeetingSpaces.includes(room.id) ? '700' : '500',
-                      boxShadow: selectedMeetingSpaces.includes(room.id)
-                        ? '0 2px 4px rgba(5, 150, 105, 0.3)'
-                        : 'none'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!selectedMeetingSpaces.includes(room.id)) {
-                        e.target.style.background = '#f3f4f6';
-                        e.target.style.transform = 'translateY(-1px)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!selectedMeetingSpaces.includes(room.id)) {
-                        e.target.style.background = '#ffffff';
-                        e.target.style.transform = 'translateY(0)';
-                      }
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedMeetingSpaces.includes(room.id)}
-                      onChange={(e) => handleMeetingSpaceChange(room.id, e.target.checked)}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: "8px",
+                    alignItems: "start",
+                    flex: "1",
+                    overflowY: "auto",
+                  }}
+                  className="meeting-spaces-grid"
+                >
+                  {rooms.map((room) => (
+                    <label
+                      key={room.id}
                       style={{
-                        marginRight: '6px',
-                        marginTop: '2px',
-                        accentColor: '#10b981',
-                        transform: 'scale(1.1)'
+                        display: "flex",
+                        alignItems: "flex-start",
+                        padding: "8px",
+                        background: selectedMeetingSpaces.includes(room.id)
+                          ? "linear-gradient(135deg, #059669, #047857)"
+                          : "#ffffff",
+                        border: selectedMeetingSpaces.includes(room.id)
+                          ? "2px solid #065f46"
+                          : "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                        fontSize: "11px",
+                        color: selectedMeetingSpaces.includes(room.id)
+                          ? "#ffffff"
+                          : "#374151",
+                        fontWeight: selectedMeetingSpaces.includes(room.id)
+                          ? "700"
+                          : "500",
+                        boxShadow: selectedMeetingSpaces.includes(room.id)
+                          ? "0 2px 4px rgba(5, 150, 105, 0.3)"
+                          : "none",
                       }}
-                    />
-                    <div style={{ lineHeight: '1.3', flex: 1 }}>
-                      <div style={{
-                        fontWeight: selectedMeetingSpaces.includes(room.id) ? '700' : '600',
-                        marginBottom: '2px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        color: selectedMeetingSpaces.includes(room.id) ? '#ffffff' : '#374151'
-                      }}>
-                        {selectedMeetingSpaces.includes(room.id) && (
-                          <span style={{
-                            fontSize: '10px',
-                            color: '#ffffff',
-                            fontWeight: '700'
-                          }}>✓</span>
-                        )}
-                        {room.name}
+                      onMouseEnter={(e) => {
+                        if (!selectedMeetingSpaces.includes(room.id)) {
+                          e.target.style.background = "#f3f4f6";
+                          e.target.style.transform = "translateY(-1px)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!selectedMeetingSpaces.includes(room.id)) {
+                          e.target.style.background = "#ffffff";
+                          e.target.style.transform = "translateY(0)";
+                        }
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMeetingSpaces.includes(room.id)}
+                        onChange={(e) =>
+                          handleMeetingSpaceChange(room.id, e.target.checked)
+                        }
+                        style={{
+                          marginRight: "6px",
+                          marginTop: "2px",
+                          accentColor: "#10b981",
+                          transform: "scale(1.1)",
+                        }}
+                      />
+                      <div style={{ lineHeight: "1.3", flex: 1 }}>
+                        <div
+                          style={{
+                            fontWeight: selectedMeetingSpaces.includes(room.id)
+                              ? "700"
+                              : "600",
+                            marginBottom: "2px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            color: selectedMeetingSpaces.includes(room.id)
+                              ? "#ffffff"
+                              : "#374151",
+                          }}
+                        >
+                          {selectedMeetingSpaces.includes(room.id) && (
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: "#ffffff",
+                                fontWeight: "700",
+                              }}
+                            >
+                              ✓
+                            </span>
+                          )}
+                          {room.name}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            color: selectedMeetingSpaces.includes(room.id)
+                              ? "#f0fdf4"
+                              : "#6b7280",
+                            fontWeight: selectedMeetingSpaces.includes(room.id)
+                              ? "600"
+                              : "400",
+                          }}
+                        >
+                          Capacity: {room.capacity}
+                        </div>
                       </div>
-                      <div style={{
-                        fontSize: '10px',
-                        color: selectedMeetingSpaces.includes(room.id) ? '#f0fdf4' : '#6b7280',
-                        fontWeight: selectedMeetingSpaces.includes(room.id) ? '600' : '400'
-                      }}>
-                        Capacity: {room.capacity}
-                      </div>
-                    </div>
-                  </label>
+                    </label>
                   ))}
                 </div>
               )}
@@ -1842,103 +2221,146 @@ const BookingBoard = () => {
 
             {/* Booking Type Selector - 4/12 columns on desktop, full width on mobile */}
             {selectedMeetingSpaces.length > 0 && (
-              <div style={{
-                gridColumn: 'span 4',
-                background: 'linear-gradient(135deg, #e0e7ff, #f0f4ff)',
-                padding: '16px',
-                border: '1px solid #6366f1',
-                borderRadius: '12px',
-                height: '280px',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-              className="booking-type-card">
-                <h4 style={{
-                  margin: '0 0 12px 0',
-                  color: '#4338ca',
-                  fontSize: '14px',
-                  fontWeight: '800',
-                  textAlign: 'center'
-                }}>
+              <div
+                style={{
+                  gridColumn: "span 4",
+                  background: "linear-gradient(135deg, #e0e7ff, #f0f4ff)",
+                  padding: "16px",
+                  border: "1px solid #6366f1",
+                  borderRadius: "12px",
+                  height: "280px",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+                className="booking-type-card"
+              >
+                <h4
+                  style={{
+                    margin: "0 0 12px 0",
+                    color: "#4338ca",
+                    fontSize: "14px",
+                    fontWeight: "800",
+                    textAlign: "center",
+                  }}
+                >
                   📝 Select Booking Type
                 </h4>
-                <div style={{
-                  display: 'grid',
-                  gap: '8px',
-                  flex: '1'
-                }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "8px",
+                    flex: "1",
+                  }}
+                >
                   {[
-                    { value: 'hourly', label: '⏰ Hourly Booking', desc: 'Book for specific hours' },
-                    { value: 'full-day', label: '📅 Full Day', desc: 'Entire day booking' },
-                    { value: 'multi-day', label: '📊 Multi-Day', desc: 'Multiple consecutive days' },
-                    { value: 'weekly', label: '🗓️ Weekly', desc: 'Recurring weekly booking' }
-                  ].map(type => (
+                    {
+                      value: "hourly",
+                      label: "⏰ Hourly Booking",
+                      desc: "Book for specific hours",
+                    },
+                    {
+                      value: "full-day",
+                      label: "📅 Full Day",
+                      desc: "Entire day booking",
+                    },
+                    {
+                      value: "multi-day",
+                      label: "📊 Multi-Day",
+                      desc: "Multiple consecutive days",
+                    },
+                    {
+                      value: "weekly",
+                      label: "🗓️ Weekly",
+                      desc: "Recurring weekly booking",
+                    },
+                  ].map((type) => (
                     <button
                       key={type.value}
                       onClick={() => {
                         setSelectedBookingType(type.value);
                         if (selectedMeetingSpaces.length === 1) {
-                          const room = rooms.find(r => r.id === selectedMeetingSpaces[0]);
-                          setSelectedRoom(room);
-                          setSelectedTime(''); // No pre-selected time
-                          setShowBookingForm(true);
+                          const room = rooms.find(
+                            (r) => r.id === selectedMeetingSpaces[0]
+                          );
+                          // For hourly booking, open room details modal first
+                          if (type.value === "hourly") {
+                            setSelectedRoomForModal(room);
+                            setSelectedRoom(room);
+                          } else {
+                            // For other booking types, open booking form directly
+                            setSelectedRoom(room);
+                            setSelectedTime(""); // No pre-selected time
+                            setShowBookingForm(true);
+                          }
                         }
                       }}
                       style={{
-                        padding: '12px',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        border: selectedBookingType === type.value ? '2px solid #4338ca' : '2px solid #e5e7eb',
-                        borderRadius: '8px',
-                        background: selectedBookingType === type.value ? '#e0e7ff' : '#ffffff',
-                        color: selectedBookingType === type.value ? '#4338ca' : '#374151',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        textAlign: 'left'
+                        padding: "12px",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        border:
+                          selectedBookingType === type.value
+                            ? "2px solid #4338ca"
+                            : "2px solid #e5e7eb",
+                        borderRadius: "8px",
+                        background:
+                          selectedBookingType === type.value
+                            ? "#e0e7ff"
+                            : "#ffffff",
+                        color:
+                          selectedBookingType === type.value
+                            ? "#4338ca"
+                            : "#374151",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                        textAlign: "left",
                       }}
                       onMouseEnter={(e) => {
                         if (selectedBookingType !== type.value) {
-                          e.target.style.background = '#f8fafc';
-                          e.target.style.borderColor = '#cbd5e1';
+                          e.target.style.background = "#f8fafc";
+                          e.target.style.borderColor = "#cbd5e1";
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (selectedBookingType !== type.value) {
-                          e.target.style.background = '#ffffff';
-                          e.target.style.borderColor = '#e5e7eb';
+                          e.target.style.background = "#ffffff";
+                          e.target.style.borderColor = "#e5e7eb";
                         }
                       }}
                     >
-                      <div style={{ fontWeight: '700', marginBottom: '4px' }}>
+                      <div style={{ fontWeight: "700", marginBottom: "4px" }}>
                         {type.label}
                       </div>
-                      <div style={{
-                        fontSize: '10px',
-                        color: selectedBookingType === type.value ? '#6366f1' : '#6b7280',
-                        fontWeight: '400'
-                      }}>
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          color:
+                            selectedBookingType === type.value
+                              ? "#6366f1"
+                              : "#6b7280",
+                          fontWeight: "400",
+                        }}
+                      >
                         {type.desc}
                       </div>
                     </button>
                   ))}
                 </div>
-
               </div>
             )}
           </div>
-
-
         </div>
 
         {/* Booking Grid */}
         <div className="booking-grid">
           <div className="grid-header">
             <h2>
-              Room Availability - {selectedDate.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+              Room Availability -{" "}
+              {selectedDate.toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               })}
             </h2>
           </div>
@@ -1947,41 +2369,40 @@ const BookingBoard = () => {
             <div className="rooms-container">
               {filteredRooms.length === 0 ? (
                 <div className="no-rooms-message">
-                        <div className="no-rooms-content">
-                          <h3>No Rooms Available</h3>
-                          <p>
-                            {currentUser ?
-                              `You don't have access to any rooms. Please contact your administrator.` :
-                              'Please log in to view available rooms.'
-                            }
-                          </p>
-                        </div>
+                  <div className="no-rooms-content">
+                    <h3>No Rooms Available</h3>
+                    <p>
+                      {currentUser
+                        ? `You don't have access to any rooms. Please contact your administrator.`
+                        : "Please log in to view available rooms."}
+                    </p>
+                  </div>
                 </div>
-                  ) : (
-                filteredRooms.map(room => {
-                      const categoryInfo = getCategoryInfo(room.category);
-                      return (
+              ) : (
+                filteredRooms.map((room) => {
+                  const categoryInfo = getCategoryInfo(room.category);
+                  return (
                     <div key={room.id} className="room-card">
-                      <div 
-                        className="room-card-header" 
+                      <div
+                        className="room-card-header"
                         onClick={() => openRoomModal(room)}
-                        style={{ cursor: 'pointer' }}
+                        style={{ cursor: "pointer" }}
                       >
                         <div className="room-card-title">
-                                  <span className="room-category-icon">{categoryInfo.icon}</span>
+                          <span className="room-category-icon">
+                            {categoryInfo.icon}
+                          </span>
                           <h3 className="room-card-name">{room.name}</h3>
-                                  </div>
+                        </div>
                         <div className="room-status-badge">
                           {getRoomStatusIndicator(room)}
-                                  </div>
-                        <div className="expand-icon">
-                          ▶
-                                </div>
-                              </div>
-                                </div>
-                      );
-                    })
-                  )}
+                        </div>
+                        <div className="expand-icon">▶</div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           ) : (
             <div className="day-closed-message">
@@ -1999,8 +2420,14 @@ const BookingBoard = () => {
                     return (
                       <>
                         <h3>Day Complete</h3>
-                        <p>This date has passed. Bookings are no longer available.</p>
-                        <p>Please select today or a future date to make new bookings.</p>
+                        <p>
+                          This date has passed. Bookings are no longer
+                          available.
+                        </p>
+                        <p>
+                          Please select today or a future date to make new
+                          bookings.
+                        </p>
                       </>
                     );
                   } else {
@@ -2008,7 +2435,10 @@ const BookingBoard = () => {
                     return (
                       <>
                         <h3>Day Complete</h3>
-                        <p>Booking for today is no longer available (after 6:00 PM).</p>
+                        <p>
+                          Booking for today is no longer available (after 6:00
+                          PM).
+                        </p>
                         <p>Please select a future date to make new bookings.</p>
                       </>
                     );
@@ -2060,25 +2490,30 @@ const BookingBoard = () => {
             <div className="room-modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h2>{selectedRoomForModal.name}</h2>
-                <button className="modal-close" onClick={closeRoomModal}>×</button>
+                <button className="modal-close" onClick={closeRoomModal}>
+                  ×
+                </button>
               </div>
-              
+
               <div className="modal-body">
                 {/* Room Info */}
                 <div className="modal-room-info">
                   <div className="room-info-chips">
                     <div className="info-chip capacity-chip">
                       <span className="chip-label">Capacity</span>
-                      <span className="chip-value">{selectedRoomForModal.capacity}</span>
+                      <span className="chip-value">
+                        {selectedRoomForModal.capacity}
+                      </span>
                     </div>
-                    {selectedRoomForModal.amenities && selectedRoomForModal.amenities.length > 0 && (
-                      <div className="info-chip amenities-chip">
-                        <span className="chip-label">Amenities</span>
-                        <span className="chip-value">
-                          {selectedRoomForModal.amenities.join(', ')}
-                        </span>
-                      </div>
-                    )}
+                    {selectedRoomForModal.amenities &&
+                      selectedRoomForModal.amenities.length > 0 && (
+                        <div className="info-chip amenities-chip">
+                          <span className="chip-label">Amenities</span>
+                          <span className="chip-value">
+                            {selectedRoomForModal.amenities.join(", ")}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 </div>
 
@@ -2086,55 +2521,64 @@ const BookingBoard = () => {
                 <div className="day-overview-section">
                   <div className="day-overview-header">
                     <h4>Day Overview</h4>
-                    <span className="overview-date">{new Date(selectedDate).toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}</span>
+                    <span className="overview-date">
+                      {new Date(selectedDate).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
                   </div>
                   <div className="time-slots-overview">
-                    {availableTimeSlots.map(time => {
-                      const isBooked = isSlotBooked(selectedRoomForModal.id, time);
-                      const booking = getBookingDetails(selectedRoomForModal.id, time);
+                    {availableTimeSlots.map((time) => {
+                      const isBooked = isSlotBooked(
+                        selectedRoomForModal.id,
+                        time
+                      );
+                      const booking = getBookingDetails(
+                        selectedRoomForModal.id,
+                        time
+                      );
                       const isPast = isTimeSlotInPast(selectedDate, time);
                       const isWeekendDay = isWeekend(selectedDate);
-                      
-                      let status = 'available';
-                      let statusText = 'Available';
-                      let statusColor = '#10b981';
-                      
+
+                      let status = "available";
+                      let statusText = "Available";
+                      let statusColor = "#10b981";
+
                       if (isWeekendDay) {
-                        status = 'weekend';
-                        statusText = 'Weekend';
-                        statusColor = '#f59e0b';
+                        status = "weekend";
+                        statusText = "Weekend";
+                        statusColor = "#f59e0b";
                       } else if (isPast) {
-                        status = 'past';
-                        statusText = 'Past';
-                        statusColor = '#6b7280';
+                        status = "past";
+                        statusText = "Past";
+                        statusColor = "#6b7280";
                       } else if (isBooked) {
-                        status = 'booked';
-                        statusText = booking.title || 'Booked';
-                        statusColor = '#ef4444';
+                        status = "booked";
+                        statusText = booking.title || "Booked";
+                        statusColor = "#ef4444";
                       }
-                      
+
                       return (
-                        <div 
-                          key={time} 
+                        <div
+                          key={time}
                           className={`overview-slot ${status}`}
                           title={`${time}: ${statusText}`}
                           onClick={() => {
                             // Auto-select this time in the picker below
-                            const timeSelect = document.getElementById(`modal-time-select`);
+                            const timeSelect =
+                              document.getElementById(`modal-time-select`);
                             if (timeSelect) {
                               timeSelect.value = time;
-                              timeSelect.dispatchEvent(new Event('change'));
+                              timeSelect.dispatchEvent(new Event("change"));
                             }
                           }}
                         >
                           <span className="slot-time">{time}</span>
-                          <div 
-                            className="slot-indicator" 
+                          <div
+                            className="slot-indicator"
                             style={{ backgroundColor: statusColor }}
                           ></div>
                         </div>
@@ -2143,47 +2587,69 @@ const BookingBoard = () => {
                   </div>
                   <div className="overview-legend">
                     <div className="legend-item">
-                      <div className="legend-color" style={{ backgroundColor: '#10b981' }}></div>
+                      <div
+                        className="legend-color"
+                        style={{ backgroundColor: "#10b981" }}
+                      ></div>
                       <span>Available</span>
                     </div>
                     <div className="legend-item">
-                      <div className="legend-color" style={{ backgroundColor: '#ef4444' }}></div>
+                      <div
+                        className="legend-color"
+                        style={{ backgroundColor: "#ef4444" }}
+                      ></div>
                       <span>Booked</span>
                     </div>
                     <div className="legend-item">
-                      <div className="legend-color" style={{ backgroundColor: '#6b7280' }}></div>
+                      <div
+                        className="legend-color"
+                        style={{ backgroundColor: "#6b7280" }}
+                      ></div>
                       <span>Past</span>
                     </div>
                     <div className="legend-item">
-                      <div className="legend-color" style={{ backgroundColor: '#f59e0b' }}></div>
+                      <div
+                        className="legend-color"
+                        style={{ backgroundColor: "#f59e0b" }}
+                      ></div>
                       <span>Weekend</span>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Time Picker Section */}
                 <div className="time-picker-section">
                   <div className="time-picker-header">
                     <h4>Select Time Slot</h4>
                     <span className="time-range-info">9:00 AM - 6:00 PM</span>
                   </div>
-                  
+
                   <div className="time-picker-controls">
                     <div className="time-input-group">
                       <label htmlFor="modal-time-select">Choose Time:</label>
-                      <select 
+                      <select
                         id="modal-time-select"
                         className="time-select"
                         onChange={(e) => {
                           const selectedTime = e.target.value;
                           if (selectedTime) {
-                            const isBooked = isSlotBooked(selectedRoomForModal.id, selectedTime);
-                            const booking = getBookingDetails(selectedRoomForModal.id, selectedTime);
-                            const isPast = isTimeSlotInPast(selectedDate, selectedTime);
+                            const isBooked = isSlotBooked(
+                              selectedRoomForModal.id,
+                              selectedTime
+                            );
+                            const booking = getBookingDetails(
+                              selectedRoomForModal.id,
+                              selectedTime
+                            );
+                            const isPast = isTimeSlotInPast(
+                              selectedDate,
+                              selectedTime
+                            );
                             const isWeekendDay = isWeekend(selectedDate);
-                            
+
                             // Update the availability display
-                            const availabilityElement = document.getElementById('modal-availability');
+                            const availabilityElement =
+                              document.getElementById("modal-availability");
                             if (availabilityElement) {
                               if (isWeekendDay) {
                                 availabilityElement.innerHTML = `
@@ -2219,30 +2685,46 @@ const BookingBoard = () => {
                         }}
                       >
                         <option value="">Select a time slot...</option>
-                        {availableTimeSlots.map(time => (
-                          <option key={time} value={time}>{time}</option>
+                        {availableTimeSlots.map((time) => (
+                          <option key={time} value={time}>
+                            {time}
+                          </option>
                         ))}
                       </select>
                     </div>
-                    
-                    <div id="modal-availability" className="availability-display">
+
+                    <div
+                      id="modal-availability"
+                      className="availability-display"
+                    >
                       <div className="availability-status placeholder">
                         <span className="status-icon">ℹ️</span>
-                        <span className="status-text">Select a time to check availability</span>
+                        <span className="status-text">
+                          Select a time to check availability
+                        </span>
                       </div>
                     </div>
-                    
+
                     <div className="booking-action">
-                      <button 
+                      <button
                         className="book-now-btn"
                         onClick={() => {
-                          const timeSelect = document.getElementById('modal-time-select');
+                          const timeSelect =
+                            document.getElementById("modal-time-select");
                           const selectedTime = timeSelect.value;
-                          if (selectedTime && !isSlotBooked(selectedRoomForModal.id, selectedTime) && !isTimeSlotInPast(selectedDate, selectedTime) && !isWeekend(selectedDate)) {
+                          if (
+                            selectedTime &&
+                            !isSlotBooked(
+                              selectedRoomForModal.id,
+                              selectedTime
+                            ) &&
+                            !isTimeSlotInPast(selectedDate, selectedTime) &&
+                            !isWeekend(selectedDate)
+                          ) {
                             handleBooking(selectedRoomForModal, selectedTime);
                             closeRoomModal();
                           } else {
-                            alert('Please select a valid available time slot');
+                            alert("Please select a valid available time slot");
                           }
                         }}
                       >
@@ -2255,8 +2737,6 @@ const BookingBoard = () => {
             </div>
           </div>
         )}
-
-
 
         {/* User Management Modal */}
         {showUserManagement && (
@@ -2280,7 +2760,7 @@ const BookingBoard = () => {
           <EmailSettingsPanel
             user={currentUser}
             onSettingsUpdate={(settings) => {
-              console.log('Email settings updated:', settings);
+              console.log("Email settings updated:", settings);
               // You can add additional logic here to handle settings changes
             }}
             onClose={() => setShowEmailSettings(false)}
@@ -2292,7 +2772,11 @@ const BookingBoard = () => {
           <div className="footer-content">
             <div className="footer-section">
               <div className="footer-logo">
-                <img src="/ICPAC_Website_Header_Logo.svg" alt="ICPAC Logo" className="footer-logo-img" />
+                <img
+                  src="/ICPAC_Website_Header_Logo.svg"
+                  alt="ICPAC Logo"
+                  className="footer-logo-img"
+                />
                 <div className="footer-text">
                   <h3>ICPAC Boardroom System</h3>
                   <p>Streamlining meeting room reservations</p>
@@ -2303,15 +2787,37 @@ const BookingBoard = () => {
             <div className="footer-section">
               <h4>Quick Links</h4>
               <ul className="footer-links">
-                <li><a href="#" onClick={(e) => { e.preventDefault(); window.location.reload(); }}>Refresh</a></li>
-                <li><a href="#" onClick={(e) => { e.preventDefault(); handleUserLogout(); }}>Logout</a></li>
+                <li>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.location.reload();
+                    }}
+                  >
+                    Refresh
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleUserLogout();
+                    }}
+                  >
+                    Logout
+                  </a>
+                </li>
               </ul>
             </div>
 
             <div className="footer-section">
               <h4>Contact Info</h4>
               <div className="contact-info">
-                <p><strong>ICPAC</strong></p>
+                <p>
+                  <strong>ICPAC</strong>
+                </p>
                 <p>Climate Prediction and Applications Centre</p>
                 <p>Email: info@icpac.net</p>
                 <p>Phone: +254 20 7095000</p>
@@ -2330,7 +2836,10 @@ const BookingBoard = () => {
           </div>
 
           <div className="footer-bottom">
-            <p>&copy; 2025 ICPAC. All rights reserved. | Boardroom Booking System v1.0</p>
+            <p>
+              &copy; 2025 ICPAC. All rights reserved. | Boardroom Booking System
+              v1.0
+            </p>
           </div>
         </footer>
       </div>
@@ -2338,35 +2847,39 @@ const BookingBoard = () => {
   );
 };
 
-const ProcurementOrdersSection = ({ orders, attendeeCount, onOrdersChange }) => {
+const ProcurementOrdersSection = ({
+  orders,
+  attendeeCount,
+  onOrdersChange,
+}) => {
   const procurementItems = [
-    { id: 'coffee_tea', name: 'Coffee & Tea', unit: 'cup' },
-    { id: 'lunch', name: 'Lunch', unit: 'plate' },
-    { id: 'snacks', name: 'Snacks', unit: 'portion' },
-    { id: 'water', name: 'Bottled Water', unit: 'bottle' },
-    { id: 'juice', name: 'Fresh Juice', unit: 'glass' }
+    { id: "coffee_tea", name: "Coffee & Tea", unit: "cup" },
+    { id: "lunch", name: "Lunch", unit: "plate" },
+    { id: "snacks", name: "Snacks", unit: "portion" },
+    { id: "water", name: "Bottled Water", unit: "bottle" },
+    { id: "juice", name: "Fresh Juice", unit: "glass" },
   ];
 
   const handleItemToggle = (itemId) => {
-    const existingOrder = orders.find(order => order.itemId === itemId);
+    const existingOrder = orders.find((order) => order.itemId === itemId);
 
     if (existingOrder) {
-      onOrdersChange(orders.filter(order => order.itemId !== itemId));
+      onOrdersChange(orders.filter((order) => order.itemId !== itemId));
     } else {
-      const item = procurementItems.find(item => item.id === itemId);
+      const item = procurementItems.find((item) => item.id === itemId);
       const newOrder = {
         itemId: itemId,
         itemName: item.name,
         quantity: attendeeCount,
         unit: item.unit,
-        notes: ''
+        notes: "",
       };
       onOrdersChange([...orders, newOrder]);
     }
   };
 
   const handleQuantityChange = (itemId, quantity) => {
-    const updatedOrders = orders.map(order =>
+    const updatedOrders = orders.map((order) =>
       order.itemId === itemId
         ? { ...order, quantity: parseInt(quantity) || 0 }
         : order
@@ -2375,24 +2888,26 @@ const ProcurementOrdersSection = ({ orders, attendeeCount, onOrdersChange }) => 
   };
 
   const handleNotesChange = (itemId, notes) => {
-    const updatedOrders = orders.map(order =>
-      order.itemId === itemId
-        ? { ...order, notes }
-        : order
+    const updatedOrders = orders.map((order) =>
+      order.itemId === itemId ? { ...order, notes } : order
     );
     onOrdersChange(updatedOrders);
   };
 
-
   return (
     <div className="procurement-orders">
       <div className="procurement-grid">
-        {procurementItems.map(item => {
-          const isSelected = orders.some(order => order.itemId === item.id);
-          const selectedOrder = orders.find(order => order.itemId === item.id);
+        {procurementItems.map((item) => {
+          const isSelected = orders.some((order) => order.itemId === item.id);
+          const selectedOrder = orders.find(
+            (order) => order.itemId === item.id
+          );
 
           return (
-            <div key={item.id} className={`procurement-item ${isSelected ? 'selected' : ''}`}>
+            <div
+              key={item.id}
+              className={`procurement-item ${isSelected ? "selected" : ""}`}
+            >
               <div className="procurement-item-header">
                 <label className="procurement-checkbox">
                   <input
@@ -2412,7 +2927,9 @@ const ProcurementOrdersSection = ({ orders, attendeeCount, onOrdersChange }) => 
                       type="number"
                       min="1"
                       value={selectedOrder?.quantity || attendeeCount}
-                      onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                      onChange={(e) =>
+                        handleQuantityChange(item.id, e.target.value)
+                      }
                       className="quantity-input"
                     />
                     <span className="quantity-unit">{item.unit}(s)</span>
@@ -2421,13 +2938,14 @@ const ProcurementOrdersSection = ({ orders, attendeeCount, onOrdersChange }) => 
                   <div className="procurement-notes">
                     <label>Special Instructions:</label>
                     <textarea
-                      value={selectedOrder?.notes || ''}
-                      onChange={(e) => handleNotesChange(item.id, e.target.value)}
+                      value={selectedOrder?.notes || ""}
+                      onChange={(e) =>
+                        handleNotesChange(item.id, e.target.value)
+                      }
                       placeholder="Any special requirements or notes..."
                       className="notes-textarea"
                     />
                   </div>
-
                 </div>
               )}
             </div>
@@ -2439,15 +2957,20 @@ const ProcurementOrdersSection = ({ orders, attendeeCount, onOrdersChange }) => 
         <div className="procurement-summary">
           <h4>Procurement Summary</h4>
           <div className="procurement-summary-items">
-            {orders.map(order => (
+            {orders.map((order) => (
               <div key={order.itemId} className="summary-item">
                 <span>{order.itemName}</span>
-                <span>{order.quantity} {order.unit}(s)</span>
+                <span>
+                  {order.quantity} {order.unit}(s)
+                </span>
               </div>
             ))}
           </div>
           <div className="procurement-note">
-            <small>Note: Procurement officer will be notified of these orders for preparation.</small>
+            <small>
+              Note: Procurement officer will be notified of these orders for
+              preparation.
+            </small>
           </div>
         </div>
       )}
@@ -2455,7 +2978,15 @@ const ProcurementOrdersSection = ({ orders, attendeeCount, onOrdersChange }) => 
   );
 };
 
-const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hourly', onConfirm, onCancel }) => {
+const BookingForm = ({
+  room,
+  time,
+  date,
+  currentUser,
+  initialBookingType = "hourly",
+  onConfirm,
+  onCancel,
+}) => {
   // Generate time slots with 15-minute intervals
   const generateTimeSlots = () => {
     const slots = [];
@@ -2463,11 +2994,11 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
     const endHour = 18; // 6 PM
 
     for (let hour = startHour; hour <= endHour; hour++) {
-      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      slots.push(`${hour.toString().padStart(2, "0")}:00`);
       if (hour < endHour) {
-        slots.push(`${hour.toString().padStart(2, '0')}:15`);
-        slots.push(`${hour.toString().padStart(2, '0')}:30`);
-        slots.push(`${hour.toString().padStart(2, '0')}:45`);
+        slots.push(`${hour.toString().padStart(2, "0")}:15`);
+        slots.push(`${hour.toString().padStart(2, "0")}:30`);
+        slots.push(`${hour.toString().padStart(2, "0")}:45`);
       }
     }
     return slots;
@@ -2497,37 +3028,40 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
     const targetHour = currentMinutes > 0 ? currentHour + 1 : currentHour;
 
     // Format as HH:00 and find closest available slot
-    const timeString = `${targetHour.toString().padStart(2, '0')}:00`;
+    const timeString = `${targetHour.toString().padStart(2, "0")}:00`;
 
     // Find the closest available time slot for today
-    const availableSlot = timeSlots.find(slot => slot >= timeString);
+    const availableSlot = timeSlots.find((slot) => slot >= timeString);
     return availableSlot || timeSlots[0];
   };
 
   // Calculate end time based on start time and duration
   const calculateEndTime = (startTime, duration) => {
-    const startIndex = timeSlots.findIndex(slot => slot === startTime);
+    const startIndex = timeSlots.findIndex((slot) => slot === startTime);
     if (startIndex === -1) return timeSlots[1];
 
     // Convert duration from hours to number of 15-minute slots
     const durationInSlots = Math.ceil(duration * 4);
-    const endIndex = Math.min(startIndex + durationInSlots, timeSlots.length - 1);
+    const endIndex = Math.min(
+      startIndex + durationInSlots,
+      timeSlots.length - 1
+    );
     return timeSlots[endIndex];
   };
 
   const initialStartTime = getCurrentTimeSlot();
 
   const [formData, setFormData] = useState({
-    title: '',
-    organizer: currentUser ? currentUser.name : '',
+    title: "",
+    organizer: currentUser ? currentUser.name : "",
     bookingType: initialBookingType,
     duration: 0.5,
-    startDate: date.toISOString().split('T')[0],
-    endDate: date.toISOString().split('T')[0],
+    startDate: date.toISOString().split("T")[0],
+    endDate: date.toISOString().split("T")[0],
     startTime: initialStartTime,
     endTime: calculateEndTime(initialStartTime, 0.5),
-    description: '',
-    attendeeCount: 1
+    description: "",
+    attendeeCount: 1,
   });
 
   const isTimeSlotInPast = (date, time) => {
@@ -2540,21 +3074,20 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
     }
 
     // If it's today, check if the time has passed
-    const [hours, minutes] = time.split(':').map(Number);
+    const [hours, minutes] = time.split(":").map(Number);
     const slotDateTime = new Date(slotDate);
     slotDateTime.setHours(hours, minutes, 0, 0);
 
     return slotDateTime < now;
   };
 
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
     // Validate past time for hourly bookings on today's date
-    if (formData.bookingType === 'hourly') {
+    if (formData.bookingType === "hourly") {
       if (isTimeSlotInPast(new Date(formData.startDate), formData.startTime)) {
-        alert('Cannot book past time slots. Please select a future time.');
+        alert("Cannot book past time slots. Please select a future time.");
         return;
       }
     }
@@ -2564,31 +3097,31 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => {
+    setFormData((prev) => {
       const newData = { ...prev, [name]: value };
 
       // Auto-adjust end date based on booking type
-      if (name === 'bookingType') {
+      if (name === "bookingType") {
         const startDate = new Date(prev.startDate);
         switch (value) {
-          case 'full-day':
+          case "full-day":
             newData.endDate = prev.startDate;
-            newData.startTime = '08:00';
-            newData.endTime = '18:00';
+            newData.startTime = "08:00";
+            newData.endTime = "18:00";
             break;
-          case 'weekly':
+          case "weekly":
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 6);
-            newData.endDate = endDate.toISOString().split('T')[0];
-            newData.startTime = '08:00';
-            newData.endTime = '18:00';
+            newData.endDate = endDate.toISOString().split("T")[0];
+            newData.startTime = "08:00";
+            newData.endTime = "18:00";
             break;
-          case 'multi-day':
+          case "multi-day":
             const multiEndDate = new Date(startDate);
             multiEndDate.setDate(startDate.getDate() + 1);
-            newData.endDate = multiEndDate.toISOString().split('T')[0];
-            newData.startTime = '08:00';
-            newData.endTime = '18:00';
+            newData.endDate = multiEndDate.toISOString().split("T")[0];
+            newData.startTime = "08:00";
+            newData.endTime = "18:00";
             break;
           default: // hourly
             newData.endDate = prev.startDate;
@@ -2597,19 +3130,19 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
       }
 
       // Recalculate end time when duration changes
-      if (name === 'duration') {
+      if (name === "duration") {
         const duration = parseInt(value);
         newData.duration = duration; // Ensure duration is stored as integer
         newData.endTime = calculateEndTime(prev.startTime, duration);
       }
 
       // Recalculate end time when start time changes
-      if (name === 'startTime') {
+      if (name === "startTime") {
         newData.endTime = calculateEndTime(value, parseInt(prev.duration));
       }
 
       // Ensure end date is not before start date
-      if (name === 'endDate' && new Date(value) < new Date(prev.startDate)) {
+      if (name === "endDate" && new Date(value) < new Date(prev.startDate)) {
         newData.endDate = prev.startDate;
       }
 
@@ -2620,7 +3153,9 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
   return (
     <div className="booking-modal-overlay">
       <div className="booking-modal-container">
-        <button onClick={onCancel} className="booking-modal-close">×</button>
+        <button onClick={onCancel} className="booking-modal-close">
+          ×
+        </button>
 
         <div className="booking-modal-header">
           <div className="booking-header-icon">
@@ -2628,7 +3163,9 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
           </div>
           <div className="booking-header-content">
             <h3 className="booking-modal-title">Book Meeting Room</h3>
-            <p className="booking-modal-subtitle">Reserve your perfect meeting space</p>
+            <p className="booking-modal-subtitle">
+              Reserve your perfect meeting space
+            </p>
           </div>
         </div>
 
@@ -2643,19 +3180,26 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
                   {room.capacity} people
                 </span>
                 <span className="booking-preview">
-                  {formData.bookingType === 'hourly'
-                    ? `${new Date(formData.startDate).toLocaleDateString()} • ${formData.startTime} - ${formData.endTime}`
-                    : `${new Date(formData.startDate).toLocaleDateString()} to ${new Date(formData.endDate).toLocaleDateString()}`
-                  }
+                  {formData.bookingType === "hourly"
+                    ? `${new Date(formData.startDate).toLocaleDateString()} • ${
+                        formData.startTime
+                      } - ${formData.endTime}`
+                    : `${new Date(
+                        formData.startDate
+                      ).toLocaleDateString()} to ${new Date(
+                        formData.endDate
+                      ).toLocaleDateString()}`}
                 </span>
               </div>
             </div>
           </div>
 
           <div className="room-amenities">
-            {room.amenities.map(amenity => (
+            {room.amenities.map((amenity) => (
               <span key={amenity} className="amenity-chip">
-                <span className="amenity-chip-icon">{getAmenityIcon(amenity)}</span>
+                <span className="amenity-chip-icon">
+                  {getAmenityIcon(amenity)}
+                </span>
                 {amenity}
               </span>
             ))}
@@ -2665,237 +3209,258 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
         <form onSubmit={handleSubmit} className="modern-booking-form">
           <div className="booking-form-content">
             <div className="booking-form-grid">
-            <div className="form-field-group">
-              <div className="input-field">
-                <input
-                  type="text"
-                  name="title"
-                  required
-                  value={formData.title}
-                  onChange={handleChange}
-                  className="modern-input"
-                  id="meeting-title"
-                />
-                <label htmlFor="meeting-title" className="input-label">
-                  <span className="label-icon">📋</span>
-                  Meeting Title *
-                </label>
+              <div className="form-field-group">
+                <div className="input-field">
+                  <input
+                    type="text"
+                    name="title"
+                    required
+                    value={formData.title}
+                    onChange={handleChange}
+                    className="modern-input"
+                    id="meeting-title"
+                  />
+                  <label htmlFor="meeting-title" className="input-label">
+                    <span className="label-icon">📋</span>
+                    Meeting Title *
+                  </label>
+                </div>
               </div>
-            </div>
 
-            <div className="form-field-group">
-              <div className="input-field">
-                <input
-                  type="text"
-                  name="organizer"
-                  required
-                  value={formData.organizer}
-                  onChange={handleChange}
-                  className="modern-input"
-                  id="organizer-name"
-                />
-                <label htmlFor="organizer-name" className="input-label">
-                  <span className="label-icon">👤</span>
-                  Organizer *
-                </label>
+              <div className="form-field-group">
+                <div className="input-field">
+                  <input
+                    type="text"
+                    name="organizer"
+                    required
+                    value={formData.organizer}
+                    onChange={handleChange}
+                    className="modern-input"
+                    id="organizer-name"
+                  />
+                  <label htmlFor="organizer-name" className="input-label">
+                    <span className="label-icon">👤</span>
+                    Organizer *
+                  </label>
+                </div>
               </div>
-            </div>
 
-            <div className="form-field-group">
-              <div className="select-field">
-                <select
-                  name="bookingType"
-                  value={formData.bookingType}
-                  onChange={handleChange}
-                  className="modern-select"
-                  id="booking-type"
-                >
-                  <option value="hourly">⏰ Hourly Booking</option>
-                  <option value="full-day">🌅 Full Day (8:00 AM - 6:00 PM)</option>
-                  <option value="multi-day">📅 Multi-Day Booking</option>
-                  <option value="weekly">📆 Weekly Booking (7 days)</option>
-                </select>
-                <label htmlFor="booking-type" className="select-label">
-                  <span className="label-icon">🕒</span>
-                  Booking Type *
-                </label>
-                <div className="select-arrow">▼</div>
-              </div>
-            </div>
-
-            {formData.bookingType === 'hourly' && (
               <div className="form-field-group">
                 <div className="select-field">
                   <select
-                    name="duration"
-                    value={formData.duration}
+                    name="bookingType"
+                    value={formData.bookingType}
                     onChange={handleChange}
                     className="modern-select"
-                    id="duration"
+                    id="booking-type"
                   >
-                    <option value={0.25}>⏱️ 15 minutes</option>
-                    <option value={0.33}>⏱️ 20 minutes</option>
-                    <option value={0.5}>⏱️ 30 minutes</option>
-                    <option value={0.75}>⏱️ 45 minutes</option>
-                    <option value={1}>⏱️ 1 hour</option>
-                    <option value={1.25}>⏱️ 1 hour 15 minutes</option>
-                    <option value={1.5}>⏱️ 1 hour 30 minutes</option>
-                    <option value={2}>⏱️ 2 hours</option>
-                    <option value={3}>⏱️ 3 hours</option>
-                    <option value={4}>⏱️ 4 hours</option>
+                    <option value="hourly">⏰ Hourly Booking</option>
+                    <option value="full-day">
+                      🌅 Full Day (8:00 AM - 6:00 PM)
+                    </option>
+                    <option value="multi-day">📅 Multi-Day Booking</option>
+                    <option value="weekly">📆 Weekly Booking (7 days)</option>
                   </select>
-                  <label htmlFor="duration" className="select-label">
-                    <span className="label-icon">⏰</span>
-                    Duration
+                  <label htmlFor="booking-type" className="select-label">
+                    <span className="label-icon">🕒</span>
+                    Booking Type *
                   </label>
                   <div className="select-arrow">▼</div>
                 </div>
               </div>
-            )}
 
-            <div className="form-row">
-              <div className="form-field-group">
-                <div className="date-field">
-                  <input
-                    type="date"
-                    name="startDate"
-                    required
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    className="modern-date-input"
-                    id="start-date"
-                  />
-                  <label htmlFor="start-date" className="date-label">
-                    <span className="label-icon">📅</span>
-                    Start Date *
-                  </label>
+              {formData.bookingType === "hourly" && (
+                <div className="form-field-group">
+                  <div className="select-field">
+                    <select
+                      name="duration"
+                      value={formData.duration}
+                      onChange={handleChange}
+                      className="modern-select"
+                      id="duration"
+                    >
+                      <option value={0.25}>⏱️ 15 minutes</option>
+                      <option value={0.33}>⏱️ 20 minutes</option>
+                      <option value={0.5}>⏱️ 30 minutes</option>
+                      <option value={0.75}>⏱️ 45 minutes</option>
+                      <option value={1}>⏱️ 1 hour</option>
+                      <option value={1.25}>⏱️ 1 hour 15 minutes</option>
+                      <option value={1.5}>⏱️ 1 hour 30 minutes</option>
+                      <option value={2}>⏱️ 2 hours</option>
+                      <option value={3}>⏱️ 3 hours</option>
+                      <option value={4}>⏱️ 4 hours</option>
+                    </select>
+                    <label htmlFor="duration" className="select-label">
+                      <span className="label-icon">⏰</span>
+                      Duration
+                    </label>
+                    <div className="select-arrow">▼</div>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {formData.bookingType === 'multi-day' && (
+              <div className="form-row">
                 <div className="form-field-group">
                   <div className="date-field">
                     <input
                       type="date"
-                      name="endDate"
+                      name="startDate"
                       required
-                      value={formData.endDate}
+                      value={formData.startDate}
                       onChange={handleChange}
                       className="modern-date-input"
-                      id="end-date"
-                      min={formData.startDate}
+                      id="start-date"
                     />
-                    <label htmlFor="end-date" className="date-label">
+                    <label htmlFor="start-date" className="date-label">
                       <span className="label-icon">📅</span>
-                      End Date *
+                      Start Date *
                     </label>
+                  </div>
+                </div>
+
+                {formData.bookingType === "multi-day" && (
+                  <div className="form-field-group">
+                    <div className="date-field">
+                      <input
+                        type="date"
+                        name="endDate"
+                        required
+                        value={formData.endDate}
+                        onChange={handleChange}
+                        className="modern-date-input"
+                        id="end-date"
+                        min={formData.startDate}
+                      />
+                      <label htmlFor="end-date" className="date-label">
+                        <span className="label-icon">📅</span>
+                        End Date *
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {formData.bookingType === "hourly" && (
+                <div className="form-row">
+                  <div className="form-field-group">
+                    <div className="select-field">
+                      <select
+                        name="startTime"
+                        value={formData.startTime}
+                        onChange={handleChange}
+                        className="modern-select"
+                        id="start-time"
+                      >
+                        {timeSlots.map((slot) => {
+                          const isSlotPast = isTimeSlotInPast(
+                            new Date(formData.startDate),
+                            slot
+                          );
+                          return (
+                            <option
+                              key={slot}
+                              value={slot}
+                              disabled={isSlotPast}
+                            >
+                              🕐 {slot} {isSlotPast ? "(Past)" : ""}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <label htmlFor="start-time" className="select-label">
+                        <span className="label-icon">🕐</span>
+                        Start Time *
+                      </label>
+                      <div className="select-arrow">▼</div>
+                    </div>
+                  </div>
+
+                  <div className="form-field-group">
+                    <div className="select-field">
+                      <select
+                        name="endTime"
+                        value={formData.endTime}
+                        onChange={handleChange}
+                        className="modern-select"
+                        id="end-time"
+                      >
+                        {timeSlots.map((slot) => {
+                          const isSlotPast = isTimeSlotInPast(
+                            new Date(formData.startDate),
+                            slot
+                          );
+                          return (
+                            <option
+                              key={slot}
+                              value={slot}
+                              disabled={isSlotPast}
+                            >
+                              🕐 {slot} {isSlotPast ? "(Past)" : ""}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <label htmlFor="end-time" className="select-label">
+                        <span className="label-icon">🕐</span>
+                        End Time *
+                      </label>
+                      <div className="select-arrow">▼</div>
+                    </div>
                   </div>
                 </div>
               )}
-            </div>
 
-            {formData.bookingType === 'hourly' && (
-              <div className="form-row">
-                <div className="form-field-group">
-                  <div className="select-field">
-                    <select
-                      name="startTime"
-                      value={formData.startTime}
-                      onChange={handleChange}
-                      className="modern-select"
-                      id="start-time"
-                    >
-                      {timeSlots.map(slot => {
-                        const isSlotPast = isTimeSlotInPast(new Date(formData.startDate), slot);
-                        return (
-                          <option key={slot} value={slot} disabled={isSlotPast}>
-                            🕐 {slot} {isSlotPast ? '(Past)' : ''}
-                          </option>
-                        );
-                      })}
-                    </select>
-                    <label htmlFor="start-time" className="select-label">
-                      <span className="label-icon">🕐</span>
-                      Start Time *
-                    </label>
-                    <div className="select-arrow">▼</div>
-                  </div>
-                </div>
-
-                <div className="form-field-group">
-                  <div className="select-field">
-                    <select
-                      name="endTime"
-                      value={formData.endTime}
-                      onChange={handleChange}
-                      className="modern-select"
-                      id="end-time"
-                    >
-                      {timeSlots.map(slot => {
-                        const isSlotPast = isTimeSlotInPast(new Date(formData.startDate), slot);
-                        return (
-                          <option key={slot} value={slot} disabled={isSlotPast}>
-                            🕐 {slot} {isSlotPast ? '(Past)' : ''}
-                          </option>
-                        );
-                      })}
-                    </select>
-                    <label htmlFor="end-time" className="select-label">
-                      <span className="label-icon">🕐</span>
-                      End Time *
-                    </label>
-                    <div className="select-arrow">▼</div>
-                  </div>
+              <div className="form-field-group full-width">
+                <div className="input-field">
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows="3"
+                    className="modern-textarea"
+                    id="description"
+                  />
+                  <label htmlFor="description" className="input-label">
+                    <span className="label-icon">📝</span>
+                    Description (optional)
+                  </label>
                 </div>
               </div>
-            )}
 
-            <div className="form-field-group full-width">
-              <div className="input-field">
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows="3"
-                  className="modern-textarea"
-                  id="description"
-                />
-                <label htmlFor="description" className="input-label">
-                  <span className="label-icon">📝</span>
-                  Description (optional)
-                </label>
-              </div>
-            </div>
-
-            <div className="form-field-group">
-              <div className="input-field">
-                <input
-                  type="number"
-                  name="attendeeCount"
-                  value={formData.attendeeCount}
-                  onChange={handleChange}
-                  min="1"
-                  max="100"
-                  required
-                  className="modern-input"
-                  id="attendee-count"
-                />
-                <label htmlFor="attendee-count" className="input-label">
-                  <span className="label-icon">👥</span>
-                  Number of Attendees *
-                </label>
-                <div className="capacity-indicator">
-                  <span className="capacity-text">Max: {room.capacity}</span>
-                  <div className="capacity-bar">
-                    <div
-                      className="capacity-fill"
-                      style={{ width: `${Math.min((formData.attendeeCount / room.capacity) * 100, 100)}%` }}
-                    />
+              <div className="form-field-group">
+                <div className="input-field">
+                  <input
+                    type="number"
+                    name="attendeeCount"
+                    value={formData.attendeeCount}
+                    onChange={handleChange}
+                    min="1"
+                    max="100"
+                    required
+                    className="modern-input"
+                    id="attendee-count"
+                  />
+                  <label htmlFor="attendee-count" className="input-label">
+                    <span className="label-icon">👥</span>
+                    Number of Attendees *
+                  </label>
+                  <div className="capacity-indicator">
+                    <span className="capacity-text">Max: {room.capacity}</span>
+                    <div className="capacity-bar">
+                      <div
+                        className="capacity-fill"
+                        style={{
+                          width: `${Math.min(
+                            (formData.attendeeCount / room.capacity) * 100,
+                            100
+                          )}%`,
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
           </div>
 
           <div className="booking-form-actions">
@@ -2907,10 +3472,7 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
               <span className="btn-icon">❌</span>
               Cancel
             </button>
-            <button
-              type="submit"
-              className="booking-btn primary"
-            >
+            <button type="submit" className="booking-btn primary">
               <span className="btn-icon">✅</span>
               Book Room
             </button>
@@ -2921,9 +3483,14 @@ const BookingForm = ({ room, time, date, currentUser, initialBookingType = 'hour
   );
 };
 
-const UserLoginModal = ({ onLogin, onCancel, onSwitchToSignup, onForgotPassword }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const UserLoginModal = ({
+  onLogin,
+  onCancel,
+  onSwitchToSignup,
+  onForgotPassword,
+}) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
@@ -2935,23 +3502,26 @@ const UserLoginModal = ({ onLogin, onCancel, onSwitchToSignup, onForgotPassword 
   return (
     <div className="auth-modal-overlay">
       <div className="auth-modal-container">
-        <button onClick={onCancel} className="auth-close-btn">×</button>
+        <button onClick={onCancel} className="auth-close-btn">
+          ×
+        </button>
 
         <div className="auth-split-layout">
           {/* Branding Sidebar */}
           <div className="auth-branding-sidebar">
             <div className="branding-logo">
-              <img
-                src="/ICPAC_Website_Header_Logo.svg"
-                alt="ICPAC Logo"
-              />
+              <img src="/ICPAC_Website_Header_Logo.svg" alt="ICPAC Logo" />
             </div>
             <h2 className="branding-title">Welcome Back!</h2>
-            <p className="branding-subtitle">Sign in to access your ICPAC meeting room booking dashboard</p>
+            <p className="branding-subtitle">
+              Sign in to access your ICPAC meeting room booking dashboard
+            </p>
             <div className="branding-features">
               <div className="feature-item">
                 <span className="feature-icon">📅</span>
-                <span className="feature-text">Book meeting rooms instantly</span>
+                <span className="feature-text">
+                  Book meeting rooms instantly
+                </span>
               </div>
               <div className="feature-item">
                 <span className="feature-icon">🏢</span>
@@ -2968,7 +3538,9 @@ const UserLoginModal = ({ onLogin, onCancel, onSwitchToSignup, onForgotPassword 
           <div className="auth-form-section">
             <div className="auth-form-header">
               <h3 className="auth-form-title">Sign In</h3>
-              <p className="auth-form-subtitle">Enter your credentials to continue</p>
+              <p className="auth-form-subtitle">
+                Enter your credentials to continue
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="auth-form">
@@ -2979,7 +3551,7 @@ const UserLoginModal = ({ onLogin, onCancel, onSwitchToSignup, onForgotPassword 
                   onChange={(e) => setEmail(e.target.value)}
                   onFocus={() => setEmailFocused(true)}
                   onBlur={() => setEmailFocused(false)}
-                  className={`floating-input ${email ? 'has-value' : ''}`}
+                  className={`floating-input ${email ? "has-value" : ""}`}
                   required
                   id="login-email"
                 />
@@ -2995,7 +3567,7 @@ const UserLoginModal = ({ onLogin, onCancel, onSwitchToSignup, onForgotPassword 
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => setPasswordFocused(false)}
-                  className={`floating-input ${password ? 'has-value' : ''}`}
+                  className={`floating-input ${password ? "has-value" : ""}`}
                   required
                   id="login-password"
                 />
@@ -3011,7 +3583,11 @@ const UserLoginModal = ({ onLogin, onCancel, onSwitchToSignup, onForgotPassword 
               </div>
 
               <div className="auth-form-actions">
-                <button type="button" onClick={onCancel} className="auth-secondary-btn">
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="auth-secondary-btn"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="auth-primary-btn">
@@ -3022,7 +3598,10 @@ const UserLoginModal = ({ onLogin, onCancel, onSwitchToSignup, onForgotPassword 
 
             <div className="auth-form-footer">
               <p className="auth-switch-text">
-                Don't have an account? <span className="auth-switch-link" onClick={onSwitchToSignup}>Sign up here</span>
+                Don't have an account?{" "}
+                <span className="auth-switch-link" onClick={onSwitchToSignup}>
+                  Sign up here
+                </span>
               </p>
             </div>
           </div>
@@ -3034,38 +3613,38 @@ const UserLoginModal = ({ onLogin, onCancel, onSwitchToSignup, onForgotPassword 
 
 const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
   const [focusedFields, setFocusedFields] = useState({
     name: false,
     email: false,
     password: false,
-    confirmPassword: false
+    confirmPassword: false,
   });
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
-    text: '',
-    color: '#e2e8f0'
+    text: "",
+    color: "#e2e8f0",
   });
   const [validationErrors, setValidationErrors] = useState({});
 
   // OTP related states
   const [showOTPStep, setShowOTPStep] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
+  const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [otpError, setOtpError] = useState('');
+  const [otpError, setOtpError] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
 
   // Register user and trigger OTP email from backend
   const registerUser = async (userData) => {
     try {
       // Split full name into first and last name
-      const nameParts = userData.name.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
+      const nameParts = userData.name.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
 
       const registrationData = {
         first_name: firstName,
@@ -3073,26 +3652,28 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
         email: userData.email,
         password: userData.password,
         password_confirm: userData.confirmPassword || userData.password,
-        phone_number: userData.phoneNumber || '',
-        department: userData.department || ''
+        phone_number: userData.phoneNumber || "",
+        department: userData.department || "",
       };
 
-      console.log('Sending registration data:', registrationData);
+      console.log("Sending registration data:", registrationData);
 
       // Call backend to register user - this automatically sends OTP
       const response = await apiService.register(registrationData);
 
       // Show success message without revealing OTP
-      alert(`Verification code has been sent to ${userData.email}\n\nPlease check your email for the 6-digit verification code.`);
+      alert(
+        `Verification code has been sent to ${userData.email}\n\nPlease check your email for the 6-digit verification code.`
+      );
 
       setOtpSent(true);
-      setOtpError('');
+      setOtpError("");
       setShowOTPStep(true);
 
       // Start resend cooldown (60 seconds)
       setResendCooldown(60);
       const timer = setInterval(() => {
-        setResendCooldown(prev => {
+        setResendCooldown((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
             return 0;
@@ -3103,8 +3684,9 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
 
       return true;
     } catch (error) {
-      console.error('Registration error:', error);
-      const errorMessage = error.message || 'Failed to register. Please try again.';
+      console.error("Registration error:", error);
+      const errorMessage =
+        error.message || "Failed to register. Please try again.";
       alert(`Registration Error: ${errorMessage}`);
       setValidationErrors({ general: errorMessage });
       return false;
@@ -3115,12 +3697,12 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
   const resendOTP = async () => {
     try {
       await apiService.resendOTP(formData.email);
-      alert('New verification code has been sent to your email.');
+      alert("New verification code has been sent to your email.");
 
       // Reset cooldown
       setResendCooldown(60);
       const timer = setInterval(() => {
-        setResendCooldown(prev => {
+        setResendCooldown((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
             return 0;
@@ -3129,7 +3711,7 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
         });
       }, 1000);
     } catch (error) {
-      setOtpError('Failed to resend code. Please try again.');
+      setOtpError("Failed to resend code. Please try again.");
     }
   };
 
@@ -3140,26 +3722,28 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
 
       // If verification successful, login the user
       if (response.access) {
-        localStorage.setItem('access_token', response.access);
-        localStorage.setItem('refresh_token', response.refresh);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem("access_token", response.access);
+        localStorage.setItem("refresh_token", response.refresh);
+        localStorage.setItem("user", JSON.stringify(response.user));
       }
 
-      setOtpError('');
+      setOtpError("");
       return true;
     } catch (error) {
-      setOtpError(error.message || 'Invalid verification code. Please try again.');
+      setOtpError(
+        error.message || "Invalid verification code. Please try again."
+      );
       return false;
     }
   };
 
   const calculatePasswordStrength = (password) => {
     let score = 0;
-    let text = '';
-    let color = '#e2e8f0';
+    let text = "";
+    let color = "#e2e8f0";
 
     if (password.length === 0) {
-      return { score: 0, text: '', color: '#e2e8f0' };
+      return { score: 0, text: "", color: "#e2e8f0" };
     }
 
     // Length check
@@ -3175,17 +3759,17 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
 
     // Determine strength
     if (score <= 2) {
-      text = 'Weak';
-      color = '#ef4444';
+      text = "Weak";
+      color = "#ef4444";
     } else if (score <= 4) {
-      text = 'Fair';
-      color = '#f59e0b';
+      text = "Fair";
+      color = "#f59e0b";
     } else if (score <= 5) {
-      text = 'Good';
-      color = '#3b82f6';
+      text = "Good";
+      color = "#3b82f6";
     } else {
-      text = 'Strong';
-      color = '#10b981';
+      text = "Strong";
+      color = "#10b981";
     }
 
     return { score, text, color };
@@ -3196,35 +3780,40 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
 
     // Name validation
     if (!formData.name.trim()) {
-      errors.name = 'Name is required';
+      errors.name = "Name is required";
     } else if (formData.name.trim().length < 2) {
-      errors.name = 'Name must be at least 2 characters';
+      errors.name = "Name must be at least 2 characters";
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const allowedDomains = ['@icpac.net', '@igad.int'];
+    const allowedDomains = ["@icpac.net", "@igad.int"];
 
     if (!formData.email) {
-      errors.email = 'Email is required';
+      errors.email = "Email is required";
     } else if (!emailRegex.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
-    } else if (!allowedDomains.some(domain => formData.email && formData.email.toLowerCase().endsWith(domain))) {
-      errors.email = 'Email must be from @icpac.net or @igad.int domain';
+      errors.email = "Please enter a valid email address";
+    } else if (
+      !allowedDomains.some(
+        (domain) =>
+          formData.email && formData.email.toLowerCase().endsWith(domain)
+      )
+    ) {
+      errors.email = "Email must be from @icpac.net or @igad.int domain";
     }
 
     // Password validation
     if (!formData.password) {
-      errors.password = 'Password is required';
+      errors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
+      errors.password = "Password must be at least 6 characters";
     }
 
     // Confirm password validation
     if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password';
+      errors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
+      errors.confirmPassword = "Passwords do not match";
     }
 
     return errors;
@@ -3246,19 +3835,19 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
       // Register user (this will send OTP via email)
       const success = await registerUser(formData);
       if (!success) {
-        console.error('Registration failed');
+        console.error("Registration failed");
       }
     } else {
       // Step 2: Verify OTP and complete signup
       if (!otpCode) {
-        setOtpError('Please enter the verification code');
+        setOtpError("Please enter the verification code");
         return;
       }
 
       const verified = await verifyOTP();
       if (verified) {
         // OTP verified successfully, user is now logged in
-        alert('Email verified successfully! You are now logged in.');
+        alert("Email verified successfully! You are now logged in.");
         window.location.reload(); // Reload to update the UI with logged-in state
       }
     }
@@ -3266,57 +3855,63 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
     // Calculate password strength
-    if (name === 'password') {
+    if (name === "password") {
       setPasswordStrength(calculatePasswordStrength(value));
     }
 
     // Clear validation error for this field
     if (validationErrors[name]) {
-      setValidationErrors(prev => ({
+      setValidationErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
 
   const handleFocus = (fieldName) => {
-    setFocusedFields(prev => ({ ...prev, [fieldName]: true }));
+    setFocusedFields((prev) => ({ ...prev, [fieldName]: true }));
   };
 
   const handleBlur = (fieldName) => {
-    setFocusedFields(prev => ({ ...prev, [fieldName]: false }));
+    setFocusedFields((prev) => ({ ...prev, [fieldName]: false }));
   };
 
   return (
     <div className="auth-modal-overlay">
       <div className="auth-modal-container">
-        <button onClick={onCancel} className="auth-close-btn">×</button>
+        <button onClick={onCancel} className="auth-close-btn">
+          ×
+        </button>
 
         <div className="auth-split-layout">
           {/* Branding Sidebar */}
           <div className="auth-branding-sidebar">
             <div className="branding-logo">
-              <img
-                src="/ICPAC_Website_Header_Logo.svg"
-                alt="ICPAC Logo"
-              />
+              <img src="/ICPAC_Website_Header_Logo.svg" alt="ICPAC Logo" />
             </div>
             <h2 className="branding-title">Join ICPAC!</h2>
-            <p className="branding-subtitle">Create your account to start booking meeting rooms and accessing our services</p>
+            <p className="branding-subtitle">
+              Create your account to start booking meeting rooms and accessing
+              our services
+            </p>
             <div className="branding-features">
               <div className="feature-item">
                 <span className="feature-icon">📧</span>
-                <span className="feature-text">Only ICPAC and IGAD email addresses are accepted</span>
+                <span className="feature-text">
+                  Only ICPAC and IGAD email addresses are accepted
+                </span>
               </div>
               <div className="feature-item">
                 <span className="feature-icon">✅</span>
-                <span className="feature-text">Examples: user@icpac.net, staff@igad.int</span>
+                <span className="feature-text">
+                  Examples: user@icpac.net, staff@igad.int
+                </span>
               </div>
             </div>
           </div>
@@ -3325,7 +3920,9 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
           <div className="auth-form-section">
             <div className="auth-form-header">
               <h3 className="auth-form-title">Create Account</h3>
-              <p className="auth-form-subtitle">Fill in your details to get started</p>
+              <p className="auth-form-subtitle">
+                Fill in your details to get started
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="auth-form">
@@ -3337,16 +3934,22 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      onFocus={() => handleFocus('name')}
-                      onBlur={() => handleBlur('name')}
-                      className={`floating-input ${formData.name ? 'has-value' : ''} ${validationErrors.name ? 'error' : ''}`}
+                      onFocus={() => handleFocus("name")}
+                      onBlur={() => handleBlur("name")}
+                      className={`floating-input ${
+                        formData.name ? "has-value" : ""
+                      } ${validationErrors.name ? "error" : ""}`}
                       required
                       id="signup-name"
                     />
                     <label htmlFor="signup-name" className="floating-label">
                       Full Name
                     </label>
-                    {validationErrors.name && <span className="error-message">{validationErrors.name}</span>}
+                    {validationErrors.name && (
+                      <span className="error-message">
+                        {validationErrors.name}
+                      </span>
+                    )}
                   </div>
 
                   <div className="floating-label-group">
@@ -3355,16 +3958,22 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      onFocus={() => handleFocus('email')}
-                      onBlur={() => handleBlur('email')}
-                      className={`floating-input ${formData.email ? 'has-value' : ''} ${validationErrors.email ? 'error' : ''}`}
+                      onFocus={() => handleFocus("email")}
+                      onBlur={() => handleBlur("email")}
+                      className={`floating-input ${
+                        formData.email ? "has-value" : ""
+                      } ${validationErrors.email ? "error" : ""}`}
                       required
                       id="signup-email"
                     />
                     <label htmlFor="signup-email" className="floating-label">
                       Email Address
                     </label>
-                    {validationErrors.email && <span className="error-message">{validationErrors.email}</span>}
+                    {validationErrors.email && (
+                      <span className="error-message">
+                        {validationErrors.email}
+                      </span>
+                    )}
                   </div>
 
                   <div className="floating-label-group">
@@ -3373,9 +3982,11 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      onFocus={() => handleFocus('password')}
-                      onBlur={() => handleBlur('password')}
-                      className={`floating-input ${formData.password ? 'has-value' : ''} ${validationErrors.password ? 'error' : ''}`}
+                      onFocus={() => handleFocus("password")}
+                      onBlur={() => handleBlur("password")}
+                      className={`floating-input ${
+                        formData.password ? "has-value" : ""
+                      } ${validationErrors.password ? "error" : ""}`}
                       required
                       id="signup-password"
                     />
@@ -3389,16 +4000,23 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
                             className="strength-fill"
                             style={{
                               width: `${(passwordStrength.score / 6) * 100}%`,
-                              backgroundColor: passwordStrength.color
+                              backgroundColor: passwordStrength.color,
                             }}
                           />
                         </div>
-                        <span className="strength-text" style={{ color: passwordStrength.color }}>
+                        <span
+                          className="strength-text"
+                          style={{ color: passwordStrength.color }}
+                        >
                           {passwordStrength.text}
                         </span>
                       </div>
                     )}
-                    {validationErrors.password && <span className="error-message">{validationErrors.password}</span>}
+                    {validationErrors.password && (
+                      <span className="error-message">
+                        {validationErrors.password}
+                      </span>
+                    )}
                   </div>
                 </>
               )}
@@ -3410,25 +4028,43 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    onFocus={() => handleFocus('confirmPassword')}
-                    onBlur={() => handleBlur('confirmPassword')}
-                    className={`floating-input ${formData.confirmPassword ? 'has-value' : ''} ${validationErrors.confirmPassword ? 'error' : ''}`}
+                    onFocus={() => handleFocus("confirmPassword")}
+                    onBlur={() => handleBlur("confirmPassword")}
+                    className={`floating-input ${
+                      formData.confirmPassword ? "has-value" : ""
+                    } ${validationErrors.confirmPassword ? "error" : ""}`}
                     required
                     id="signup-confirm-password"
                   />
-                  <label htmlFor="signup-confirm-password" className="floating-label">
+                  <label
+                    htmlFor="signup-confirm-password"
+                    className="floating-label"
+                  >
                     Confirm Password
                   </label>
-                  {validationErrors.confirmPassword && <span className="error-message">{validationErrors.confirmPassword}</span>}
+                  {validationErrors.confirmPassword && (
+                    <span className="error-message">
+                      {validationErrors.confirmPassword}
+                    </span>
+                  )}
                 </div>
               )}
 
               {showOTPStep && (
                 <div className="otp-verification-section">
                   <div className="otp-header">
-                    <h3 style={{ color: '#065f46', marginBottom: '0.5rem' }}>📧 Verify Your Email</h3>
-                    <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                      We've sent a verification code to <strong>{formData.email}</strong>
+                    <h3 style={{ color: "#065f46", marginBottom: "0.5rem" }}>
+                      📧 Verify Your Email
+                    </h3>
+                    <p
+                      style={{
+                        color: "#6b7280",
+                        fontSize: "0.9rem",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      We've sent a verification code to{" "}
+                      <strong>{formData.email}</strong>
                     </p>
                   </div>
 
@@ -3438,28 +4074,35 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
                       value={otpCode}
                       onChange={(e) => {
                         setOtpCode(e.target.value);
-                        setOtpError('');
+                        setOtpError("");
                       }}
-                      className={`floating-input ${otpCode ? 'has-value' : ''} ${otpError ? 'error' : ''}`}
+                      className={`floating-input ${
+                        otpCode ? "has-value" : ""
+                      } ${otpError ? "error" : ""}`}
                       placeholder="Enter 6-digit code"
                       maxLength="6"
                       style={{
-                        textAlign: 'center',
-                        fontSize: '1.2rem',
-                        letterSpacing: '0.2rem',
-                        fontWeight: 'bold'
+                        textAlign: "center",
+                        fontSize: "1.2rem",
+                        letterSpacing: "0.2rem",
+                        fontWeight: "bold",
                       }}
                       id="otp-input"
                     />
                     <label htmlFor="otp-input" className="floating-label">
                       Verification Code
                     </label>
-                    {otpError && <span className="error-message">{otpError}</span>}
+                    {otpError && (
+                      <span className="error-message">{otpError}</span>
+                    )}
                   </div>
 
-                  <div className="otp-actions" style={{ textAlign: 'center', marginTop: '1rem' }}>
+                  <div
+                    className="otp-actions"
+                    style={{ textAlign: "center", marginTop: "1rem" }}
+                  >
                     {resendCooldown > 0 ? (
-                      <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
+                      <p style={{ color: "#6b7280", fontSize: "0.9rem" }}>
                         Resend code in {resendCooldown}s
                       </p>
                     ) : (
@@ -3467,7 +4110,13 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
                         type="button"
                         onClick={() => resendOTP()}
                         className="auth-link-btn"
-                        style={{ background: 'none', border: 'none', color: '#065f46', cursor: 'pointer', textDecoration: 'underline' }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#065f46",
+                          cursor: "pointer",
+                          textDecoration: "underline",
+                        }}
                       >
                         Resend verification code
                       </button>
@@ -3477,7 +4126,11 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
               )}
 
               <div className="auth-form-actions">
-                <button type="button" onClick={onCancel} className="auth-secondary-btn">
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="auth-secondary-btn"
+                >
                   Cancel
                 </button>
                 {showOTPStep && (
@@ -3485,20 +4138,25 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
                     type="button"
                     onClick={() => setShowOTPStep(false)}
                     className="auth-secondary-btn"
-                    style={{ marginRight: '0.5rem' }}
+                    style={{ marginRight: "0.5rem" }}
                   >
                     ← Back
                   </button>
                 )}
                 <button type="submit" className="auth-primary-btn">
-                  {showOTPStep ? 'Verify & Create Account' : 'Send Verification Code'}
+                  {showOTPStep
+                    ? "Verify & Create Account"
+                    : "Send Verification Code"}
                 </button>
               </div>
             </form>
 
             <div className="auth-form-footer">
               <p className="auth-switch-text">
-                Already have an account? <span className="auth-switch-link" onClick={onSwitchToLogin}>Sign in here</span>
+                Already have an account?{" "}
+                <span className="auth-switch-link" onClick={onSwitchToLogin}>
+                  Sign in here
+                </span>
               </p>
             </div>
           </div>
@@ -3509,14 +4167,14 @@ const UserSignupModal = ({ onCancel, onSwitchToLogin }) => {
 };
 
 const ForgotPasswordModal = ({ onCancel, onBackToLogin }) => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [validationError, setValidationError] = useState('');
+  const [validationError, setValidationError] = useState("");
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const allowedDomains = ['@icpac.net', '@igad.int'];
+    const allowedDomains = ["@icpac.net", "@igad.int"];
 
     // Check basic email format first
     if (!emailRegex.test(email)) {
@@ -3524,23 +4182,26 @@ const ForgotPasswordModal = ({ onCancel, onBackToLogin }) => {
     }
 
     // Check if email ends with allowed domains
-    return email && allowedDomains.some(domain => email.toLowerCase().endsWith(domain));
+    return (
+      email &&
+      allowedDomains.some((domain) => email.toLowerCase().endsWith(domain))
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email) {
-      setValidationError('Email is required');
+      setValidationError("Email is required");
       return;
     }
 
     if (!validateEmail(email)) {
-      setValidationError('Email must be from @icpac.net or @igad.int domain');
+      setValidationError("Email must be from @icpac.net or @igad.int domain");
       return;
     }
 
-    setValidationError('');
+    setValidationError("");
     setIsLoading(true);
 
     // Simulate API call
@@ -3553,14 +4214,16 @@ const ForgotPasswordModal = ({ onCancel, onBackToLogin }) => {
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
     if (validationError) {
-      setValidationError('');
+      setValidationError("");
     }
   };
 
   return (
     <div className="auth-modal-overlay">
       <div className="auth-modal-container">
-        <button onClick={onCancel} className="auth-close-btn">×</button>
+        <button onClick={onCancel} className="auth-close-btn">
+          ×
+        </button>
 
         <div className="auth-split-layout">
           {/* Branding Sidebar */}
@@ -3570,8 +4233,7 @@ const ForgotPasswordModal = ({ onCancel, onBackToLogin }) => {
             <p className="branding-subtitle">
               {isSubmitted
                 ? "Check your email for reset instructions"
-                : "Enter your email to receive password reset instructions"
-              }
+                : "Enter your email to receive password reset instructions"}
             </p>
             <div className="branding-features">
               <div className="feature-item">
@@ -3598,8 +4260,7 @@ const ForgotPasswordModal = ({ onCancel, onBackToLogin }) => {
               <p className="auth-form-subtitle">
                 {isSubmitted
                   ? "We've sent password reset instructions to your email address"
-                  : "Enter your email address and we'll send you instructions to reset your password"
-                }
+                  : "Enter your email address and we'll send you instructions to reset your password"}
               </p>
             </div>
 
@@ -3610,7 +4271,9 @@ const ForgotPasswordModal = ({ onCancel, onBackToLogin }) => {
                     type="email"
                     value={email}
                     onChange={handleEmailChange}
-                    className={`floating-input ${email ? 'has-value' : ''} ${validationError ? 'error' : ''}`}
+                    className={`floating-input ${email ? "has-value" : ""} ${
+                      validationError ? "error" : ""
+                    }`}
                     required
                     id="forgot-email"
                     disabled={isLoading}
@@ -3618,14 +4281,25 @@ const ForgotPasswordModal = ({ onCancel, onBackToLogin }) => {
                   <label htmlFor="forgot-email" className="floating-label">
                     Email Address
                   </label>
-                  {validationError && <span className="error-message">{validationError}</span>}
+                  {validationError && (
+                    <span className="error-message">{validationError}</span>
+                  )}
                 </div>
 
                 <div className="auth-form-actions">
-                  <button type="button" onClick={onBackToLogin} className="auth-secondary-btn" disabled={isLoading}>
+                  <button
+                    type="button"
+                    onClick={onBackToLogin}
+                    className="auth-secondary-btn"
+                    disabled={isLoading}
+                  >
                     Back to Login
                   </button>
-                  <button type="submit" className="auth-primary-btn" disabled={isLoading}>
+                  <button
+                    type="submit"
+                    className="auth-primary-btn"
+                    disabled={isLoading}
+                  >
                     {isLoading ? (
                       <>
                         <span className="loading-spinner"></span>
@@ -3642,8 +4316,13 @@ const ForgotPasswordModal = ({ onCancel, onBackToLogin }) => {
                 <div className="success-icon">✅</div>
                 <div className="success-message">
                   <h4>Instructions sent!</h4>
-                  <p>Check your email inbox and spam folder for the password reset link.</p>
-                  <p className="reset-email">Sent to: <strong>{email}</strong></p>
+                  <p>
+                    Check your email inbox and spam folder for the password
+                    reset link.
+                  </p>
+                  <p className="reset-email">
+                    Sent to: <strong>{email}</strong>
+                  </p>
                 </div>
                 <div className="auth-form-actions">
                   <button onClick={onBackToLogin} className="auth-primary-btn">
@@ -3655,7 +4334,10 @@ const ForgotPasswordModal = ({ onCancel, onBackToLogin }) => {
 
             <div className="auth-form-footer">
               <p className="auth-switch-text">
-                Remember your password? <span className="auth-switch-link" onClick={onBackToLogin}>Sign in here</span>
+                Remember your password?{" "}
+                <span className="auth-switch-link" onClick={onBackToLogin}>
+                  Sign in here
+                </span>
               </p>
             </div>
           </div>
@@ -3673,11 +4355,19 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
         <div className="booking-header">
           <div className="header-title-row">
             <div className="logo-section">
-              <img src="/ICPAC_Website_Header_Logo.svg" alt="ICPAC Logo" className="icpac-logo" />
+              <img
+                src="/ICPAC_Website_Header_Logo.svg"
+                alt="ICPAC Logo"
+                className="icpac-logo"
+              />
             </div>
             <div className="title-section">
               <h1 className="booking-title">ICPAC INTERNAL BOOKING SYSTEM</h1>
-              <p className="booking-subtitle">Welcome to the ICPAC Internal Booking System - Streamline your conference room reservations, manage meeting schedules, and enhance team collaboration</p>
+              <p className="booking-subtitle">
+                Welcome to the ICPAC Internal Booking System - Streamline your
+                conference room reservations, manage meeting schedules, and
+                enhance team collaboration
+              </p>
             </div>
           </div>
         </div>
@@ -3707,9 +4397,23 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
           </div>
 
           <div className="date-picker-section">
-            <label className="date-picker-label" style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffffff' }}>Get Started:</label>
-            <p style={{ marginTop: '10px', color: '#ffffff', fontSize: '16px', fontStyle: 'italic', fontWeight: '500' }}>
-              Please login to your account or create a new one to access the meeting room booking system.
+            <label
+              className="date-picker-label"
+              style={{ fontSize: "18px", fontWeight: "bold", color: "#ffffff" }}
+            >
+              Get Started:
+            </label>
+            <p
+              style={{
+                marginTop: "10px",
+                color: "#ffffff",
+                fontSize: "16px",
+                fontStyle: "italic",
+                fontWeight: "500",
+              }}
+            >
+              Please login to your account or create a new one to access the
+              meeting room booking system.
             </p>
           </div>
         </div>
@@ -3729,145 +4433,336 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
             </div>
           </div>
 
-          <div className="dashboard-preview" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '20px',
-            padding: '20px',
-            backgroundColor: '#f8fafc',
-            borderRadius: '12px',
-            marginTop: '20px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
-          }}>
-            <div className="stat-card" style={{
-              background: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
-              padding: '20px',
-              borderRadius: '12px',
-              textAlign: 'center',
-              border: '1px solid rgba(56, 189, 248, 0.2)',
-              boxShadow: '0 2px 4px rgba(56, 189, 248, 0.1)',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+          <div
+            className="dashboard-preview"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: "20px",
+              padding: "20px",
+              backgroundColor: "#f8fafc",
+              borderRadius: "12px",
+              marginTop: "20px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
             }}
+          >
+            <div
+              className="stat-card"
+              style={{
+                background: "linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)",
+                padding: "20px",
+                borderRadius: "12px",
+                textAlign: "center",
+                border: "1px solid rgba(56, 189, 248, 0.2)",
+                boxShadow: "0 2px 4px rgba(56, 189, 248, 0.1)",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              }}
               onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(56, 189, 248, 0.2)';
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 4px 12px rgba(56, 189, 248, 0.2)";
               }}
               onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 2px 4px rgba(56, 189, 248, 0.1)';
-              }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🏢</div>
-              <h3 style={{ color: '#0369a1', margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Total Rooms</h3>
-              <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#0c4a6e', margin: '0' }}>6</p>
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 2px 4px rgba(56, 189, 248, 0.1)";
+              }}
+            >
+              <div style={{ fontSize: "2.5rem", marginBottom: "8px" }}>🏢</div>
+              <h3
+                style={{
+                  color: "#0369a1",
+                  margin: "0 0 8px 0",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                }}
+              >
+                Total Rooms
+              </h3>
+              <p
+                style={{
+                  fontSize: "28px",
+                  fontWeight: "bold",
+                  color: "#0c4a6e",
+                  margin: "0",
+                }}
+              >
+                6
+              </p>
             </div>
-            <div className="stat-card" style={{
-              background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
-              padding: '20px',
-              borderRadius: '12px',
-              textAlign: 'center',
-              border: '1px solid rgba(34, 197, 94, 0.2)',
-              boxShadow: '0 2px 4px rgba(34, 197, 94, 0.1)',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-            }}
+            <div
+              className="stat-card"
+              style={{
+                background: "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)",
+                padding: "20px",
+                borderRadius: "12px",
+                textAlign: "center",
+                border: "1px solid rgba(34, 197, 94, 0.2)",
+                boxShadow: "0 2px 4px rgba(34, 197, 94, 0.1)",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              }}
               onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(34, 197, 94, 0.2)';
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 4px 12px rgba(34, 197, 94, 0.2)";
               }}
               onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 2px 4px rgba(34, 197, 94, 0.1)';
-              }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>📊</div>
-              <h3 style={{ color: '#166534', margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Available Features</h3>
-              <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#14532d', margin: '0' }}>Live Analytics</p>
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 2px 4px rgba(34, 197, 94, 0.1)";
+              }}
+            >
+              <div style={{ fontSize: "2.5rem", marginBottom: "8px" }}>📊</div>
+              <h3
+                style={{
+                  color: "#166534",
+                  margin: "0 0 8px 0",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                }}
+              >
+                Available Features
+              </h3>
+              <p
+                style={{
+                  fontSize: "20px",
+                  fontWeight: "bold",
+                  color: "#14532d",
+                  margin: "0",
+                }}
+              >
+                Live Analytics
+              </p>
             </div>
-            <div className="stat-card" style={{
-              background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-              padding: '20px',
-              borderRadius: '12px',
-              textAlign: 'center',
-              border: '1px solid rgba(245, 158, 11, 0.2)',
-              boxShadow: '0 2px 4px rgba(245, 158, 11, 0.1)',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-            }}
+            <div
+              className="stat-card"
+              style={{
+                background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+                padding: "20px",
+                borderRadius: "12px",
+                textAlign: "center",
+                border: "1px solid rgba(245, 158, 11, 0.2)",
+                boxShadow: "0 2px 4px rgba(245, 158, 11, 0.1)",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              }}
               onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.2)';
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.2)";
               }}
               onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 2px 4px rgba(245, 158, 11, 0.1)';
-              }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🎯</div>
-              <h3 style={{ color: '#d97706', margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Room Types</h3>
-              <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#92400e', margin: '0' }}>3</p>
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 2px 4px rgba(245, 158, 11, 0.1)";
+              }}
+            >
+              <div style={{ fontSize: "2.5rem", marginBottom: "8px" }}>🎯</div>
+              <h3
+                style={{
+                  color: "#d97706",
+                  margin: "0 0 8px 0",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                }}
+              >
+                Room Types
+              </h3>
+              <p
+                style={{
+                  fontSize: "28px",
+                  fontWeight: "bold",
+                  color: "#92400e",
+                  margin: "0",
+                }}
+              >
+                3
+              </p>
             </div>
-            <div className="stat-card" style={{
-              background: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)',
-              padding: '20px',
-              borderRadius: '12px',
-              textAlign: 'center',
-              border: '1px solid rgba(139, 92, 246, 0.2)',
-              boxShadow: '0 2px 4px rgba(139, 92, 246, 0.1)',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-            }}
+            <div
+              className="stat-card"
+              style={{
+                background: "linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)",
+                padding: "20px",
+                borderRadius: "12px",
+                textAlign: "center",
+                border: "1px solid rgba(139, 92, 246, 0.2)",
+                boxShadow: "0 2px 4px rgba(139, 92, 246, 0.1)",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              }}
               onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.2)';
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 4px 12px rgba(139, 92, 246, 0.2)";
               }}
               onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 2px 4px rgba(139, 92, 246, 0.1)';
-              }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>⚡</div>
-              <h3 style={{ color: '#7c3aed', margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Real-time</h3>
-              <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#5b21b6', margin: '0' }}>Updates</p>
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 2px 4px rgba(139, 92, 246, 0.1)";
+              }}
+            >
+              <div style={{ fontSize: "2.5rem", marginBottom: "8px" }}>⚡</div>
+              <h3
+                style={{
+                  color: "#7c3aed",
+                  margin: "0 0 8px 0",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                }}
+              >
+                Real-time
+              </h3>
+              <p
+                style={{
+                  fontSize: "20px",
+                  fontWeight: "bold",
+                  color: "#5b21b6",
+                  margin: "0",
+                }}
+              >
+                Updates
+              </p>
             </div>
           </div>
 
-          <div className="dashboard-features" style={{
-            marginTop: '20px',
-            padding: '20px',
-            backgroundColor: '#f8fafc',
-            borderRadius: '8px'
-          }}>
-            <h3 style={{ color: '#374151', marginBottom: '15px' }}>Dashboard Features Available:</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
-              <div style={{ padding: '10px', backgroundColor: '#fff', borderRadius: '6px', borderLeft: '4px solid #3b82f6' }}>
+          <div
+            className="dashboard-features"
+            style={{
+              marginTop: "20px",
+              padding: "20px",
+              backgroundColor: "#f8fafc",
+              borderRadius: "8px",
+            }}
+          >
+            <h3 style={{ color: "#374151", marginBottom: "15px" }}>
+              Dashboard Features Available:
+            </h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                gap: "15px",
+              }}
+            >
+              <div
+                style={{
+                  padding: "10px",
+                  backgroundColor: "#fff",
+                  borderRadius: "6px",
+                  borderLeft: "4px solid #3b82f6",
+                }}
+              >
                 <strong>📈 Room Utilization Stats</strong>
-                <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#6b7280' }}>Real-time usage percentages and booking counts</p>
+                <p
+                  style={{
+                    margin: "5px 0 0 0",
+                    fontSize: "14px",
+                    color: "#6b7280",
+                  }}
+                >
+                  Real-time usage percentages and booking counts
+                </p>
               </div>
-              <div style={{ padding: '10px', backgroundColor: '#fff', borderRadius: '6px', borderLeft: '4px solid #10b981' }}>
+              <div
+                style={{
+                  padding: "10px",
+                  backgroundColor: "#fff",
+                  borderRadius: "6px",
+                  borderLeft: "4px solid #10b981",
+                }}
+              >
                 <strong>🏆 Room Rankings</strong>
-                <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#6b7280' }}>Busiest to least used rooms with analytics</p>
+                <p
+                  style={{
+                    margin: "5px 0 0 0",
+                    fontSize: "14px",
+                    color: "#6b7280",
+                  }}
+                >
+                  Busiest to least used rooms with analytics
+                </p>
               </div>
-              <div style={{ padding: '10px', backgroundColor: '#fff', borderRadius: '6px', borderLeft: '4px solid #f59e0b' }}>
+              <div
+                style={{
+                  padding: "10px",
+                  backgroundColor: "#fff",
+                  borderRadius: "6px",
+                  borderLeft: "4px solid #f59e0b",
+                }}
+              >
                 <strong>🕐 Peak Hours Analysis</strong>
-                <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#6b7280' }}>Time-based usage patterns and trends</p>
+                <p
+                  style={{
+                    margin: "5px 0 0 0",
+                    fontSize: "14px",
+                    color: "#6b7280",
+                  }}
+                >
+                  Time-based usage patterns and trends
+                </p>
               </div>
-              <div style={{ padding: '10px', backgroundColor: '#fff', borderRadius: '6px', borderLeft: '4px solid #ef4444' }}>
+              <div
+                style={{
+                  padding: "10px",
+                  backgroundColor: "#fff",
+                  borderRadius: "6px",
+                  borderLeft: "4px solid #ef4444",
+                }}
+              >
                 <strong>🔥 Usage Heatmaps</strong>
-                <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#6b7280' }}>Visual representation of room usage by time</p>
+                <p
+                  style={{
+                    margin: "5px 0 0 0",
+                    fontSize: "14px",
+                    color: "#6b7280",
+                  }}
+                >
+                  Visual representation of room usage by time
+                </p>
               </div>
-              <div style={{ padding: '10px', backgroundColor: '#fff', borderRadius: '6px', borderLeft: '4px solid #8b5cf6' }}>
+              <div
+                style={{
+                  padding: "10px",
+                  backgroundColor: "#fff",
+                  borderRadius: "6px",
+                  borderLeft: "4px solid #8b5cf6",
+                }}
+              >
                 <strong>📊 Interactive Charts</strong>
-                <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#6b7280' }}>Weekly/monthly booking trends and patterns</p>
+                <p
+                  style={{
+                    margin: "5px 0 0 0",
+                    fontSize: "14px",
+                    color: "#6b7280",
+                  }}
+                >
+                  Weekly/monthly booking trends and patterns
+                </p>
               </div>
-              <div style={{ padding: '10px', backgroundColor: '#fff', borderRadius: '6px', borderLeft: '4px solid #06b6d4' }}>
+              <div
+                style={{
+                  padding: "10px",
+                  backgroundColor: "#fff",
+                  borderRadius: "6px",
+                  borderLeft: "4px solid #06b6d4",
+                }}
+              >
                 <strong>🎯 Capacity Analysis</strong>
-                <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#6b7280' }}>Efficiency metrics and capacity utilization</p>
+                <p
+                  style={{
+                    margin: "5px 0 0 0",
+                    fontSize: "14px",
+                    color: "#6b7280",
+                  }}
+                >
+                  Efficiency metrics and capacity utilization
+                </p>
               </div>
             </div>
           </div>
         </div>
-
 
         {/* Footer */}
         <footer className="booking-footer">
           <div className="footer-content">
             <div className="footer-section">
               <div className="footer-logo">
-                <img src="/ICPAC_Website_Header_Logo.svg" alt="ICPAC Logo" className="footer-logo-img" />
+                <img
+                  src="/ICPAC_Website_Header_Logo.svg"
+                  alt="ICPAC Logo"
+                  className="footer-logo-img"
+                />
                 <div className="footer-text">
                   <h3>ICPAC Boardroom System</h3>
                   <p>Streamlining meeting room reservations</p>
@@ -3878,15 +4773,37 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
             <div className="footer-section">
               <h4>Quick Links</h4>
               <ul className="footer-links">
-                <li><a href="#" onClick={(e) => { e.preventDefault(); onLogin(); }}>Login</a></li>
-                <li><a href="#" onClick={(e) => { e.preventDefault(); onSignup(); }}>Sign Up</a></li>
+                <li>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onLogin();
+                    }}
+                  >
+                    Login
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onSignup();
+                    }}
+                  >
+                    Sign Up
+                  </a>
+                </li>
               </ul>
             </div>
 
             <div className="footer-section">
               <h4>Contact Info</h4>
               <div className="contact-info">
-                <p><strong>ICPAC</strong></p>
+                <p>
+                  <strong>ICPAC</strong>
+                </p>
                 <p>Climate Prediction and Applications Centre</p>
                 <p>Email: info@icpac.net</p>
                 <p>Phone: +254 20 7095000</p>
@@ -3905,7 +4822,10 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
           </div>
 
           <div className="footer-bottom">
-            <p>&copy; 2025 ICPAC. All rights reserved. | Boardroom Booking System v1.0</p>
+            <p>
+              &copy; 2025 ICPAC. All rights reserved. | Boardroom Booking System
+              v1.0
+            </p>
           </div>
         </footer>
       </div>
@@ -3914,7 +4834,7 @@ const LandingPage = ({ onLogin, onSignup, onViewDashboard }) => {
 };
 
 const AdminLoginModal = ({ onLogin, onCancel }) => {
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -3925,15 +4845,20 @@ const AdminLoginModal = ({ onLogin, onCancel }) => {
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <div className="admin-logo-section" style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <div
+            className="admin-logo-section"
+            style={{ textAlign: "center", marginBottom: "16px" }}
+          >
             <img
               src="/ICPAC_Website_Header_Logo.svg"
               alt="ICPAC Logo"
-              style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+              style={{ width: "48px", height: "48px", objectFit: "contain" }}
             />
           </div>
           <h3 className="modal-title">Admin Login</h3>
-          <button onClick={onCancel} className="modal-close">×</button>
+          <button onClick={onCancel} className="modal-close">
+            ×
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="admin-login-form">
           <div className="form-group">
@@ -3948,7 +4873,11 @@ const AdminLoginModal = ({ onLogin, onCancel }) => {
             />
           </div>
           <div className="form-buttons">
-            <button type="button" onClick={onCancel} className="form-button secondary">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="form-button secondary"
+            >
               Cancel
             </button>
             <button type="submit" className="form-button primary">
@@ -3961,16 +4890,22 @@ const AdminLoginModal = ({ onLogin, onCancel }) => {
   );
 };
 
-const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) => {
+const EditBookingForm = ({
+  booking,
+  rooms,
+  currentUser,
+  onUpdate,
+  onCancel,
+}) => {
   const [formData, setFormData] = useState({
-    title: booking.title || '',
-    organizer: booking.organizer || (currentUser ? currentUser.name : ''),
+    title: booking.title || "",
+    organizer: booking.organizer || (currentUser ? currentUser.name : ""),
     duration: booking.duration || 0.5,
-    description: booking.description || '',
-    date: booking.date || '',
-    time: booking.time || '',
+    description: booking.description || "",
+    date: booking.date || "",
+    time: booking.time || "",
     roomId: booking.roomId || 1,
-    attendeeCount: booking.attendeeCount || 1
+    attendeeCount: booking.attendeeCount || 1,
   });
 
   // Generate time slots with 15-minute intervals
@@ -3980,11 +4915,11 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
     const endHour = 18; // 6 PM
 
     for (let hour = startHour; hour <= endHour; hour++) {
-      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      slots.push(`${hour.toString().padStart(2, "0")}:00`);
       if (hour < endHour) {
-        slots.push(`${hour.toString().padStart(2, '0')}:15`);
-        slots.push(`${hour.toString().padStart(2, '0')}:30`);
-        slots.push(`${hour.toString().padStart(2, '0')}:45`);
+        slots.push(`${hour.toString().padStart(2, "0")}:15`);
+        slots.push(`${hour.toString().padStart(2, "0")}:30`);
+        slots.push(`${hour.toString().padStart(2, "0")}:45`);
       }
     }
     return slots;
@@ -4001,8 +4936,12 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: name === 'duration' ? parseFloat(value) :
-              name === 'roomId' || name === 'attendeeCount' ? parseInt(value) : value
+      [name]:
+        name === "duration"
+          ? parseFloat(value)
+          : name === "roomId" || name === "attendeeCount"
+          ? parseInt(value)
+          : value,
     });
   };
 
@@ -4011,12 +4950,16 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
       <div className="modal-content">
         <div className="modal-header">
           <h3 className="modal-title">Edit Booking</h3>
-          <button onClick={onCancel} className="modal-close">×</button>
+          <button onClick={onCancel} className="modal-close">
+            ×
+          </button>
         </div>
 
         <div className="booking-info">
           <h4>Editing: {booking.title}</h4>
-          <p>Original: {booking.date} at {booking.time}</p>
+          <p>
+            Original: {booking.date} at {booking.time}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="booking-form">
@@ -4052,8 +4995,10 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
               onChange={handleChange}
               className="form-select"
             >
-              {rooms.map(room => (
-                <option key={room.id} value={room.id}>{room.name}</option>
+              {rooms.map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.name}
+                </option>
               ))}
             </select>
           </div>
@@ -4078,8 +5023,10 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
               onChange={handleChange}
               className="form-select"
             >
-              {timeSlots.map(time => (
-                <option key={time} value={time}>{time}</option>
+              {timeSlots.map((time) => (
+                <option key={time} value={time}>
+                  {time}
+                </option>
               ))}
             </select>
           </div>
@@ -4133,9 +5080,12 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
             />
           </div>
 
-
           <div className="form-buttons">
-            <button type="button" onClick={onCancel} className="form-button secondary">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="form-button secondary"
+            >
               Cancel
             </button>
             <button type="submit" className="form-button primary">
@@ -4148,22 +5098,33 @@ const EditBookingForm = ({ booking, rooms, currentUser, onUpdate, onCancel }) =>
   );
 };
 
-const UserRegistrationModal = ({ rooms, onRegister, onCancel, user = null, isEditing = false }) => {
+const UserRegistrationModal = ({
+  rooms,
+  onRegister,
+  onCancel,
+  user = null,
+  isEditing = false,
+}) => {
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    password: user?.password || '',
-    role: user?.role || 'user',
-    managedRooms: user?.managedRooms || []
+    name: user?.name || "",
+    email: user?.email || "",
+    password: user?.password || "",
+    role: user?.role || "user",
+    managedRooms: user?.managedRooms || [],
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
     // Validate email domain
-    const allowedDomains = ['@icpac.net', '@igad.int'];
-    if (!allowedDomains.some(domain => formData.email && formData.email.toLowerCase().endsWith(domain))) {
-      alert('Email must be from @icpac.net or @igad.int domain');
+    const allowedDomains = ["@icpac.net", "@igad.int"];
+    if (
+      !allowedDomains.some(
+        (domain) =>
+          formData.email && formData.email.toLowerCase().endsWith(domain)
+      )
+    ) {
+      alert("Email must be from @icpac.net or @igad.int domain");
       return;
     }
 
@@ -4174,18 +5135,18 @@ const UserRegistrationModal = ({ rooms, onRegister, onCancel, user = null, isEdi
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
   const handleRoomSelection = (roomId) => {
     const updatedRooms = formData.managedRooms.includes(roomId)
-      ? formData.managedRooms.filter(id => id !== roomId)
+      ? formData.managedRooms.filter((id) => id !== roomId)
       : [...formData.managedRooms, roomId];
 
     setFormData({
       ...formData,
-      managedRooms: updatedRooms
+      managedRooms: updatedRooms,
     });
   };
 
@@ -4193,8 +5154,12 @@ const UserRegistrationModal = ({ rooms, onRegister, onCancel, user = null, isEdi
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h3 className="modal-title">{isEditing ? 'Edit User' : 'User Registration'}</h3>
-          <button onClick={onCancel} className="modal-close">×</button>
+          <h3 className="modal-title">
+            {isEditing ? "Edit User" : "User Registration"}
+          </h3>
+          <button onClick={onCancel} className="modal-close">
+            ×
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="user-registration-form">
           <div className="form-group">
@@ -4251,11 +5216,11 @@ const UserRegistrationModal = ({ rooms, onRegister, onCancel, user = null, isEdi
             </select>
           </div>
 
-          {formData.role === 'room_admin' && (
+          {formData.role === "room_admin" && (
             <div className="form-group">
               <label className="form-label">Managed Rooms</label>
               <div className="room-checkboxes">
-                {rooms.map(room => (
+                {rooms.map((room) => (
                   <label key={room.id} className="checkbox-label">
                     <input
                       type="checkbox"
@@ -4270,7 +5235,11 @@ const UserRegistrationModal = ({ rooms, onRegister, onCancel, user = null, isEdi
           )}
 
           <div className="form-buttons">
-            <button type="button" onClick={onCancel} className="form-button secondary">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="form-button secondary"
+            >
               Cancel
             </button>
             <button type="submit" className="form-button primary">
@@ -4289,31 +5258,42 @@ const UserManagementModal = ({ users, rooms, onUpdateUsers, onCancel }) => {
 
   const handleAddUser = (userData) => {
     // Check if email already exists
-    const emailExists = users.some(user => user.email && userData.email && user.email.toLowerCase() === userData.email.toLowerCase());
+    const emailExists = users.some(
+      (user) =>
+        user.email &&
+        userData.email &&
+        user.email.toLowerCase() === userData.email.toLowerCase()
+    );
     if (emailExists) {
-      alert('Error: A user with this email address already exists. Please use a different email.');
+      alert(
+        "Error: A user with this email address already exists. Please use a different email."
+      );
       return;
     }
 
     const newUser = {
       id: Date.now(),
       ...userData,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
     const updatedUsers = [...users, newUser];
     onUpdateUsers(updatedUsers);
-    localStorage.setItem('icpac_users', JSON.stringify(updatedUsers));
+    localStorage.setItem("icpac_users", JSON.stringify(updatedUsers));
     setShowAddUser(false);
-    alert('User added successfully!');
+    alert("User added successfully!");
   };
 
   const handleDeleteUser = (userId) => {
-    const userToDelete = users.find(user => user.id === userId);
+    const userToDelete = users.find((user) => user.id === userId);
     if (userToDelete) {
-      if (window.confirm(`⚠️ Are you sure you want to delete user "${userToDelete.name}" (${userToDelete.email})?\n\nThis action cannot be undone and will remove all their access to the system.`)) {
-        const updatedUsers = users.filter(user => user.id !== userId);
+      if (
+        window.confirm(
+          `⚠️ Are you sure you want to delete user "${userToDelete.name}" (${userToDelete.email})?\n\nThis action cannot be undone and will remove all their access to the system.`
+        )
+      ) {
+        const updatedUsers = users.filter((user) => user.id !== userId);
         onUpdateUsers(updatedUsers);
-        localStorage.setItem('icpac_users', JSON.stringify(updatedUsers));
+        localStorage.setItem("icpac_users", JSON.stringify(updatedUsers));
         alert(`User "${userToDelete.name}" has been deleted successfully.`);
       }
     }
@@ -4321,27 +5301,35 @@ const UserManagementModal = ({ users, rooms, onUpdateUsers, onCancel }) => {
 
   const handleEditUser = (userData) => {
     // Check if email already exists (excluding current user)
-    const emailExists = users.some(user =>
-      user.id !== editingUser.id && user.email && userData.email && user.email.toLowerCase() === userData.email.toLowerCase()
+    const emailExists = users.some(
+      (user) =>
+        user.id !== editingUser.id &&
+        user.email &&
+        userData.email &&
+        user.email.toLowerCase() === userData.email.toLowerCase()
     );
     if (emailExists) {
-      alert('Error: A user with this email address already exists. Please use a different email.');
+      alert(
+        "Error: A user with this email address already exists. Please use a different email."
+      );
       return;
     }
 
-    const updatedUsers = users.map(user =>
+    const updatedUsers = users.map((user) =>
       user.id === editingUser.id
         ? { ...user, ...userData, updatedAt: new Date().toISOString() }
         : user
     );
     onUpdateUsers(updatedUsers);
-    localStorage.setItem('icpac_users', JSON.stringify(updatedUsers));
+    localStorage.setItem("icpac_users", JSON.stringify(updatedUsers));
     setEditingUser(null);
-    alert('User updated successfully!');
+    alert("User updated successfully!");
   };
 
   const getRoomNames = (roomIds) => {
-    return roomIds.map(id => rooms.find(room => room.id === id)?.name).join(', ');
+    return roomIds
+      .map((id) => rooms.find((room) => room.id === id)?.name)
+      .join(", ");
   };
 
   return (
@@ -4349,7 +5337,9 @@ const UserManagementModal = ({ users, rooms, onUpdateUsers, onCancel }) => {
       <div className="modal-content large">
         <div className="modal-header">
           <h3 className="modal-title">User Management</h3>
-          <button onClick={onCancel} className="modal-close">×</button>
+          <button onClick={onCancel} className="modal-close">
+            ×
+          </button>
         </div>
         <div className="user-management-content">
           <div className="user-management-header">
@@ -4374,18 +5364,26 @@ const UserManagementModal = ({ users, rooms, onUpdateUsers, onCancel }) => {
                 </tr>
               </thead>
               <tbody>
-                {users.map(user => (
+                {users.map((user) => (
                   <tr key={user.id}>
                     <td>{user.name}</td>
                     <td>{user.email}</td>
                     <td>
                       <span className={`role-badge role-${user.role}`}>
-                        {user.role === 'super_admin' ? 'Super Admin' :
-                          user.role === 'room_admin' ? 'Room Admin' :
-                            user.role === 'procurement_officer' ? 'Procurement Officer' : 'User'}
+                        {user.role === "super_admin"
+                          ? "Super Admin"
+                          : user.role === "room_admin"
+                          ? "Room Admin"
+                          : user.role === "procurement_officer"
+                          ? "Procurement Officer"
+                          : "User"}
                       </span>
                     </td>
-                    <td>{user.managedRooms ? getRoomNames(user.managedRooms) : 'None'}</td>
+                    <td>
+                      {user.managedRooms
+                        ? getRoomNames(user.managedRooms)
+                        : "None"}
+                    </td>
                     <td>
                       <div className="user-actions">
                         <button
@@ -4443,41 +5441,52 @@ const UserManagementModal = ({ users, rooms, onUpdateUsers, onCancel }) => {
 
 // Enhanced Procurement Dashboard Component
 const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [statusFilter, setStatusFilter] = React.useState('all');
-  const [sortBy, setSortBy] = React.useState('date');
-  const [sortOrder, setSortOrder] = React.useState('asc');
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState("all");
+  const [sortBy, setSortBy] = React.useState("date");
+  const [sortOrder, setSortOrder] = React.useState("asc");
   const [currentPage, setCurrentPage] = React.useState(1);
   const [itemsPerPage] = React.useState(10);
 
   const getAllProcurementOrders = () => {
     return bookings
-      .filter(booking => booking.procurementOrders && booking.procurementOrders.length > 0)
-      .map(booking => ({
+      .filter(
+        (booking) =>
+          booking.procurementOrders && booking.procurementOrders.length > 0
+      )
+      .map((booking) => ({
         ...booking,
-        roomName: rooms.find(room => room.id === booking.roomId)?.name || 'Unknown Room',
-        roomLocation: getRoomLocation(rooms.find(room => room.id === booking.roomId)),
+        roomName:
+          rooms.find((room) => room.id === booking.roomId)?.name ||
+          "Unknown Room",
+        roomLocation: getRoomLocation(
+          rooms.find((room) => room.id === booking.roomId)
+        ),
         // Normalize procurement orders data structure
-        procurementOrders: booking.procurementOrders.map(item => ({
+        procurementOrders: booking.procurementOrders.map((item) => ({
           ...item,
-          itemName: item.itemName || item.name || 'Unknown Item',
+          itemName: item.itemName || item.name || "Unknown Item",
           quantity: item.quantity || 1,
-          notes: item.notes || ''
+          notes: item.notes || "",
         })),
         // Add booking duration info
         duration: getBookingDuration(booking),
         totalDays: getTotalBookingDays(booking),
-        priority: calculateOrderPriority(booking)
+        priority: calculateOrderPriority(booking),
       }))
-      .sort((a, b) => new Date(a.date || a.startDate) - new Date(b.date || b.startDate));
+      .sort(
+        (a, b) =>
+          new Date(a.date || a.startDate) - new Date(b.date || b.startDate)
+      );
   };
 
   const getRoomLocation = (room) => {
-    if (!room) return 'Unknown Location';
+    if (!room) return "Unknown Location";
     const name = room.name.toLowerCase();
-    if (name.includes('ground floor')) return 'Ground Floor';
-    if (name.includes('first floor') || name.includes('1st floor')) return 'First Floor';
-    return 'Main Building';
+    if (name.includes("ground floor")) return "Ground Floor";
+    if (name.includes("first floor") || name.includes("1st floor"))
+      return "First Floor";
+    return "Main Building";
   };
 
   const calculateOrderPriority = (booking) => {
@@ -4485,23 +5494,23 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
     const now = new Date();
     const hoursUntil = (orderDate - now) / (1000 * 60 * 60);
 
-    if (hoursUntil < 0) return 'expired';
-    if (hoursUntil <= 2) return 'urgent';
-    if (hoursUntil <= 24) return 'high';
-    if (hoursUntil <= 72) return 'medium';
-    return 'low';
+    if (hoursUntil < 0) return "expired";
+    if (hoursUntil <= 2) return "urgent";
+    if (hoursUntil <= 24) return "high";
+    if (hoursUntil <= 72) return "medium";
+    return "low";
   };
 
   const getBookingDuration = (booking) => {
-    if (booking.bookingType === 'weekly') return 'Weekly';
-    if (booking.bookingType === 'multi-day') return 'Multi-day';
-    if (booking.bookingType === 'full-day') return 'Full day';
-    return 'Hourly';
+    if (booking.bookingType === "weekly") return "Weekly";
+    if (booking.bookingType === "multi-day") return "Multi-day";
+    if (booking.bookingType === "full-day") return "Full day";
+    return "Hourly";
   };
 
   const getTotalBookingDays = (booking) => {
-    if (booking.bookingType === 'weekly') return 7;
-    if (booking.bookingType === 'multi-day') {
+    if (booking.bookingType === "weekly") return 7;
+    if (booking.bookingType === "multi-day") {
       const startDate = new Date(booking.startDate);
       const endDate = new Date(booking.endDate);
       const diffTime = Math.abs(endDate - startDate);
@@ -4518,19 +5527,20 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(order =>
-        order.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.organizer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.procurementOrders.some(item =>
-          item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+      filtered = filtered.filter(
+        (order) =>
+          order.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.organizer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.procurementOrders.some((item) =>
+            item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
+          )
       );
     }
 
     // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(order => {
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((order) => {
         const status = getOrderStatus(order);
         return status.status.toLowerCase() === statusFilter.toLowerCase();
       });
@@ -4541,24 +5551,30 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
       let aVal, bVal;
 
       switch (sortBy) {
-        case 'date':
+        case "date":
           aVal = new Date(a.date || a.startDate);
           bVal = new Date(b.date || b.startDate);
           break;
-        case 'title':
+        case "title":
           aVal = a.title.toLowerCase();
           bVal = b.title.toLowerCase();
           break;
-        case 'organizer':
+        case "organizer":
           aVal = a.organizer.toLowerCase();
           bVal = b.organizer.toLowerCase();
           break;
-        case 'room':
+        case "room":
           aVal = a.roomName.toLowerCase();
           bVal = b.roomName.toLowerCase();
           break;
-        case 'priority':
-          const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1, expired: 0 };
+        case "priority":
+          const priorityOrder = {
+            urgent: 4,
+            high: 3,
+            medium: 2,
+            low: 1,
+            expired: 0,
+          };
           aVal = priorityOrder[a.priority] || 0;
           bVal = priorityOrder[b.priority] || 0;
           break;
@@ -4567,7 +5583,7 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
           bVal = b.id;
       }
 
-      if (sortOrder === 'asc') {
+      if (sortOrder === "asc") {
         return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
       } else {
         return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
@@ -4582,7 +5598,10 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
   // Pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedOrders = filteredOrders.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   // Calculate enhanced stats
   const totalOrders = orders.length || 0;
@@ -4593,23 +5612,25 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
     const orderTotal = order.procurementOrders.reduce((orderSum, item) => {
       const quantity = parseInt(item.quantity) || 0;
       const days = order.totalDays || 1;
-      return orderSum + (quantity * days);
+      return orderSum + quantity * days;
     }, 0);
     return total + orderTotal;
   }, 0);
 
   // Calculate additional stats for enhanced dashboard
-  const urgentOrders = orders.filter(order => order.priority === 'urgent').length;
-  const todayOrders = orders.filter(order => {
+  const urgentOrders = orders.filter(
+    (order) => order.priority === "urgent"
+  ).length;
+  const todayOrders = orders.filter((order) => {
     try {
-      return getOrderStatus(order).status === 'Today';
+      return getOrderStatus(order).status === "Today";
     } catch (e) {
       return false;
     }
   }).length;
-  const upcomingOrders = orders.filter(order => {
+  const upcomingOrders = orders.filter((order) => {
     try {
-      return getOrderStatus(order).status === 'Upcoming';
+      return getOrderStatus(order).status === "Upcoming";
     } catch (e) {
       return false;
     }
@@ -4618,21 +5639,21 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
   // Helper functions for styling
   const getPriorityColor = (priority) => {
     const colors = {
-      urgent: { bg: '#fef2f2', border: '#fecaca', color: '#dc2626' },
-      high: { bg: '#fef3c7', border: '#fde68a', color: '#d97706' },
-      medium: { bg: '#dbeafe', border: '#bfdbfe', color: '#2563eb' },
-      low: { bg: '#f0fdf4', border: '#bbf7d0', color: '#059669' },
-      expired: { bg: '#f1f5f9', border: '#cbd5e1', color: '#64748b' }
+      urgent: { bg: "#fef2f2", border: "#fecaca", color: "#dc2626" },
+      high: { bg: "#fef3c7", border: "#fde68a", color: "#d97706" },
+      medium: { bg: "#dbeafe", border: "#bfdbfe", color: "#2563eb" },
+      low: { bg: "#f0fdf4", border: "#bbf7d0", color: "#059669" },
+      expired: { bg: "#f1f5f9", border: "#cbd5e1", color: "#64748b" },
     };
     return colors[priority] || colors.medium;
   };
 
   const getStatusColor = (orderStatus) => {
     const colors = {
-      today: { bg: '#fef3c7', border: '#fde68a', color: '#d97706' },
-      upcoming: { bg: '#dbeafe', border: '#bfdbfe', color: '#2563eb' },
-      past: { bg: '#f1f5f9', border: '#cbd5e1', color: '#64748b' },
-      declined: { bg: '#fef2f2', border: '#fecaca', color: '#dc2626' }
+      today: { bg: "#fef3c7", border: "#fde68a", color: "#d97706" },
+      upcoming: { bg: "#dbeafe", border: "#bfdbfe", color: "#2563eb" },
+      past: { bg: "#f1f5f9", border: "#cbd5e1", color: "#64748b" },
+      declined: { bg: "#fef2f2", border: "#fecaca", color: "#dc2626" },
     };
     const statusKey = orderStatus.status.toLowerCase();
     return colors[statusKey] || colors.upcoming;
@@ -4640,19 +5661,23 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
 
   // Download functions
   const downloadPDF = (filterType = null) => {
-    const filteredOrders = filterType ? orders.filter(order => order.duration === filterType) : orders;
-    const printWindow = window.open('', '_blank');
-    const currentDate = new Date().toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    const filteredOrders = filterType
+      ? orders.filter((order) => order.duration === filterType)
+      : orders;
+    const printWindow = window.open("", "_blank");
+    const currentDate = new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
     const pdfContent = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>ICPAC Procurement Orders Report${filterType ? ` - ${filterType}` : ''}</title>
+        <title>ICPAC Procurement Orders Report${
+          filterType ? ` - ${filterType}` : ""
+        }</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
           .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #10b981; padding-bottom: 20px; }
@@ -4682,7 +5707,9 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
       </head>
       <body>
         <div class="header">
-          <h1>ICPAC Procurement Orders Report${filterType ? ` - ${filterType}` : ''}</h1>
+          <h1>ICPAC Procurement Orders Report${
+            filterType ? ` - ${filterType}` : ""
+          }</h1>
           <p>Generated on ${currentDate}</p>
           <p>IGAD Climate Prediction and Applications Centre</p>
         </div>
@@ -4694,64 +5721,96 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
           </div>
           <div class="stat">
             <h3>${filteredOrders.reduce((total, order) => {
-      if (!order.procurementOrders || !Array.isArray(order.procurementOrders)) {
-        return total;
-      }
-      const orderTotal = order.procurementOrders.reduce((orderSum, item) => {
-        const quantity = parseInt(item.quantity) || 0;
-        const days = order.totalDays || 1;
-        return orderSum + (quantity * days);
-      }, 0);
-      return total + orderTotal;
-    }, 0)}</h3>
+              if (
+                !order.procurementOrders ||
+                !Array.isArray(order.procurementOrders)
+              ) {
+                return total;
+              }
+              const orderTotal = order.procurementOrders.reduce(
+                (orderSum, item) => {
+                  const quantity = parseInt(item.quantity) || 0;
+                  const days = order.totalDays || 1;
+                  return orderSum + quantity * days;
+                },
+                0
+              );
+              return total + orderTotal;
+            }, 0)}</h3>
             <p>Total Items</p>
           </div>
           <div class="stat">
-            <h3>${filteredOrders.filter(order => {
-      try {
-        return getOrderStatus(order).status === 'Today';
-      } catch (e) {
-        return false;
-      }
-    }).length}</h3>
+            <h3>${
+              filteredOrders.filter((order) => {
+                try {
+                  return getOrderStatus(order).status === "Today";
+                } catch (e) {
+                  return false;
+                }
+              }).length
+            }</h3>
             <p>Today's Orders</p>
           </div>
         </div>
 
-        ${filteredOrders.map(order => {
-      const status = getOrderStatus(order);
-      return `
+        ${filteredOrders
+          .map((order) => {
+            const status = getOrderStatus(order);
+            return `
             <div class="order">
               <div class="order-header">
                 <div class="order-title">${order.title}</div>
                 <div class="order-details">
                   <strong>Organizer:</strong> ${order.organizer} | 
-                  <strong>Date:</strong> ${formatDate(order.date || order.startDate)} | 
-                  <strong>Time:</strong> ${formatTime(order.time || order.startTime)} | 
-                  ${order.endDate ? `<strong>End Date:</strong> ${formatDate(order.endDate)} | ` : ''}
-                  <strong>Duration:</strong> ${order.duration} ${order.totalDays > 1 ? `(${order.totalDays} days)` : ''} | 
+                  <strong>Date:</strong> ${formatDate(
+                    order.date || order.startDate
+                  )} | 
+                  <strong>Time:</strong> ${formatTime(
+                    order.time || order.startTime
+                  )} | 
+                  ${
+                    order.endDate
+                      ? `<strong>End Date:</strong> ${formatDate(
+                          order.endDate
+                        )} | `
+                      : ""
+                  }
+                  <strong>Duration:</strong> ${order.duration} ${
+              order.totalDays > 1 ? `(${order.totalDays} days)` : ""
+            } | 
                   <strong>Room:</strong> ${order.roomName} | 
                   <strong>Attendees:</strong> ${order.attendeeCount || 1}
-                  <span class="status ${status.className}">${status.status}</span>
+                  <span class="status ${status.className}">${
+              status.status
+            }</span>
                 </div>
               </div>
               <div class="items">
                 <strong>Items Required:</strong>
-                ${order.procurementOrders.map(item => {
-        const dailyQuantity = item.quantity;
-        const totalQuantity = dailyQuantity * order.totalDays;
-        return `
+                ${order.procurementOrders
+                  .map((item) => {
+                    const dailyQuantity = item.quantity;
+                    const totalQuantity = dailyQuantity * order.totalDays;
+                    return `
                     <div class="item">
                       <span>${item.itemName}</span>
-                      <span><strong>×${totalQuantity}${order.totalDays > 1 ? ` (${dailyQuantity}/day)` : ''}</strong></span>
+                      <span><strong>×${totalQuantity}${
+                      order.totalDays > 1 ? ` (${dailyQuantity}/day)` : ""
+                    }</strong></span>
                     </div>
-                    ${item.notes ? `<div style="font-size: 12px; color: #6b7280; margin-left: 10px;">Note: ${item.notes}</div>` : ''}
+                    ${
+                      item.notes
+                        ? `<div style="font-size: 12px; color: #6b7280; margin-left: 10px;">Note: ${item.notes}</div>`
+                        : ""
+                    }
                   `;
-      }).join('')}
+                  })
+                  .join("")}
               </div>
             </div>
           `;
-    }).join('')}
+          })
+          .join("")}
 
         <div class="footer">
           <p>This report was generated automatically by the ICPAC Boardroom System</p>
@@ -4767,18 +5826,18 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const formatTime = (timeString) => {
-    const [hours, minutes] = timeString.split(':');
+    const [hours, minutes] = timeString.split(":");
     const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const ampm = hour >= 12 ? "PM" : "AM";
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
   };
@@ -4789,16 +5848,17 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
 
     // Create full datetime for the order
     const orderDateTime = new Date(orderDate);
-    const [hours, minutes] = orderTime.split(':');
+    const [hours, minutes] = orderTime.split(":");
     orderDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
     // Calculate time difference in hours
     const currentTime = new Date();
-    const timeDifferenceHours = (currentTime - orderDateTime) / (1000 * 60 * 60);
+    const timeDifferenceHours =
+      (currentTime - orderDateTime) / (1000 * 60 * 60);
 
     // Check if order is declined (2+ hours past)
     if (timeDifferenceHours >= 2) {
-      return { status: 'Declined', className: 'declined' };
+      return { status: "Declined", className: "declined" };
     }
 
     // Check if order date is in the past
@@ -4808,223 +5868,302 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
     orderDateOnly.setHours(0, 0, 0, 0);
 
     if (orderDateOnly < todayDate) {
-      return { status: 'Past', className: 'past' };
+      return { status: "Past", className: "past" };
     } else if (orderDateOnly.getTime() === todayDate.getTime()) {
       // If today, check if time has passed
       if (timeDifferenceHours > 0) {
-        return { status: 'Past', className: 'past' };
+        return { status: "Past", className: "past" };
       } else {
-        return { status: 'Today', className: 'today' };
+        return { status: "Today", className: "today" };
       }
     } else {
-      return { status: 'Upcoming', className: 'upcoming' };
+      return { status: "Upcoming", className: "upcoming" };
     }
   };
 
   return (
     <div className="modal-overlay">
       <div className="modal-content large modern-procurement-modal">
-        <div className="modal-header" style={{
-          background: 'linear-gradient(135deg, #034930 0%, #065f46 100%)',
-          padding: '2rem',
-          borderRadius: '16px 16px 0 0',
-          color: 'white',
-          position: 'relative'
-        }}>
+        <div
+          className="modal-header"
+          style={{
+            background: "linear-gradient(135deg, #034930 0%, #065f46 100%)",
+            padding: "2rem",
+            borderRadius: "16px 16px 0 0",
+            color: "white",
+            position: "relative",
+          }}
+        >
           <div className="dashboard-title-section">
             <div className="dashboard-title-content">
-              <h2 className="modal-title" style={{
-                fontSize: '2rem',
-                fontWeight: '800',
-                color: 'white',
-                margin: '0 0 0.5rem 0',
-                textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-              }}>📊 Procurement Orders Dashboard</h2>
-              <p style={{
-                color: '#d1fae5',
-                fontSize: '1rem',
-                margin: '0',
-                opacity: '0.9'
-              }}>Real-time procurement insights and order management for ICPAC</p>
+              <h2
+                className="modal-title"
+                style={{
+                  fontSize: "2rem",
+                  fontWeight: "800",
+                  color: "white",
+                  margin: "0 0 0.5rem 0",
+                  textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                  fontFamily:
+                    'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                }}
+              >
+                📊 Procurement Orders Dashboard
+              </h2>
+              <p
+                style={{
+                  color: "#d1fae5",
+                  fontSize: "1rem",
+                  margin: "0",
+                  opacity: "0.9",
+                }}
+              >
+                Real-time procurement insights and order management for ICPAC
+              </p>
             </div>
           </div>
-          <div className="download-section" style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            gap: '0.75rem'
-          }}>
-            <div className="download-label" style={{
-              fontSize: '0.875rem',
-              color: '#d1fae5',
-              fontWeight: '600',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>Download Orders</div>
+          <div
+            className="download-section"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: "0.75rem",
+            }}
+          >
+            <div
+              className="download-label"
+              style={{
+                fontSize: "0.875rem",
+                color: "#d1fae5",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
+              Download Orders
+            </div>
             <div className="download-buttons">
-              <div className="download-group" style={{
-                display: 'flex',
-                gap: '0.75rem',
-                flexWrap: 'wrap'
-              }}>
-                <button onClick={() => downloadPDF()} className="download-btn btn-pdf" title="Download all orders as PDF" style={{
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '12px',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-                }}>
+              <div
+                className="download-group"
+                style={{
+                  display: "flex",
+                  gap: "0.75rem",
+                  flexWrap: "wrap",
+                }}
+              >
+                <button
+                  onClick={() => downloadPDF()}
+                  className="download-btn btn-pdf"
+                  title="Download all orders as PDF"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                    color: "white",
+                    border: "none",
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "12px",
+                    fontWeight: "600",
+                    fontSize: "0.875rem",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+                    fontFamily:
+                      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                  }}
+                >
                   📄 All Orders PDF
                 </button>
-                <button onClick={() => downloadPDF('Hourly')} className="download-btn btn-hourly" title="Download hourly orders as PDF" style={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '12px',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-                  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-                }}>
+                <button
+                  onClick={() => downloadPDF("Hourly")}
+                  className="download-btn btn-hourly"
+                  title="Download hourly orders as PDF"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                    color: "white",
+                    border: "none",
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "12px",
+                    fontWeight: "600",
+                    fontSize: "0.875rem",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+                    fontFamily:
+                      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                  }}
+                >
                   ⏰ Hourly Orders
                 </button>
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="modal-close" aria-label="Close dashboard" style={{
-            position: 'absolute',
-            top: '1rem',
-            right: '1rem',
-            background: 'rgba(255, 255, 255, 0.1)',
-            color: 'white',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '50%',
-            width: '48px',
-            height: '48px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            backdropFilter: 'blur(10px)'
-          }}>×</button>
+          <button
+            onClick={onClose}
+            className="modal-close"
+            aria-label="Close dashboard"
+            style={{
+              position: "absolute",
+              top: "1rem",
+              right: "1rem",
+              background: "rgba(255, 255, 255, 0.1)",
+              color: "white",
+              border: "2px solid rgba(255, 255, 255, 0.3)",
+              borderRadius: "50%",
+              width: "48px",
+              height: "48px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1.5rem",
+              fontWeight: "700",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            ×
+          </button>
         </div>
 
-        <div className="procurement-dashboard" style={{
-          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          background: 'var(--bg-main, #f8fafc)',
-          padding: '2rem',
-          minHeight: '400px'
-        }}>
+        <div
+          className="procurement-dashboard"
+          style={{
+            fontFamily:
+              'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            background: "var(--bg-main, #f8fafc)",
+            padding: "2rem",
+            minHeight: "400px",
+          }}
+        >
           {!orders || orders.length === 0 ? (
-            <div className="no-orders" style={{
-              textAlign: 'center',
-              padding: '4rem',
-              background: '#ffffff',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              border: '1px solid #e2e8f0'
-            }}>
-              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📦</div>
-              <h3 style={{
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                color: '#1e293b',
-                marginBottom: '1rem'
-              }}>No Procurement Orders Found</h3>
-              <p style={{
-                color: '#64748b',
-                fontSize: '1rem',
-                marginBottom: '2rem'
-              }}>No bookings have procurement orders yet. Orders will appear here when users submit procurement requests with their meeting bookings.</p>
-              <div style={{
-                background: '#f1f5f9',
-                padding: '1rem',
-                borderRadius: '8px',
-                fontSize: '0.875rem',
-                color: '#475569'
-              }}>
-                <strong>Tip:</strong> Procurement orders are automatically created when users add items to their booking requests during the meeting booking process.
+            <div
+              className="no-orders"
+              style={{
+                textAlign: "center",
+                padding: "4rem",
+                background: "#ffffff",
+                borderRadius: "16px",
+                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>📦</div>
+              <h3
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "700",
+                  color: "#1e293b",
+                  marginBottom: "1rem",
+                }}
+              >
+                No Procurement Orders Found
+              </h3>
+              <p
+                style={{
+                  color: "#64748b",
+                  fontSize: "1rem",
+                  marginBottom: "2rem",
+                }}
+              >
+                No bookings have procurement orders yet. Orders will appear here
+                when users submit procurement requests with their meeting
+                bookings.
+              </p>
+              <div
+                style={{
+                  background: "#f1f5f9",
+                  padding: "1rem",
+                  borderRadius: "8px",
+                  fontSize: "0.875rem",
+                  color: "#475569",
+                }}
+              >
+                <strong>Tip:</strong> Procurement orders are automatically
+                created when users add items to their booking requests during
+                the meeting booking process.
               </div>
             </div>
           ) : (
             <div className="orders-container">
               {/* Enhanced Search and Filter Controls */}
-              <div className="dashboard-controls" style={{
-                background: '#ffffff',
-                borderRadius: '16px',
-                padding: '1.5rem',
-                marginBottom: '2rem',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                border: '1px solid #e2e8f0'
-              }}>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                  gap: '1rem',
-                  alignItems: 'end'
-                }}>
+              <div
+                className="dashboard-controls"
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "16px",
+                  padding: "1.5rem",
+                  marginBottom: "2rem",
+                  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                  border: "1px solid #e2e8f0",
+                }}
+              >
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                    gap: "1rem",
+                    alignItems: "end",
+                  }}
+                >
                   {/* Search Input */}
                   <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      color: '#374151',
-                      marginBottom: '0.5rem'
-                    }}>🔍 Search Orders</label>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "0.875rem",
+                        fontWeight: "600",
+                        color: "#374151",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      🔍 Search Orders
+                    </label>
                     <input
                       type="text"
                       placeholder="Search by title, organizer, room, or items..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '0.875rem',
-                        transition: 'border-color 0.2s ease',
-                        boxSizing: 'border-box'
+                        width: "100%",
+                        padding: "0.75rem",
+                        border: "2px solid #e5e7eb",
+                        borderRadius: "8px",
+                        fontSize: "0.875rem",
+                        transition: "border-color 0.2s ease",
+                        boxSizing: "border-box",
                       }}
-                      onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                      onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+                      onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
+                      onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                     />
                   </div>
 
                   {/* Status Filter */}
                   <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      color: '#374151',
-                      marginBottom: '0.5rem'
-                    }}>📋 Filter by Status</label>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "0.875rem",
+                        fontWeight: "600",
+                        color: "#374151",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      📋 Filter by Status
+                    </label>
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
                       style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '0.875rem',
-                        background: '#ffffff',
-                        cursor: 'pointer',
-                        boxSizing: 'border-box'
+                        width: "100%",
+                        padding: "0.75rem",
+                        border: "2px solid #e5e7eb",
+                        borderRadius: "8px",
+                        fontSize: "0.875rem",
+                        background: "#ffffff",
+                        cursor: "pointer",
+                        boxSizing: "border-box",
                       }}
                     >
                       <option value="all">All Orders</option>
@@ -5037,25 +6176,29 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
 
                   {/* Sort Controls */}
                   <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      color: '#374151',
-                      marginBottom: '0.5rem'
-                    }}>📊 Sort by</label>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "0.875rem",
+                        fontWeight: "600",
+                        color: "#374151",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      📊 Sort by
+                    </label>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
                       <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
                         style={{
-                          flex: '1',
-                          padding: '0.75rem',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '0.875rem',
-                          background: '#ffffff',
-                          cursor: 'pointer'
+                          flex: "1",
+                          padding: "0.75rem",
+                          border: "2px solid #e5e7eb",
+                          borderRadius: "8px",
+                          fontSize: "0.875rem",
+                          background: "#ffffff",
+                          cursor: "pointer",
                         }}
                       >
                         <option value="date">Date</option>
@@ -5065,500 +6208,812 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
                         <option value="priority">Priority</option>
                       </select>
                       <button
-                        onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                        onClick={() =>
+                          setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                        }
                         style={{
-                          padding: '0.75rem',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '8px',
-                          background: '#ffffff',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem'
+                          padding: "0.75rem",
+                          border: "2px solid #e5e7eb",
+                          borderRadius: "8px",
+                          background: "#ffffff",
+                          cursor: "pointer",
+                          fontSize: "0.875rem",
                         }}
-                        title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
+                        title={`Sort ${
+                          sortOrder === "asc" ? "Descending" : "Ascending"
+                        }`}
                       >
-                        {sortOrder === 'asc' ? '↑' : '↓'}
+                        {sortOrder === "asc" ? "↑" : "↓"}
                       </button>
                     </div>
                   </div>
                 </div>
 
                 {/* Results Summary */}
-                <div style={{
-                  marginTop: '1rem',
-                  padding: '0.75rem',
-                  background: '#f8fafc',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  color: '#64748b'
-                }}>
-                  Showing {paginatedOrders.length} of {filteredOrders.length} orders
+                <div
+                  style={{
+                    marginTop: "1rem",
+                    padding: "0.75rem",
+                    background: "#f8fafc",
+                    borderRadius: "8px",
+                    fontSize: "0.875rem",
+                    color: "#64748b",
+                  }}
+                >
+                  Showing {paginatedOrders.length} of {filteredOrders.length}{" "}
+                  orders
                   {searchTerm && ` (filtered from ${orders.length} total)`}
                 </div>
               </div>
-              <div className="dashboard-stats" role="region" aria-label="Dashboard statistics" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '1.5rem',
-                marginBottom: '2rem'
-              }}>
-                <div className="stat-card total-orders" role="article" aria-label={`Total orders: ${totalOrders}`} style={{
-                  background: '#ffffff',
-                  borderRadius: '16px',
-                  padding: '1.5rem',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                  border: '1px solid #e2e8f0',
-                  borderLeft: '5px solid #3b82f6',
-                  position: 'relative',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}>
-                  <div className="stat-header" style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '1rem'
-                  }}>
-                    <div className="stat-label" style={{
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      color: '#64748b',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      lineHeight: '1.2'
-                    }}>Total<br />Orders</div>
-                    <div className="stat-icon" role="img" aria-label="Orders icon" style={{
-                      fontSize: '2rem',
-                      opacity: '0.7'
-                    }}>📦</div>
+              <div
+                className="dashboard-stats"
+                role="region"
+                aria-label="Dashboard statistics"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                  gap: "1.5rem",
+                  marginBottom: "2rem",
+                }}
+              >
+                <div
+                  className="stat-card total-orders"
+                  role="article"
+                  aria-label={`Total orders: ${totalOrders}`}
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "16px",
+                    padding: "1.5rem",
+                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                    border: "1px solid #e2e8f0",
+                    borderLeft: "5px solid #3b82f6",
+                    position: "relative",
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div
+                    className="stat-header"
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    <div
+                      className="stat-label"
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: "600",
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      Total
+                      <br />
+                      Orders
+                    </div>
+                    <div
+                      className="stat-icon"
+                      role="img"
+                      aria-label="Orders icon"
+                      style={{
+                        fontSize: "2rem",
+                        opacity: "0.7",
+                      }}
+                    >
+                      📦
+                    </div>
                   </div>
-                  <div className="stat-value" aria-label={`${totalOrders} orders`} style={{
-                    fontSize: '2.5rem',
-                    fontWeight: '800',
-                    color: '#1e293b',
-                    margin: '0'
-                  }}>{totalOrders}</div>
+                  <div
+                    className="stat-value"
+                    aria-label={`${totalOrders} orders`}
+                    style={{
+                      fontSize: "2.5rem",
+                      fontWeight: "800",
+                      color: "#1e293b",
+                      margin: "0",
+                    }}
+                  >
+                    {totalOrders}
+                  </div>
                 </div>
-                <div className="stat-card total-items" role="article" aria-label={`Total items: ${totalItems}`} style={{
-                  background: '#ffffff',
-                  borderRadius: '16px',
-                  padding: '1.5rem',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                  border: '1px solid #e2e8f0',
-                  borderLeft: '5px solid #10b981',
-                  position: 'relative',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}>
-                  <div className="stat-header" style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '1rem'
-                  }}>
-                    <div className="stat-label" style={{
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      color: '#64748b',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      lineHeight: '1.2'
-                    }}>Total<br />Items</div>
-                    <div className="stat-icon" role="img" aria-label="Items icon" style={{
-                      fontSize: '2rem',
-                      opacity: '0.7'
-                    }}>📋</div>
+                <div
+                  className="stat-card total-items"
+                  role="article"
+                  aria-label={`Total items: ${totalItems}`}
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "16px",
+                    padding: "1.5rem",
+                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                    border: "1px solid #e2e8f0",
+                    borderLeft: "5px solid #10b981",
+                    position: "relative",
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div
+                    className="stat-header"
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    <div
+                      className="stat-label"
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: "600",
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      Total
+                      <br />
+                      Items
+                    </div>
+                    <div
+                      className="stat-icon"
+                      role="img"
+                      aria-label="Items icon"
+                      style={{
+                        fontSize: "2rem",
+                        opacity: "0.7",
+                      }}
+                    >
+                      📋
+                    </div>
                   </div>
-                  <div className="stat-value" aria-label={`${totalItems} items`} style={{
-                    fontSize: '2.5rem',
-                    fontWeight: '800',
-                    color: '#1e293b',
-                    margin: '0'
-                  }}>{totalItems}</div>
-                  <small className="stat-description" style={{
-                    fontSize: '0.75rem',
-                    color: '#64748b',
-                    fontStyle: 'italic',
-                    marginTop: '0.5rem',
-                    display: 'block'
-                  }}>Including multi-day quantities</small>
+                  <div
+                    className="stat-value"
+                    aria-label={`${totalItems} items`}
+                    style={{
+                      fontSize: "2.5rem",
+                      fontWeight: "800",
+                      color: "#1e293b",
+                      margin: "0",
+                    }}
+                  >
+                    {totalItems}
+                  </div>
+                  <small
+                    className="stat-description"
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#64748b",
+                      fontStyle: "italic",
+                      marginTop: "0.5rem",
+                      display: "block",
+                    }}
+                  >
+                    Including multi-day quantities
+                  </small>
                 </div>
-                <div className="stat-card today-orders" role="article" aria-label={`Today's orders: ${todayOrders}`} style={{
-                  background: '#ffffff',
-                  borderRadius: '16px',
-                  padding: '1.5rem',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                  border: '1px solid #e2e8f0',
-                  borderLeft: '5px solid #f59e0b',
-                  position: 'relative',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}>
-                  <div className="stat-header" style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '1rem'
-                  }}>
-                    <div className="stat-label" style={{
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      color: '#64748b',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      lineHeight: '1.2'
-                    }}>Today's<br />Orders</div>
-                    <div className="stat-icon" role="img" aria-label="Today icon" style={{
-                      fontSize: '2rem',
-                      opacity: '0.7'
-                    }}>📅</div>
+                <div
+                  className="stat-card today-orders"
+                  role="article"
+                  aria-label={`Today's orders: ${todayOrders}`}
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "16px",
+                    padding: "1.5rem",
+                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                    border: "1px solid #e2e8f0",
+                    borderLeft: "5px solid #f59e0b",
+                    position: "relative",
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div
+                    className="stat-header"
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    <div
+                      className="stat-label"
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: "600",
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      Today's
+                      <br />
+                      Orders
+                    </div>
+                    <div
+                      className="stat-icon"
+                      role="img"
+                      aria-label="Today icon"
+                      style={{
+                        fontSize: "2rem",
+                        opacity: "0.7",
+                      }}
+                    >
+                      📅
+                    </div>
                   </div>
-                  <div className="stat-value" style={{
-                    fontSize: '2.5rem',
-                    fontWeight: '800',
-                    color: '#1e293b',
-                    margin: '0'
-                  }}>{todayOrders}</div>
-                  <div style={{
-                    fontSize: '0.75rem',
-                    color: '#64748b',
-                    fontStyle: 'italic',
-                    marginTop: '0.5rem'
-                  }}>Requires immediate attention</div>
+                  <div
+                    className="stat-value"
+                    style={{
+                      fontSize: "2.5rem",
+                      fontWeight: "800",
+                      color: "#1e293b",
+                      margin: "0",
+                    }}
+                  >
+                    {todayOrders}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#64748b",
+                      fontStyle: "italic",
+                      marginTop: "0.5rem",
+                    }}
+                  >
+                    Requires immediate attention
+                  </div>
                 </div>
 
-                <div className="stat-card urgent-orders" role="article" aria-label={`Urgent orders: ${urgentOrders}`} style={{
-                  background: '#ffffff',
-                  borderRadius: '16px',
-                  padding: '1.5rem',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                  border: '1px solid #e2e8f0',
-                  borderLeft: '5px solid #ef4444',
-                  position: 'relative',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}>
-                  <div className="stat-header" style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '1rem'
-                  }}>
-                    <div className="stat-label" style={{
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      color: '#64748b',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      lineHeight: '1.2'
-                    }}>Urgent<br />Orders</div>
-                    <div className="stat-icon" role="img" aria-label="Urgent icon" style={{
-                      fontSize: '2rem',
-                      opacity: '0.7'
-                    }}>🚨</div>
+                <div
+                  className="stat-card urgent-orders"
+                  role="article"
+                  aria-label={`Urgent orders: ${urgentOrders}`}
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "16px",
+                    padding: "1.5rem",
+                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                    border: "1px solid #e2e8f0",
+                    borderLeft: "5px solid #ef4444",
+                    position: "relative",
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div
+                    className="stat-header"
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    <div
+                      className="stat-label"
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: "600",
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      Urgent
+                      <br />
+                      Orders
+                    </div>
+                    <div
+                      className="stat-icon"
+                      role="img"
+                      aria-label="Urgent icon"
+                      style={{
+                        fontSize: "2rem",
+                        opacity: "0.7",
+                      }}
+                    >
+                      🚨
+                    </div>
                   </div>
-                  <div className="stat-value" style={{
-                    fontSize: '2.5rem',
-                    fontWeight: '800',
-                    color: '#1e293b',
-                    margin: '0'
-                  }}>{urgentOrders}</div>
-                  <div style={{
-                    fontSize: '0.75rem',
-                    color: '#ef4444',
-                    fontWeight: '600',
-                    marginTop: '0.5rem'
-                  }}>Within 2 hours</div>
+                  <div
+                    className="stat-value"
+                    style={{
+                      fontSize: "2.5rem",
+                      fontWeight: "800",
+                      color: "#1e293b",
+                      margin: "0",
+                    }}
+                  >
+                    {urgentOrders}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#ef4444",
+                      fontWeight: "600",
+                      marginTop: "0.5rem",
+                    }}
+                  >
+                    Within 2 hours
+                  </div>
                 </div>
 
-                <div className="stat-card upcoming-orders" role="article" aria-label={`Upcoming orders: ${upcomingOrders}`} style={{
-                  background: '#ffffff',
-                  borderRadius: '16px',
-                  padding: '1.5rem',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                  border: '1px solid #e2e8f0',
-                  borderLeft: '5px solid #8b5cf6',
-                  position: 'relative',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}>
-                  <div className="stat-header" style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '1rem'
-                  }}>
-                    <div className="stat-label" style={{
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      color: '#64748b',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      lineHeight: '1.2'
-                    }}>Upcoming<br />Orders</div>
-                    <div className="stat-icon" role="img" aria-label="Upcoming icon" style={{
-                      fontSize: '2rem',
-                      opacity: '0.7'
-                    }}>📈</div>
+                <div
+                  className="stat-card upcoming-orders"
+                  role="article"
+                  aria-label={`Upcoming orders: ${upcomingOrders}`}
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "16px",
+                    padding: "1.5rem",
+                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                    border: "1px solid #e2e8f0",
+                    borderLeft: "5px solid #8b5cf6",
+                    position: "relative",
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div
+                    className="stat-header"
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    <div
+                      className="stat-label"
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: "600",
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      Upcoming
+                      <br />
+                      Orders
+                    </div>
+                    <div
+                      className="stat-icon"
+                      role="img"
+                      aria-label="Upcoming icon"
+                      style={{
+                        fontSize: "2rem",
+                        opacity: "0.7",
+                      }}
+                    >
+                      📈
+                    </div>
                   </div>
-                  <div className="stat-value" style={{
-                    fontSize: '2.5rem',
-                    fontWeight: '800',
-                    color: '#1e293b',
-                    margin: '0'
-                  }}>{upcomingOrders}</div>
-                  <div style={{
-                    fontSize: '0.75rem',
-                    color: '#64748b',
-                    fontStyle: 'italic',
-                    marginTop: '0.5rem'
-                  }}>Future requirements</div>
+                  <div
+                    className="stat-value"
+                    style={{
+                      fontSize: "2.5rem",
+                      fontWeight: "800",
+                      color: "#1e293b",
+                      margin: "0",
+                    }}
+                  >
+                    {upcomingOrders}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#64748b",
+                      fontStyle: "italic",
+                      marginTop: "0.5rem",
+                    }}
+                  >
+                    Future requirements
+                  </div>
                 </div>
               </div>
 
-              <div className="orders-table-container" role="region" aria-label="Procurement orders data table" style={{
-                background: '#ffffff',
-                borderRadius: '16px',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                border: '1px solid #e2e8f0',
-                overflow: 'hidden'
-              }}>
-                <table className="orders-table" role="table" aria-label="List of procurement orders" style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-                }}>
+              <div
+                className="orders-table-container"
+                role="region"
+                aria-label="Procurement orders data table"
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "16px",
+                  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                  border: "1px solid #e2e8f0",
+                  overflow: "hidden",
+                }}
+              >
+                <table
+                  className="orders-table"
+                  role="table"
+                  aria-label="List of procurement orders"
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontFamily:
+                      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                  }}
+                >
                   <thead>
-                    <tr role="row" style={{
-                      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
-                    }}>
-                      <th role="columnheader" scope="col" aria-sort="none" style={{
-                        padding: '1.25rem 1rem',
-                        textAlign: 'left',
-                        fontWeight: '700',
-                        color: '#1e293b',
-                        fontSize: '0.875rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0'
-                      }}>Date</th>
-                      <th role="columnheader" scope="col" aria-sort="none" style={{
-                        padding: '1.25rem 1rem',
-                        textAlign: 'left',
-                        fontWeight: '700',
-                        color: '#1e293b',
-                        fontSize: '0.875rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0'
-                      }}>Time</th>
-                      <th role="columnheader" scope="col" aria-sort="none" style={{
-                        padding: '1.25rem 1rem',
-                        textAlign: 'left',
-                        fontWeight: '700',
-                        color: '#1e293b',
-                        fontSize: '0.875rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0'
-                      }}>Duration</th>
-                      <th role="columnheader" scope="col" aria-sort="none" style={{
-                        padding: '1.25rem 1rem',
-                        textAlign: 'left',
-                        fontWeight: '700',
-                        color: '#1e293b',
-                        fontSize: '0.875rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0'
-                      }}>Meeting</th>
-                      <th role="columnheader" scope="col" aria-sort="none" style={{
-                        padding: '1.25rem 1rem',
-                        textAlign: 'left',
-                        fontWeight: '700',
-                        color: '#1e293b',
-                        fontSize: '0.875rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0'
-                      }}>Organizer</th>
-                      <th role="columnheader" scope="col" aria-sort="none" style={{
-                        padding: '1.25rem 1rem',
-                        textAlign: 'left',
-                        fontWeight: '700',
-                        color: '#1e293b',
-                        fontSize: '0.875rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0'
-                      }}>Room</th>
-                      <th role="columnheader" scope="col" aria-sort="none" style={{
-                        padding: '1.25rem 1rem',
-                        textAlign: 'left',
-                        fontWeight: '700',
-                        color: '#1e293b',
-                        fontSize: '0.875rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0'
-                      }}>Attendees</th>
-                      <th role="columnheader" scope="col" aria-sort="none" style={{
-                        padding: '1.25rem 1rem',
-                        textAlign: 'left',
-                        fontWeight: '700',
-                        color: '#1e293b',
-                        fontSize: '0.875rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0'
-                      }}>Items Required</th>
-                      <th role="columnheader" scope="col" aria-sort="none" style={{
-                        padding: '1.25rem 1rem',
-                        textAlign: 'left',
-                        fontWeight: '700',
-                        color: '#1e293b',
-                        fontSize: '0.875rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0'
-                      }}>Status</th>
+                    <tr
+                      role="row"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                      }}
+                    >
+                      <th
+                        role="columnheader"
+                        scope="col"
+                        aria-sort="none"
+                        style={{
+                          padding: "1.25rem 1rem",
+                          textAlign: "left",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        Date
+                      </th>
+                      <th
+                        role="columnheader"
+                        scope="col"
+                        aria-sort="none"
+                        style={{
+                          padding: "1.25rem 1rem",
+                          textAlign: "left",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        Time
+                      </th>
+                      <th
+                        role="columnheader"
+                        scope="col"
+                        aria-sort="none"
+                        style={{
+                          padding: "1.25rem 1rem",
+                          textAlign: "left",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        Duration
+                      </th>
+                      <th
+                        role="columnheader"
+                        scope="col"
+                        aria-sort="none"
+                        style={{
+                          padding: "1.25rem 1rem",
+                          textAlign: "left",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        Meeting
+                      </th>
+                      <th
+                        role="columnheader"
+                        scope="col"
+                        aria-sort="none"
+                        style={{
+                          padding: "1.25rem 1rem",
+                          textAlign: "left",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        Organizer
+                      </th>
+                      <th
+                        role="columnheader"
+                        scope="col"
+                        aria-sort="none"
+                        style={{
+                          padding: "1.25rem 1rem",
+                          textAlign: "left",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        Room
+                      </th>
+                      <th
+                        role="columnheader"
+                        scope="col"
+                        aria-sort="none"
+                        style={{
+                          padding: "1.25rem 1rem",
+                          textAlign: "left",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        Attendees
+                      </th>
+                      <th
+                        role="columnheader"
+                        scope="col"
+                        aria-sort="none"
+                        style={{
+                          padding: "1.25rem 1rem",
+                          textAlign: "left",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        Items Required
+                      </th>
+                      <th
+                        role="columnheader"
+                        scope="col"
+                        aria-sort="none"
+                        style={{
+                          padding: "1.25rem 1rem",
+                          textAlign: "left",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedOrders.map(order => {
+                    {paginatedOrders.map((order) => {
                       const orderStatus = getOrderStatus(order);
                       return (
-                        <tr key={order.id} style={{
-                          borderBottom: '1px solid #f1f5f9',
-                          transition: 'all 0.2s ease'
-                        }}
-                          onMouseEnter={(e) => e.target.closest('tr').style.backgroundColor = '#f8fafc'}
-                          onMouseLeave={(e) => e.target.closest('tr').style.backgroundColor = 'transparent'}>
-                          <td style={{
-                            padding: '1rem',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            color: '#374151'
-                          }}>{formatDate(order.date || order.startDate)}</td>
-                          <td style={{
-                            padding: '1rem',
-                            fontSize: '0.875rem',
-                            color: '#64748b'
-                          }}>{formatTime(order.time || order.startTime)}</td>
-                          <td style={{ padding: '1rem' }}>
-                            <span style={{
-                              display: 'inline-block',
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '6px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              color: '#1e293b',
-                              background: getPriorityColor(order.priority).bg,
-                              border: `1px solid ${getPriorityColor(order.priority).border}`
-                            }}>
+                        <tr
+                          key={order.id}
+                          style={{
+                            borderBottom: "1px solid #f1f5f9",
+                            transition: "all 0.2s ease",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.target.closest("tr").style.backgroundColor =
+                              "#f8fafc")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.target.closest("tr").style.backgroundColor =
+                              "transparent")
+                          }
+                        >
+                          <td
+                            style={{
+                              padding: "1rem",
+                              fontSize: "0.875rem",
+                              fontWeight: "500",
+                              color: "#374151",
+                            }}
+                          >
+                            {formatDate(order.date || order.startDate)}
+                          </td>
+                          <td
+                            style={{
+                              padding: "1rem",
+                              fontSize: "0.875rem",
+                              color: "#64748b",
+                            }}
+                          >
+                            {formatTime(order.time || order.startTime)}
+                          </td>
+                          <td style={{ padding: "1rem" }}>
+                            <span
+                              style={{
+                                display: "inline-block",
+                                padding: "0.25rem 0.75rem",
+                                borderRadius: "6px",
+                                fontSize: "0.75rem",
+                                fontWeight: "600",
+                                color: "#1e293b",
+                                background: getPriorityColor(order.priority).bg,
+                                border: `1px solid ${
+                                  getPriorityColor(order.priority).border
+                                }`,
+                              }}
+                            >
                               {order.duration}
                             </span>
                             {order.totalDays > 1 && (
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: '#64748b',
-                                marginTop: '0.25rem'
-                              }}>({order.totalDays} days)</div>
+                              <div
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "#64748b",
+                                  marginTop: "0.25rem",
+                                }}
+                              >
+                                ({order.totalDays} days)
+                              </div>
                             )}
                           </td>
-                          <td style={{
-                            padding: '1rem',
-                            fontSize: '0.875rem',
-                            fontWeight: '600',
-                            color: '#1e293b'
-                          }}>{order.title}</td>
-                          <td style={{
-                            padding: '1rem',
-                            fontSize: '0.875rem',
-                            color: '#64748b'
-                          }}>{order.organizer}</td>
-                          <td style={{
-                            padding: '1rem',
-                            fontSize: '0.875rem',
-                            color: '#64748b'
-                          }}>
-                            <div>{order.roomName}</div>
-                            <div style={{
-                              fontSize: '0.75rem',
-                              color: '#9ca3af',
-                              marginTop: '0.25rem'
-                            }}>{order.roomLocation}</div>
+                          <td
+                            style={{
+                              padding: "1rem",
+                              fontSize: "0.875rem",
+                              fontWeight: "600",
+                              color: "#1e293b",
+                            }}
+                          >
+                            {order.title}
                           </td>
-                          <td style={{
-                            padding: '1rem',
-                            fontSize: '0.875rem',
-                            textAlign: 'center',
-                            fontWeight: '500',
-                            color: '#64748b'
-                          }}>{order.attendeeCount || 1}</td>
-                          <td style={{ padding: '1rem' }}>
-                            <div style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '0.5rem'
-                            }}>
+                          <td
+                            style={{
+                              padding: "1rem",
+                              fontSize: "0.875rem",
+                              color: "#64748b",
+                            }}
+                          >
+                            {order.organizer}
+                          </td>
+                          <td
+                            style={{
+                              padding: "1rem",
+                              fontSize: "0.875rem",
+                              color: "#64748b",
+                            }}
+                          >
+                            <div>{order.roomName}</div>
+                            <div
+                              style={{
+                                fontSize: "0.75rem",
+                                color: "#9ca3af",
+                                marginTop: "0.25rem",
+                              }}
+                            >
+                              {order.roomLocation}
+                            </div>
+                          </td>
+                          <td
+                            style={{
+                              padding: "1rem",
+                              fontSize: "0.875rem",
+                              textAlign: "center",
+                              fontWeight: "500",
+                              color: "#64748b",
+                            }}
+                          >
+                            {order.attendeeCount || 1}
+                          </td>
+                          <td style={{ padding: "1rem" }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "0.5rem",
+                              }}
+                            >
                               {order.procurementOrders.map((item, index) => {
                                 const dailyQuantity = item.quantity;
-                                const totalQuantity = dailyQuantity * order.totalDays;
+                                const totalQuantity =
+                                  dailyQuantity * order.totalDays;
                                 return (
-                                  <div key={index} style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    padding: '0.5rem 0.75rem',
-                                    background: '#f8fafc',
-                                    borderRadius: '6px',
-                                    border: '1px solid #e2e8f0'
-                                  }}>
-                                    <span style={{
-                                      fontSize: '0.875rem',
-                                      fontWeight: '500',
-                                      color: '#374151',
-                                      flex: '1'
-                                    }}>{item.itemName}</span>
-                                    <span style={{
-                                      fontSize: '0.875rem',
-                                      fontWeight: '700',
-                                      color: '#059669',
-                                      marginLeft: '0.5rem'
-                                    }}>
+                                  <div
+                                    key={index}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "space-between",
+                                      padding: "0.5rem 0.75rem",
+                                      background: "#f8fafc",
+                                      borderRadius: "6px",
+                                      border: "1px solid #e2e8f0",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        fontSize: "0.875rem",
+                                        fontWeight: "500",
+                                        color: "#374151",
+                                        flex: "1",
+                                      }}
+                                    >
+                                      {item.itemName}
+                                    </span>
+                                    <span
+                                      style={{
+                                        fontSize: "0.875rem",
+                                        fontWeight: "700",
+                                        color: "#059669",
+                                        marginLeft: "0.5rem",
+                                      }}
+                                    >
                                       ×{totalQuantity}
                                       {order.totalDays > 1 && (
-                                        <span style={{
-                                          fontSize: '0.75rem',
-                                          color: '#64748b',
-                                          fontWeight: '400'
-                                        }}> ({dailyQuantity}/day)</span>
+                                        <span
+                                          style={{
+                                            fontSize: "0.75rem",
+                                            color: "#64748b",
+                                            fontWeight: "400",
+                                          }}
+                                        >
+                                          {" "}
+                                          ({dailyQuantity}/day)
+                                        </span>
                                       )}
                                     </span>
                                     {item.notes && (
-                                      <div style={{
-                                        fontSize: '0.75rem',
-                                        color: '#64748b',
-                                        marginTop: '0.25rem',
-                                        fontStyle: 'italic'
-                                      }}>{item.notes}</div>
+                                      <div
+                                        style={{
+                                          fontSize: "0.75rem",
+                                          color: "#64748b",
+                                          marginTop: "0.25rem",
+                                          fontStyle: "italic",
+                                        }}
+                                      >
+                                        {item.notes}
+                                      </div>
                                     )}
                                   </div>
                                 );
                               })}
                             </div>
                           </td>
-                          <td style={{ padding: '1rem' }}>
-                            <span style={{
-                              display: 'inline-block',
-                              padding: '0.375rem 0.75rem',
-                              borderRadius: '6px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              color: getStatusColor(orderStatus).color,
-                              backgroundColor: getStatusColor(orderStatus).bg,
-                              border: `1px solid ${getStatusColor(orderStatus).border}`
-                            }}>
+                          <td style={{ padding: "1rem" }}>
+                            <span
+                              style={{
+                                display: "inline-block",
+                                padding: "0.375rem 0.75rem",
+                                borderRadius: "6px",
+                                fontSize: "0.75rem",
+                                fontWeight: "600",
+                                color: getStatusColor(orderStatus).color,
+                                backgroundColor: getStatusColor(orderStatus).bg,
+                                border: `1px solid ${
+                                  getStatusColor(orderStatus).border
+                                }`,
+                              }}
+                            >
                               {orderStatus.status}
                             </span>
                           </td>
@@ -5570,84 +7025,106 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div style={{
-                    padding: '1.5rem',
-                    borderTop: '1px solid #e2e8f0',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    background: '#f8fafc'
-                  }}>
-                    <div style={{
-                      fontSize: '0.875rem',
-                      color: '#64748b'
-                    }}>
-                      Page {currentPage} of {totalPages} • {filteredOrders.length} total orders
+                  <div
+                    style={{
+                      padding: "1.5rem",
+                      borderTop: "1px solid #e2e8f0",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      background: "#f8fafc",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "0.875rem",
+                        color: "#64748b",
+                      }}
+                    >
+                      Page {currentPage} of {totalPages} •{" "}
+                      {filteredOrders.length} total orders
                     </div>
-                    <div style={{
-                      display: 'flex',
-                      gap: '0.5rem'
-                    }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                      }}
+                    >
                       <button
                         onClick={() => setCurrentPage(currentPage - 1)}
                         disabled={currentPage <= 1}
                         style={{
-                          padding: '0.5rem 1rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '6px',
-                          background: currentPage <= 1 ? '#f9fafb' : '#ffffff',
-                          color: currentPage <= 1 ? '#9ca3af' : '#374151',
-                          cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
-                          fontSize: '0.875rem'
+                          padding: "0.5rem 1rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "6px",
+                          background: currentPage <= 1 ? "#f9fafb" : "#ffffff",
+                          color: currentPage <= 1 ? "#9ca3af" : "#374151",
+                          cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+                          fontSize: "0.875rem",
                         }}
                       >
                         ← Previous
                       </button>
 
                       {/* Page Numbers */}
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
-                        }
+                      {Array.from(
+                        { length: Math.min(5, totalPages) },
+                        (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
 
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setCurrentPage(pageNum)}
-                            style={{
-                              padding: '0.5rem 0.75rem',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '6px',
-                              background: pageNum === currentPage ? '#3b82f6' : '#ffffff',
-                              color: pageNum === currentPage ? '#ffffff' : '#374151',
-                              cursor: 'pointer',
-                              fontSize: '0.875rem',
-                              fontWeight: pageNum === currentPage ? '600' : '400'
-                            }}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => setCurrentPage(pageNum)}
+                              style={{
+                                padding: "0.5rem 0.75rem",
+                                border: "1px solid #d1d5db",
+                                borderRadius: "6px",
+                                background:
+                                  pageNum === currentPage
+                                    ? "#3b82f6"
+                                    : "#ffffff",
+                                color:
+                                  pageNum === currentPage
+                                    ? "#ffffff"
+                                    : "#374151",
+                                cursor: "pointer",
+                                fontSize: "0.875rem",
+                                fontWeight:
+                                  pageNum === currentPage ? "600" : "400",
+                              }}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        }
+                      )}
 
                       <button
                         onClick={() => setCurrentPage(currentPage + 1)}
                         disabled={currentPage >= totalPages}
                         style={{
-                          padding: '0.5rem 1rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '6px',
-                          background: currentPage >= totalPages ? '#f9fafb' : '#ffffff',
-                          color: currentPage >= totalPages ? '#9ca3af' : '#374151',
-                          cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
-                          fontSize: '0.875rem'
+                          padding: "0.5rem 1rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "6px",
+                          background:
+                            currentPage >= totalPages ? "#f9fafb" : "#ffffff",
+                          color:
+                            currentPage >= totalPages ? "#9ca3af" : "#374151",
+                          cursor:
+                            currentPage >= totalPages
+                              ? "not-allowed"
+                              : "pointer",
+                          fontSize: "0.875rem",
                         }}
                       >
                         Next →
@@ -5665,22 +7142,22 @@ const ProcurementDashboard = ({ bookings, rooms, onClose }) => {
 };
 
 const MeetingSpaceSelectionModal = ({ rooms, onSelect, currentUser }) => {
-  const [selectedRoomId, setSelectedRoomId] = useState('');
+  const [selectedRoomId, setSelectedRoomId] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (selectedRoomId) {
       onSelect(selectedRoomId);
     } else {
-      alert('Please select a meeting space to continue.');
+      alert("Please select a meeting space to continue.");
     }
   };
 
   const getLocationFromName = (name) => {
-    if (name.toLowerCase().includes('ground floor')) return 'Ground Floor';
-    if (name.toLowerCase().includes('first floor')) return 'First Floor';
-    if (name.toLowerCase().includes('1st floor')) return '1st Floor';
-    return 'Main Building';
+    if (name.toLowerCase().includes("ground floor")) return "Ground Floor";
+    if (name.toLowerCase().includes("first floor")) return "First Floor";
+    if (name.toLowerCase().includes("1st floor")) return "1st Floor";
+    return "Main Building";
   };
 
   return (
@@ -5689,22 +7166,27 @@ const MeetingSpaceSelectionModal = ({ rooms, onSelect, currentUser }) => {
         <div className="modal-header">
           <h3 className="modal-title">Select Your Meeting Space</h3>
           <div className="modal-subtitle">
-            Welcome, {currentUser?.name}! Please choose a meeting space to continue.
+            Welcome, {currentUser?.name}! Please choose a meeting space to
+            continue.
           </div>
         </div>
         <form onSubmit={handleSubmit} className="meeting-space-form">
           <div className="form-group">
             <label className="form-label">Available Meeting Spaces</label>
             <div className="meeting-spaces-grid">
-              {rooms.map(room => (
+              {rooms.map((room) => (
                 <div
                   key={room.id}
-                  className={`meeting-space-card ${selectedRoomId === room.id.toString() ? 'selected' : ''}`}
+                  className={`meeting-space-card ${
+                    selectedRoomId === room.id.toString() ? "selected" : ""
+                  }`}
                   onClick={() => setSelectedRoomId(room.id.toString())}
                 >
                   <div className="space-header">
                     <h4 className="space-name">{room.name}</h4>
-                    <span className="space-location">{getLocationFromName(room.name)}</span>
+                    <span className="space-location">
+                      {getLocationFromName(room.name)}
+                    </span>
                   </div>
                   <div className="space-details">
                     <div className="space-capacity">
@@ -5712,18 +7194,22 @@ const MeetingSpaceSelectionModal = ({ rooms, onSelect, currentUser }) => {
                       <span>Capacity: {room.capacity}</span>
                     </div>
                     <div className="space-amenities">
-                      {room.amenities?.slice(0, 3).map(amenity => (
+                      {room.amenities?.slice(0, 3).map((amenity) => (
                         <span key={amenity} className="amenity-chip-small">
                           {amenity}
                         </span>
                       ))}
                       {room.amenities?.length > 3 && (
-                        <span className="amenity-more">+{room.amenities.length - 3} more</span>
+                        <span className="amenity-more">
+                          +{room.amenities.length - 3} more
+                        </span>
                       )}
                     </div>
                   </div>
                   <div className="selection-indicator">
-                    {selectedRoomId === room.id.toString() && <span className="checkmark">✓</span>}
+                    {selectedRoomId === room.id.toString() && (
+                      <span className="checkmark">✓</span>
+                    )}
                   </div>
                 </div>
               ))}
