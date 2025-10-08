@@ -1,0 +1,55 @@
+# Docker Compose for ICPAC Booking System
+
+services:
+  frontend:
+    build:
+      context: ./icpac-booking-frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: icpac-booking-frontend
+    ports:
+      - "9020:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - booking_data:/usr/share/nginx/html/data
+    networks:
+      - icpac-network
+
+  backend:
+    build:
+      context: ./icpac-booking-backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: icpac-booking-backend
+    ports:
+      - "9021:8000"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://icpac_user:your_secure_password@postgres:5432/icpac_bookings
+    depends_on:
+      - postgres
+    networks:
+      - icpac-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: icpac-booking-db
+    environment:
+      POSTGRES_DB: icpac_bookings
+      POSTGRES_USER: icpac_user
+      POSTGRES_PASSWORD: your_secure_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - icpac-network
+
+volumes:
+  booking_data:
+  postgres_data:
+
+networks:
+  icpac-network:
+    driver: bridge

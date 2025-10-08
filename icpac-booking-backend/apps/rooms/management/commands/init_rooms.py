@@ -16,6 +16,11 @@ class Command(BaseCommand):
             {'name': 'TV Screen', 'icon': '📺', 'description': 'Large TV screen'},
             {'name': 'Screen', 'icon': '🖥️', 'description': 'Projection screen'},
             {'name': 'Computers', 'icon': '💻', 'description': 'Computer workstations'},
+            {'name': 'Internet Access', 'icon': '🌐', 'description': 'WiFi internet access'},
+            {'name': 'Printers', 'icon': '🖨️', 'description': 'Printing facilities'},
+            {'name': 'Air Conditioning', 'icon': '❄️', 'description': 'Climate control'},
+            {'name': 'Natural Light', 'icon': '☀️', 'description': 'Windows with natural lighting'},
+            {'name': 'Catering Setup', 'icon': '🍽️', 'description': 'Setup for food and beverages'},
         ]
 
         for amenity_data in amenities_data:
@@ -36,24 +41,60 @@ class Command(BaseCommand):
                 'capacity': 200,
                 'category': 'conference',
                 'floor': '0',
+                'location': 'Main Building, Ground Floor',
                 'is_active': True,
-                'description': 'Large conference room on the ground floor'
+                'description': 'Large conference room on the ground floor with modern AV equipment',
+                'amenities': ['Projector', 'Whiteboard', 'Video Conferencing', 'Audio System', 'Air Conditioning', 'Catering Setup']
             },
             {
                 'name': 'Boardroom - First Floor',
                 'capacity': 25,
-                'category': 'conference',
+                'category': 'boardroom',
                 'floor': '1',
+                'location': 'Main Building, First Floor',
                 'is_active': True,
-                'description': 'Executive boardroom on the first floor'
+                'description': 'Executive boardroom on the first floor for high-level meetings',
+                'amenities': ['TV Screen', 'Whiteboard', 'Video Conferencing', 'Air Conditioning']
             },
             {
                 'name': 'Computer Lab 1 - Ground Floor',
                 'capacity': 20,
                 'category': 'training',
                 'floor': '0',
+                'location': 'ICT Wing, Ground Floor',
                 'is_active': True,
-                'description': 'Computer training lab with workstations'
+                'description': 'Computer training lab with workstations and modern equipment',
+                'amenities': ['Computers', 'Projector', 'Whiteboard', 'Internet Access', 'Air Conditioning', 'Printers']
+            },
+            {
+                'name': 'Computer Lab 2 - First Floor',
+                'capacity': 25,
+                'category': 'training',
+                'floor': '1',
+                'location': 'ICT Wing, First Floor',
+                'is_active': True,
+                'description': 'Advanced computer lab for technical training and workshops',
+                'amenities': ['Computers', 'Projector', 'Whiteboard', 'Internet Access', 'Air Conditioning']
+            },
+            {
+                'name': 'Situation Room',
+                'capacity': 8,
+                'category': 'meeting',
+                'floor': '1',
+                'location': 'Main Building, First Floor',
+                'is_active': True,
+                'description': 'Small meeting room ideal for team discussions and planning sessions',
+                'amenities': ['Screen', 'Whiteboard', 'Natural Light']
+            },
+            {
+                'name': 'Small Boardroom - 1st Floor',
+                'capacity': 12,
+                'category': 'meeting',
+                'floor': '1',
+                'location': 'Main Building, First Floor',
+                'is_active': True,
+                'description': 'Compact boardroom for small group meetings and interviews',
+                'amenities': ['TV Screen', 'Whiteboard', 'Air Conditioning', 'Natural Light']
             },
         ]
 

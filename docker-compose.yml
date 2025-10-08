@@ -61,17 +61,33 @@ services:
       - ./icpac-booking-backend/staticfiles:/app/staticfiles
       - ./icpac-booking-backend/media:/app/media
 
-  # React Frontend
-  frontend:
+  # React Frontend (Original - JavaScript)
+  frontend-old:
     build:
       context: ./icpac-booking-frontend
       dockerfile: Dockerfile
       args:
         - REACT_APP_API_URL=${REACT_APP_API_URL}
-    container_name: icpac-booking-frontend
+    container_name: icpac-booking-frontend-old
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-9040}:80"
+    depends_on:
+      - backend
+    networks:
+      - icpac-network
+
+  # React Frontend (New - TypeScript)
+  frontend-new:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_URL=${REACT_APP_API_URL}
+    container_name: icpac-booking-frontend-new
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_NEW_PORT:-9044}:80"
     depends_on:
       - backend
     networks:
