@@ -1,0 +1,60 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+node_modules/
+**/node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production builds
+/build
+**/build/
+
+# Misc
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# Python
+**/__pycache__/
+*.pyc
+*.pyo
+**/venv/
+*.sqlite3
+
+# Django generated files
+**/staticfiles/
+**/media/
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Duplicate / legacy project copy
+icpac-booking-system/
+
+# Unrelated files
+south_sudan_forest_map.html
+attached_assets/
+icpac-meeting-spaces/
+
+# Large files
+*.tar.gz
+*.zip
+backups/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development.local
+.env.test.local
+.env.production.local
