@@ -5,6 +5,8 @@ Meeting room booking and management system for IGAD Climate Prediction and Appli
 ## Quick Start (Docker)
 
 ```bash
+git clone git@github.com:icpac-igad/productivity-apps.git
+cd productivity-apps/icpac-igad-booking
 cp .env.example .env
 docker compose up --build -d
 ```
@@ -25,12 +27,13 @@ Rooms and amenities are pre-loaded automatically.
 ## Project Structure
 
 ```
-icpac-igad-booking/
-  icpac-booking-backend/     Django REST API (Python 3.11, Django 5.0)
-  icpac-booking-frontend/    React frontend - JavaScript
-  frontend/                  React frontend - TypeScript
-  docker-compose.yml         Docker services config
-  .env.example               Environment template
+productivity-apps/
+  icpac-igad-booking/
+    icpac-booking-backend/     Django REST API (Python 3.11, Django 5.0)
+    icpac-booking-frontend/    React frontend - JavaScript
+    frontend/                  React frontend - TypeScript
+    docker-compose.yml         Docker services config
+    .env.example               Environment template
 ```
 
 ## Tech Stack
